@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight, Send, Target, Terminal as TerminalIcon, Twitter } from "lucide-react";
+import { ArrowUpRight, Send, Twitter } from "lucide-react";
 import { Terminal } from "./Terminal";
 import logoUrl from "@/assets/marcovault-logo.png";
 
