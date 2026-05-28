@@ -219,9 +219,9 @@ export function CommandCenter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div {...fadeUp}>
           <SectionHeader
-            kicker="04 / COMMAND CENTER"
+            kicker="04 / COMMAND CENTER · ILLUSTRATIVE PREVIEW"
             title="Inside The Vault."
-            sub="A cinematic surface that fuses charts, scanners, alerts and AI signals into one professional crypto command center."
+            sub="A cinematic surface that fuses charts, scanners, alerts and AI signals into one professional crypto command center. Panels below are an illustrative preview of the operator workspace — not live market data."
           />
         </motion.div>
 
