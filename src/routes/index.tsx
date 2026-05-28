@@ -5,30 +5,47 @@ import {
   About, Ecosystem, Features, CommandCenter, Partnerships, SocialProof, Contact, Footer,
 } from "@/components/marco/Sections";
 
+const SITE_URL = "https://vaultmarco.lovable.app";
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const TITLE = "MARCOVAULT | Multi-Chain Alpha & Web3 Intelligence";
+const DESC = "Multi-chain alpha, AI workflows, and sniper-grade execution. Navigate the noise. Enter the vault.";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MARCOVAULT | Multi-Chain Alpha & Web3 Intelligence" },
-      { name: "description", content: "MARCOVAULT is a futuristic Web3 personal branding platform focused on multi-chain intelligence, AI workflows, crypto trading systems, and community-driven alpha." },
-      { property: "og:title", content: "MARCOVAULT | Multi-Chain Alpha & Web3 Intelligence" },
-      { property: "og:description", content: "Navigate the noise. Enter the vault. Multi-chain alpha, AI workflows and sniper-grade execution." },
-      { property: "og:url", content: "/" },
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "640" },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "MARCOVAULT" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESC },
+      { name: "twitter:image", content: OG_IMAGE },
+      { name: "twitter:site", content: "@vaultmarco" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: SITE_URL }],
     scripts: [{
       type: "application/ld+json",
       children: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Person",
         name: "Marco",
-        url: "/",
+        alternateName: "MARCOVAULT",
+        url: SITE_URL,
+        image: OG_IMAGE,
         sameAs: [
           "https://x.com/vaultmarco",
           "https://t.me/DxmZone",
           "https://t.me/DexMultichain",
         ],
         jobTitle: "Multi-Chain Alpha Operator",
-        worksFor: { "@type": "Organization", name: "MARCOVAULT" },
+        worksFor: { "@type": "Organization", name: "MARCOVAULT", url: SITE_URL },
       }),
     }],
   }),

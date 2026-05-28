@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight, Send, Target, Terminal as TerminalIcon, Twitter } from "lucide-react";
+import { ArrowUpRight, Send, Twitter } from "lucide-react";
 import { Terminal } from "./Terminal";
 import logoUrl from "@/assets/marcovault-logo.png";
 
@@ -10,15 +10,17 @@ export function Hero() {
       <div className="absolute inset-0 grid-bg [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 size-[600px] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
 
-      {/* ghost emblem watermark */}
+      {/* ghost emblem watermark — hidden on small screens to save bandwidth */}
       <motion.img
         src={logoUrl}
         alt=""
         aria-hidden
+        loading="lazy"
+        decoding="async"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 0.05, scale: 1 }}
         transition={{ duration: 1.6, ease: "easeOut" }}
-        className="pointer-events-none select-none absolute -top-20 left-1/2 -translate-x-1/2 w-[1100px] max-w-none animate-float-y"
+        className="hidden md:block pointer-events-none select-none absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] lg:w-[1100px] max-w-none animate-float-y"
       />
 
 
@@ -73,27 +75,41 @@ export function Hero() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.55 }}
-              className="mt-9 flex flex-wrap gap-3"
+              className="mt-9 flex flex-wrap items-center gap-3"
             >
-              <CTA href="https://t.me/DxmZone" primary icon={<Send className="size-3.5" />}>
+              <CTA
+                href="https://t.me/DxmZone"
+                primary
+                icon={<Send className="size-3.5" />}
+                ariaLabel="Join the MARCOVAULT Telegram community (opens in new tab)"
+              >
                 Join Telegram
               </CTA>
-              <CTA href="https://x.com/vaultmarco" icon={<Twitter className="size-3.5" />}>
+              <CTA
+                href="https://x.com/vaultmarco"
+                icon={<Twitter className="size-3.5" />}
+                ariaLabel="Follow MARCOVAULT on X (opens in new tab)"
+              >
                 Follow on X
               </CTA>
-              <CTA href="https://trade.padre.gg/rk/dexmultichain" icon={<TerminalIcon className="size-3.5" />}>
-                Padre Terminal
-              </CTA>
-              <CTA href="https://t.me/achilles_trojanbot?start=r-oxjackpot" icon={<Target className="size-3.5" />}>
-                Sniper Bot
-              </CTA>
+              <a
+                href="#ecosystem"
+                className="text-[12px] font-medium uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors px-2"
+              >
+                Explore the vault ↓
+              </a>
             </motion.div>
 
             {/* ticker */}
-            <div className="mt-10 glass rounded-xl overflow-hidden">
+            <div
+              className="mt-10 glass rounded-xl overflow-hidden"
+              role="marquee"
+              aria-label="Live market ticker — demo data"
+            >
               <div className="flex whitespace-nowrap animate-ticker font-mono text-[11px] py-2.5">
                 {Array.from({ length: 2 }).map((_, k) => (
                   <div key={k} className="flex items-center gap-8 px-4">
+                    <span className="text-[9px] tracking-[0.3em] text-primary/70 uppercase">Demo</span>
                     {[
                       ["SOL", "+4.82%"], ["ETH", "+2.14%"], ["HYPE", "+12.3%"],
                       ["BTC", "+0.84%"], ["BASE", "+5.1%"], ["BNB", "-1.2%"],
@@ -131,17 +147,20 @@ function CTA({
   children,
   primary,
   icon,
+  ariaLabel,
 }: {
   href: string;
   children: React.ReactNode;
   primary?: boolean;
   icon?: React.ReactNode;
+  ariaLabel?: string;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
+      aria-label={ariaLabel}
       className={`group relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.15em] transition-all overflow-hidden ${
         primary
           ? "bg-primary text-primary-foreground glow-cyan hover:scale-[1.03]"

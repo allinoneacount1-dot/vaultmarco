@@ -15,10 +15,6 @@ export function Logo({ size = 36 }: { size?: number }) {
           className="relative z-10 drop-shadow-[0_0_8px_rgba(0,240,255,0.35)]"
           style={{ width: size, height: size, objectFit: "contain" }}
         />
-        <span
-          className="absolute inset-0 rounded-full animate-pulse-glow blur-md"
-          style={{ background: "radial-gradient(circle, rgba(0,240,255,0.35), transparent 65%)" }}
-        />
       </div>
       <div className="leading-none">
         <div className="text-chrome font-display font-semibold tracking-[0.2em] text-[13px]">

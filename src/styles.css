@@ -141,6 +141,15 @@
   .animate-float-y { animation: float-y 5s ease-in-out infinite; }
   .animate-pulse-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
   .animate-ticker { animation: ticker 40s linear infinite; }
+  .animate-ticker:hover { animation-play-state: paused; }
   .animate-sweep { animation: sweep 3s ease-in-out infinite; }
   .animate-blink { animation: blink 1s steps(1) infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float-y,
+    .animate-pulse-glow,
+    .animate-ticker,
+    .animate-sweep,
+    .animate-blink { animation: none !important; }
+  }
 }
