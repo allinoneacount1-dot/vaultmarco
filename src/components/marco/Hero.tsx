@@ -147,17 +147,20 @@ function CTA({
   children,
   primary,
   icon,
+  ariaLabel,
 }: {
   href: string;
   children: React.ReactNode;
   primary?: boolean;
   icon?: React.ReactNode;
+  ariaLabel?: string;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
+      aria-label={ariaLabel}
       className={`group relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.15em] transition-all overflow-hidden ${
         primary
           ? "bg-primary text-primary-foreground glow-cyan hover:scale-[1.03]"
