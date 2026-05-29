@@ -318,7 +318,7 @@ export function CommandCenter() {
           </Panel>
 
 
-          <Panel title="VOLUME INDICATORS" icon={LineChart}>
+          <Panel title="VOLUME INDICATORS · DEMO" icon={LineChart}>
             <div className="flex items-end gap-1 h-24 mt-2">
               {Array.from({ length: 22 }).map((_, i) => {
                 const h = 20 + ((i * 53) % 70);
