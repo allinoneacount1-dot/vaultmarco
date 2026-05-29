@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, Loader2, Zap, ArrowUpRight } from "lucide-react";
+import { Activity, ArrowUpRight } from "lucide-react";
 import { Panel } from "./Panel";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -24,22 +24,51 @@ const FALLBACK_PAIRS: PairData[] = [
   { chainId: "hyperliquid", baseToken: { symbol: "HYPE" }, quoteToken: { symbol: "USDC" }, priceUsd: "12.5", volume: { h24: 56000000 }, liquidity: { usd: 18000000 }, priceChange: { h24: -2.4 } },
 ];
 
+// Helper function to generate DexTools URL
+const generateDexToolsUrl = (chainId: string, baseSymbol: string, quoteSymbol: string) => {
+  const chainMap: Record<string, string> = {
+    solana: "solana",
+    ethereum: "ether",
+    base: "base",
+    hyperliquid: "hyperliquid",
+  };
+  const chain = chainMap[chainId.toLowerCase()] || chainId;
+  return `https://www.dextools.io/app/${chain}/pair-explorer`;
+};
+
 export function DexRealtimeTab() {
-  const [dexSource, setDexSource] = useState("screener"); // screener or dextools or both
+  const [dexSource, setDexSource] = useState("screener"); // screener or dextools
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dexScreener", dexSource],
+    queryKey: ["dexRealtime", dexSource],
     queryFn: async () => {
-      try {
-        const res = await fetch("https://api.dexscreener.com/latest/dex/tokens/SOL,ETH,BASE,HYPE");
-        const json = await res.json();
-        if (json.pairs) {
-          return (json.pairs.slice(0, 8) as PairData[]).map(p => ({ ...p, url: `https://dexscreener.com/${p.chainId}/${p.baseToken?.symbol?.toLowerCase()}-${p.quoteToken?.symbol?.toLowerCase()}` }));
+      if (dexSource === "screener") {
+        try {
+          const res = await fetch("https://api.dexscreener.com/latest/dex/tokens/SOL,ETH,BASE,HYPE");
+          const json = await res.json();
+          if (json.pairs) {
+            return (json.pairs.slice(0, 8) as PairData[]).map(p => ({
+              ...p,
+              url: `https://dexscreener.com/${p.chainId}/${p.baseToken?.symbol?.toLowerCase()}-${p.quoteToken?.symbol?.toLowerCase()}`
+            }));
+          }
+          return FALLBACK_PAIRS.map(p => ({
+            ...p,
+            url: `https://dexscreener.com/${p.chainId}/${p.baseToken?.symbol?.toLowerCase()}-${p.quoteToken?.symbol?.toLowerCase()}`
+          }));
+        } catch (err) {
+          console.warn("DexScreener API failed, using fallback:", err);
+          return FALLBACK_PAIRS.map(p => ({
+            ...p,
+            url: `https://dexscreener.com/${p.chainId}/${p.baseToken?.symbol?.toLowerCase()}-${p.quoteToken?.symbol?.toLowerCase()}`
+          }));
         }
-        return FALLBACK_PAIRS;
-      } catch (err) {
-        console.warn("DexScreener API failed, using fallback:", err);
-        return FALLBACK_PAIRS;
+      } else {
+        // For DexTools, we don't have a public API, so use fallback with DexTools URLs
+        return FALLBACK_PAIRS.map(p => ({
+          ...p,
+          url: generateDexToolsUrl(p.chainId || "", p.baseToken?.symbol || "", p.quoteToken?.symbol || "")
+        }));
       }
     },
     refetchInterval: 30000, // 30 seconds
@@ -94,7 +123,7 @@ export function DexRealtimeTab() {
                     <motion.a
                       key={i}
                       variants={fadeUp}
-                      href={p.url || (dexSource === "dextools" ? "https://www.dextools.io" : "https://dexscreener.com")}
+                      href={p.url}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-primary/30 transition-all group"
