@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell, X, Volume2, VolumeX } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -15,8 +15,9 @@ type WhaleAlert = {
 export function WhaleAlertIcon() {
   const [isOpen, setIsOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const lastIdsRef = useRef<number[]>([]);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["whaleAlerts"],
     queryFn: async () => {
       const res = await fetch("/api/whale/alerts");
@@ -24,10 +25,14 @@ export function WhaleAlertIcon() {
     },
     refetchInterval: 20000, // 20 seconds
     onSuccess: (newData) => {
-      if (soundEnabled && newData.length > 0) {
-        // Simple browser notification
+      const currentIds = newData.map((a) => a.id);
+      const newAlerts = newData.filter((a) => !lastIdsRef.current.includes(a.id));
+
+      if (soundEnabled && newAlerts.length > 0) {
         toast.success("New whale alert!");
       }
+
+      lastIdsRef.current = currentIds;
     },
   });
 
