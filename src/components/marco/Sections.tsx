@@ -734,13 +734,43 @@ function LiveMarketPanel({
 
 /* PARTNERSHIPS ---------------------------------------------------- */
 const partners = [
-  { name: "Community Alpha", tag: "Network", icon: MessageCircle, logos: ["https://via.placeholder.com/24/0f172a/22c55e?text=S", "https://via.placeholder.com/24/0f172a/0ea5e9?text=T", "https://via.placeholder.com/24/0f172a/6366f1?text=D"] },
-  { name: "Web3 Builders", tag: "Builders", icon: Cpu, logos: ["https://via.placeholder.com/24/0f172a/627eea?text=E", "https://via.placeholder.com/24/0f172a/9945ff?text=S", "https://via.placeholder.com/24/0f172a/f0b90b?text=B"] },
-  { name: "AI Infrastructure", tag: "AI", icon: Brain, logos: ["https://via.placeholder.com/24/0f172a/76b900?text=N", "https://via.placeholder.com/24/0f172a/10a37f?text=O", "https://via.placeholder.com/24/0f172a/fca311?text=C"] },
-  { name: "Trading Ecosystem", tag: "Trading", icon: LineChart, logos: ["https://via.placeholder.com/24/0f172a/ff007a?text=U", "https://via.placeholder.com/24/0f172a/9945ff?text=J", "https://via.placeholder.com/24/0f172a/06b6d4?text=P"] },
-  { name: "Launch Partners", tag: "Launchpads", icon: Flame, logos: ["https://via.placeholder.com/24/0f172a/38bdf8?text=C", "https://via.placeholder.com/24/0f172a/818cf8?text=D", "https://via.placeholder.com/24/0f172a/22d3ee?text=T"] },
-  { name: "Strategic Networks", tag: "Strategy", icon: Network, logos: ["https://via.placeholder.com/24/0f172a/9945ff?text=S", "https://via.placeholder.com/24/0f172a/627eea?text=E", "https://via.placeholder.com/24/0f172a/f0b90b?text=B", "https://via.placeholder.com/24/0f172a/22c55e?text=Ba"] },
+  { name: "Community Alpha", tag: "Network", icon: MessageCircle, logos: ["solana", "telegram", "discord"] },
+  { name: "Web3 Builders", tag: "Builders", icon: Cpu, logos: ["ethereum", "solana", "bnb"] },
+  { name: "AI Infrastructure", tag: "AI", icon: Brain, logos: ["nvidia", "openai", "coingecko"] },
+  { name: "Trading Ecosystem", tag: "Trading", icon: LineChart, logos: ["uniswap", "jupiter", "pumpfun"] },
+  { name: "Launch Partners", tag: "Launchpads", icon: Flame, logos: ["coinlist", "daomaker", "trustswap"] },
+  { name: "Strategic Networks", tag: "Strategy", icon: Network, logos: ["solana", "ethereum", "bnb", "base"] },
 ];
+
+// Simple SVG logo component
+const PartnerLogo = ({ name }: { name: string }) => {
+  const colors: Record<string, { bg: string, text: string }> = {
+    solana: { bg: "#9945ff", text: "S" },
+    ethereum: { bg: "#627eea", text: "E" },
+    bnb: { bg: "#f0b90b", text: "B" },
+    base: { bg: "#22c55e", text: "Ba" },
+    uniswap: { bg: "#ff007a", text: "U" },
+    jupiter: { bg: "#9945ff", text: "J" },
+    pumpfun: { bg: "#06b6d4", text: "P" },
+    telegram: { bg: "#0ea5e9", text: "T" },
+    discord: { bg: "#6366f1", text: "D" },
+    nvidia: { bg: "#76b900", text: "N" },
+    openai: { bg: "#10a37f", text: "O" },
+    coingecko: { bg: "#fca311", text: "CG" },
+    coinlist: { bg: "#38bdf8", text: "C" },
+    daomaker: { bg: "#818cf8", text: "D" },
+    trustswap: { bg: "#fca311", text: "TS" },
+  };
+  const c = colors[name] || { bg: "#64748b", text: "?" };
+  
+  return (
+    <div className="size-6 rounded-full border border-white/10 flex items-center justify-center text-[9px] font-mono font-bold"
+      style={{ backgroundColor: c.bg }}
+    >
+      {c.text}
+    </div>
+  );
+};
 
 export function Partnerships() {
   const [openPartner, setOpenPartner] = useState<string | null>(null);
@@ -781,17 +811,7 @@ export function Partnerships() {
               {/* Logo list */}
               <div className="mt-4 flex items-center gap-2 flex-wrap">
                 {p.logos?.map((logo, idx) => (
-                  <div
-                    key={idx}
-                    className="size-6 rounded-full bg-white/5 border border-white/10 overflow-hidden"
-                  >
-                    <img
-                      src={logo}
-                      alt="partner logo"
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
+                  <PartnerLogo key={idx} name={logo} />
                 ))}
               </div>
             </motion.button>

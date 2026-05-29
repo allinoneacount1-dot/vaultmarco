@@ -1,21 +1,41 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  X,
-  Activity,
-  Zap,
-  Users,
-  BarChart3,
-  ArrowUpRight,
-  CheckCircle2,
-  TrendingUp,
-} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { X, Activity, Zap, Users, BarChart3, ArrowUpRight, CheckCircle2, TrendingUp } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+
+// Simple SVG logo component
+const PartnerLogo = ({ name }: { name: string }) => {
+  const colors: Record<string, { bg: string, text: string }> = {
+    solana: { bg: "#9945ff", text: "S" },
+    ethereum: { bg: "#627eea", text: "E" },
+    bnb: { bg: "#f0b90b", text: "B" },
+    base: { bg: "#22c55e", text: "Ba" },
+    uniswap: { bg: "#ff007a", text: "U" },
+    jupiter: { bg: "#9945ff", text: "J" },
+    pumpfun: { bg: "#06b6d4", text: "P" },
+    "1inch": { bg: "#10b981", text: "1" },
+    telegram: { bg: "#0ea5e9", text: "T" },
+    discord: { bg: "#6366f1", text: "D" },
+    nvidia: { bg: "#76b900", text: "N" },
+    openai: { bg: "#10a37f", text: "O" },
+    coingecko: { bg: "#fca311", text: "CG" },
+    coinmarketcap: { bg: "#60a5fa", text: "CMC" },
+    messari: { bg: "#a855f4", text: "M" },
+    defillama: { bg: "#f59e0b", text: "L" },
+    coinlist: { bg: "#38bdf8", text: "C" },
+    daomaker: { bg: "#818cf8", text: "D" },
+    trustswap: { bg: "#fca311", text: "TS" },
+    starter: { bg: "#22d3ee", text: "St" },
+  };
+  const c = colors[name.toLowerCase()] || { bg: "#64748b", text: name[0].toUpperCase() };
+  
+  return (
+    <div className="size-6 rounded-full border border-white/10 flex items-center justify-center text-[9px] font-mono font-bold"
+      style={{ backgroundColor: c.bg }}
+    >
+      {c.text}
+    </div>
+  );
+};
 
 // Mock growth data for charts
 const growthData = [
@@ -44,10 +64,10 @@ const partnerData = {
       "Slippage protection",
     ],
     partners: [
-      { name: "Uniswap", logo: "https://via.placeholder.com/24/0f172a/ff007a?text=U" },
-      { name: "Jupiter", logo: "https://via.placeholder.com/24/0f172a/9945ff?text=J" },
-      { name: "PumpFun", logo: "https://via.placeholder.com/24/0f172a/06b6d4?text=P" },
-      { name: "1inch", logo: "https://via.placeholder.com/24/0f172a/10b981?text=1" },
+      { name: "Uniswap", key: "uniswap" },
+      { name: "Jupiter", key: "jupiter" },
+      { name: "PumpFun", key: "pumpfun" },
+      { name: "1inch", key: "1inch" },
     ],
   },
   "Launch Partners": {
@@ -66,10 +86,10 @@ const partnerData = {
       "Post-launch support",
     ],
     partners: [
-      { name: "CoinList", logo: "https://via.placeholder.com/24/0f172a/38bdf8?text=C" },
-      { name: "DAO Maker", logo: "https://via.placeholder.com/24/0f172a/818cf8?text=D" },
-      { name: "Starter", logo: "https://via.placeholder.com/24/0f172a/22d3ee?text=T" },
-      { name: "TrustSwap", logo: "https://via.placeholder.com/24/0f172a/fca311?text=TS" },
+      { name: "CoinList", key: "coinlist" },
+      { name: "DAO Maker", key: "daomaker" },
+      { name: "Starter", key: "starter" },
+      { name: "TrustSwap", key: "trustswap" },
     ],
   },
   "Strategic Networks": {
@@ -88,14 +108,14 @@ const partnerData = {
       "Strategic investment",
     ],
     partners: [
-      { name: "Solana", logo: "https://via.placeholder.com/24/0f172a/9945ff?text=S" },
-      { name: "Ethereum", logo: "https://via.placeholder.com/24/0f172a/627eea?text=E" },
-      { name: "BNB Chain", logo: "https://via.placeholder.com/24/0f172a/f0b90b?text=B" },
-      { name: "Base", logo: "https://via.placeholder.com/24/0f172a/22c55e?text=Ba" },
-      { name: "CoinGecko", logo: "https://via.placeholder.com/24/0f172a/fca311?text=CG" },
-      { name: "CoinMarketCap", logo: "https://via.placeholder.com/24/0f172a/60a5fa?text=CMC" },
-      { name: "Messari", logo: "https://via.placeholder.com/24/0f172a/a855f4?text=M" },
-      { name: "DefiLlama", logo: "https://via.placeholder.com/24/0f172a/f59e0b?text=L" },
+      { name: "Solana", key: "solana" },
+      { name: "Ethereum", key: "ethereum" },
+      { name: "BNB Chain", key: "bnb" },
+      { name: "Base", key: "base" },
+      { name: "CoinGecko", key: "coingecko" },
+      { name: "CoinMarketCap", key: "coinmarketcap" },
+      { name: "Messari", key: "messari" },
+      { name: "DefiLlama", key: "defillama" },
     ],
   },
 };
@@ -207,27 +227,22 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
         </div>
 
         {/* Network Partners with Logos */}
-        <div className="mt-5">
-          <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
-            Network Members
+    <div className="mt-5">
+      <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
+        Network Members
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {data.partners.map((p, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+          >
+            <PartnerLogo name={p.key} />
+            <span className="text-[11px] text-muted-foreground">{p.name}</span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {data.partners.map((p, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
-              >
-                <img
-                  src={p.logo}
-                  alt={p.name}
-                  className="size-4 rounded-full object-cover"
-                  loading="lazy"
-                />
-                <span className="text-[11px] text-muted-foreground">{p.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        ))}
+      </div>
+    </div>
 
         <div className="mt-6">
           <a
