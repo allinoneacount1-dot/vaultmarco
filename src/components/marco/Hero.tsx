@@ -70,8 +70,8 @@ export function Hero() {
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.8, delay: 0.1 }}
               className="text-chrome font-display font-semibold text-[44px] sm:text-[64px] lg:text-[80px] leading-[0.95] tracking-tight"
             >
@@ -84,6 +84,11 @@ export function Hero() {
                     "0 0 40px rgba(145,231,255,0.6)",
                     "0 0 20px rgba(145,231,255,0.3)",
                   ],
+                  filter: [
+                    "blur(0px)",
+                    "blur(2px)",
+                    "blur(0px)",
+                  ]
                 }}
                 transition={{
                   duration: 3,
@@ -103,6 +108,11 @@ export function Hero() {
                     "0 0 40px rgba(145,231,255,0.6)",
                     "0 0 20px rgba(145,231,255,0.3)",
                   ],
+                  filter: [
+                    "blur(0px)",
+                    "blur(2px)",
+                    "blur(0px)",
+                  ]
                 }}
                 transition={{
                   duration: 3,
