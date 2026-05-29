@@ -105,8 +105,8 @@ export function useMarketPrices() {
   return useQuery({
     queryKey: ["market-prices"],
     queryFn: fetchPrices,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     retry: 2,
   });
 }
