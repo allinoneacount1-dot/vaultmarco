@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight, Send, Twitter } from "lucide-react";
 import { Terminal } from "./Terminal";
+import { LiveTicker } from "./LiveTicker";
 import logoUrl from "@/assets/marcovault-logo.png";
 
 export function Hero() {
@@ -100,30 +101,7 @@ export function Hero() {
               </a>
             </motion.div>
 
-            {/* ticker */}
-            <div
-              className="mt-10 glass rounded-xl overflow-hidden"
-              role="marquee"
-              aria-label="Live market ticker — demo data"
-            >
-              <div className="flex whitespace-nowrap animate-ticker font-mono text-[11px] py-2.5">
-                {Array.from({ length: 2 }).map((_, k) => (
-                  <div key={k} className="flex items-center gap-8 px-4">
-                    <span className="text-[9px] tracking-[0.3em] text-primary/70 uppercase">Demo</span>
-                    {[
-                      ["SOL", "+4.82%"], ["ETH", "+2.14%"], ["HYPE", "+12.3%"],
-                      ["BTC", "+0.84%"], ["BASE", "+5.1%"], ["BNB", "-1.2%"],
-                      ["SUI", "+8.4%"], ["TON", "+3.6%"], ["AVAX", "+1.9%"],
-                    ].map(([s, v]) => (
-                      <span key={s + k} className="flex items-center gap-2">
-                        <span className="text-muted-foreground">{s}</span>
-                        <span className={v.startsWith("-") ? "text-red-400" : "text-accent"}>{v}</span>
-                      </span>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <LiveTicker />
           </div>
 
           {/* right */}
