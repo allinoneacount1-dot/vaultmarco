@@ -353,6 +353,44 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: any; chil
   );
 }
 
+function LiveMarketPanel() {
+  const { data, isLoading, isError } = useMarketPrices();
+  const coins = (data ?? []).slice(0, 6);
+  return (
+    <div className="glass-strong border-glow rounded-2xl p-5 scanline lg:col-span-1 relative">
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+        <span className="text-[10px] font-mono tracking-[0.3em] text-accent flex items-center gap-2">
+          <span className="size-1.5 rounded-full bg-accent animate-pulse-glow" />
+          LIVE MARKET · COINGECKO
+        </span>
+        <Activity className="size-3.5 text-accent" />
+      </div>
+      <div className="space-y-2">
+        {isError && (
+          <div className="text-[11px] font-mono text-red-400">
+            Market feed offline — retrying…
+          </div>
+        )}
+        {isLoading && !data && (
+          <div className="text-[11px] font-mono text-muted-foreground">Connecting to feed…</div>
+        )}
+        {coins.map((c) => (
+          <div key={c.sym} className="flex items-center justify-between text-[11px] font-mono">
+            <span className="text-foreground w-12">{c.sym}</span>
+            <span className="text-muted-foreground tabular-nums">{formatPrice(c.px)}</span>
+            <span
+              className={`tabular-nums w-16 text-right ${c.ch < 0 ? "text-red-400" : "text-accent"}`}
+            >
+              {c.ch >= 0 ? "+" : ""}
+              {c.ch.toFixed(2)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Row({ label, mid, value, ok }: { label: string; mid: string; value: string; ok?: boolean }) {
   return (
     <div className="flex items-center justify-between text-[11px] font-mono">
