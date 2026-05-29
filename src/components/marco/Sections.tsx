@@ -261,7 +261,7 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="TOKEN SCANNER" icon={Radar}>
+          <Panel title="TOKEN SCANNER · DEMO" icon={Radar}>
             {[
               ["AION",  "SOL",  "0:14"],
               ["NEXUS", "BASE", "1:02"],
@@ -272,7 +272,7 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="CHAIN HEATMAP" icon={Cpu}>
+          <Panel title="CHAIN HEATMAP · DEMO" icon={Cpu}>
             <div className="grid grid-cols-4 gap-1.5 mt-1">
               {["SOL","ETH","BASE","HL","BNB","SUI","TON","AVAX","ARB","OP","POL","LIN"].map((c, i) => {
                 const heat = (i * 37) % 100;
@@ -292,7 +292,7 @@ export function CommandCenter() {
             </div>
           </Panel>
 
-          <Panel title="AI SIGNAL FEED" icon={Brain}>
+          <Panel title="AI SIGNAL FEED · DEMO" icon={Brain}>
             {[
               "Narrative shift: AI-agents +18%",
               "Whale rotation SOL → HYPE",
@@ -306,7 +306,7 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="MARKET ALERTS" icon={Zap}>
+          <Panel title="MARKET ALERTS · DEMO" icon={Zap}>
             {[
               ["HYPE", "BREAKOUT", "ok"],
               ["BONK", "VOL SPIKE", "ok"],
@@ -316,6 +316,7 @@ export function CommandCenter() {
               <Row key={s + st} label={s} mid={st} value={k === "ok" ? "●" : "●"} ok={k === "ok"} />
             ))}
           </Panel>
+
 
           <Panel title="VOLUME INDICATORS" icon={LineChart}>
             <div className="flex items-end gap-1 h-24 mt-2">
