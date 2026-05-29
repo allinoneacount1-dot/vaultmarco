@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 
 const links = [
@@ -38,9 +39,9 @@ export function Navbar() {
             scrolled ? "glass-strong" : "border border-transparent"
           }`}
         >
-          <a href="#home" className="flex items-center">
+          <Link to="/" hash="home" className="flex items-center">
             <Logo />
-          </a>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-7">
             {links.map((l) => (
@@ -55,7 +56,13 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              to="/auth"
+              className="text-[12px] font-medium tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign In
+            </Link>
             <a
               href="https://t.me/DxmZone"
               target="_blank"
