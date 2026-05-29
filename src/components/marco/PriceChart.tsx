@@ -9,38 +9,38 @@ type CandlestickData = {
   close: number;
 };
 
+// Generate mock candlestick data for now
+const generateMockData = (count: number, symbol: string): CandlestickData[] => {
+  const data: CandlestickData[] = [];
+  let basePrice = symbol === "BTC" ? 68000 : 3500;
+  const now = Math.floor(Date.now() / 1000);
+
+  for (let i = count - 1; i >= 0; i--) {
+    const time = now - i * 3600; // 1 hour candles
+    const volatility = 0.02;
+    const change = (Math.random() - 0.5) * 2 * volatility * basePrice;
+    const open = basePrice;
+    const close = basePrice + change;
+    const high = Math.max(open, close) + Math.random() * volatility * basePrice;
+    const low = Math.min(open, close) - Math.random() * volatility * basePrice;
+
+    data.push({
+      time,
+      open,
+      high,
+      low,
+      close,
+    });
+
+    basePrice = close;
+  }
+  return data;
+};
+
 export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-
-  // Generate mock candlestick data for now
-  const generateMockData = (count: number): CandlestickData[] => {
-    const data: CandlestickData[] = [];
-    let basePrice = symbol === "BTC" ? 68000 : 3500;
-    const now = Math.floor(Date.now() / 1000);
-
-    for (let i = count - 1; i >= 0; i--) {
-      const time = now - i * 3600; // 1 hour candles
-      const volatility = 0.02;
-      const change = (Math.random() - 0.5) * 2 * volatility * basePrice;
-      const open = basePrice;
-      const close = basePrice + change;
-      const high = Math.max(open, close) + Math.random() * volatility * basePrice;
-      const low = Math.min(open, close) - Math.random() * volatility * basePrice;
-
-      data.push({
-        time,
-        open,
-        high,
-        low,
-        close,
-      });
-
-      basePrice = close;
-    }
-    return data;
-  };
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -71,7 +71,7 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
       wickDownColor: "#EF4444",
     });
 
-    candlestickSeries.setData(generateMockData(100));
+    candlestickSeries.setData(generateMockData(100, symbol));
 
     chartRef.current = chart;
     candlestickSeriesRef.current = candlestickSeries;
