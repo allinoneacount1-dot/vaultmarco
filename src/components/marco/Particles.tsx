@@ -34,8 +34,6 @@ export function Particles() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [isClient]);
 
-  if (!isClient || prefersReducedMotion) return null;
-
   useEffect(() => {
     if (!isClient) return;
     const updateDimensions = () => {
@@ -52,7 +50,7 @@ export function Particles() {
   }, [isClient]);
 
   useEffect(() => {
-    if (!canvasRef.current || dimensions.width === 0) return;
+    if (!isClient || !canvasRef.current || dimensions.width === 0 || prefersReducedMotion) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -145,7 +143,9 @@ export function Particles() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [dimensions]);
+  }, [dimensions, isClient, prefersReducedMotion]);
+
+  if (!isClient || prefersReducedMotion) return null;
 
   return (
     <motion.canvas
