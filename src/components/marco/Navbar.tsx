@@ -3,6 +3,7 @@ import { Menu, X, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WhaleAlertIcon } from "./WhaleAlertIcon";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -60,6 +61,7 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <WhaleAlertIcon />
             <ConnectButton.Custom>
               {({ account, chain, openConnectModal, mounted }) => {
                 if (!mounted) return null;
