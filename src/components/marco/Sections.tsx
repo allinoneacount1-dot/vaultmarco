@@ -752,5 +752,26 @@ export function Footer() {
   );
 }
 
+import { Watchlist } from "./Watchlist";
+import { Terminal } from "./Terminal";
+
+export function Sections() {
+  return (
+    <>
+      <Terminal />
+      <About />
+      <Ecosystem />
+      <Features />
+      <CommandCenter />
+      <Watchlist />
+      <Partnerships />
+      <SocialProof />
+      <Contact />
+      <Faq />
+      <Footer />
+    </>
+  );
+}
+
 // silence unused
 export const _ = { Bot };
