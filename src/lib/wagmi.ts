@@ -3,7 +3,7 @@ import { mainnet, sepolia, arbitrum, optimism, base, polygon } from "wagmi/chain
 
 export const config = getDefaultConfig({
   appName: "MARCOVAULT",
-  projectId: "YOUR_PROJECT_ID", // Ganti dengan Project ID dari WalletConnect Cloud
+  projectId: "d4d049a81df98c9f13ef7bfcf08599d5",
   chains: [mainnet, sepolia, arbitrum, optimism, base, polygon],
   ssr: false, // Karena kita pakai Vite (CSR)
 });
