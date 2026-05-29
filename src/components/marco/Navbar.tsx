@@ -5,6 +5,7 @@ import { Logo } from "./Logo";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
 import { ThemeToggle } from "./ThemeToggle";
+import { GasTracker } from "./GasTracker";
 
 const links = [
   { label: "Home", href: "#home" },

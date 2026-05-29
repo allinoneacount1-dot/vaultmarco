@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createChart, IChartApi } from "lightweight-charts";
+import { createChart } from "lightweight-charts";
 import { motion } from "framer-motion";
 
 type CandlestickData = {
@@ -40,7 +40,7 @@ const generateMockData = (count: number, symbol: string): CandlestickData[] => {
 
 export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
+  const chartRef = useRef<any | null>(null);
   const seriesRef = useRef<any>(null);
   const [activeSymbol, setActiveSymbol] = useState(symbol);
 
