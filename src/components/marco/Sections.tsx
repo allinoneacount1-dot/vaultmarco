@@ -146,11 +146,11 @@ export function Ecosystem() {
           <SectionHeader
             kicker="02 / ECOSYSTEM"
             title="The Vault Ecosystem."
-            sub="Four operational surfaces — community, signals, execution and analytics — engineered to compound."
+            sub="Six operational surfaces — community, signals, execution, research, analytics — engineered to compound."
           />
         </motion.div>
 
-        <div className="mt-14 grid sm:grid-cols-2 gap-5">
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {ecosystem.map((e, i) => (
             <motion.a
               key={e.name}
