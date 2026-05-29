@@ -112,10 +112,10 @@ export function useMarketPrices() {
 }
 
 export function useChainHeatmap(data?: MarketCoin[]): ChainHeatmapItem[] {
-  return CHAINS.map((sym, i) => {
+  return CHAINS.map((sym) => {
     const coin = data?.find((c) => c.sym === sym);
-    const ch = coin?.ch ?? Math.sin(Date.now() / 5000 + i) * 10;
-    const heat = Math.max(0, Math.min(100, Math.abs(ch) * 5 + Math.random() * 20));
+    const ch = coin?.ch ?? 0;
+    const heat = Math.max(0, Math.min(100, Math.abs(ch) * 5));
     return {
       name: sym,
       sym,
