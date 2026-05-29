@@ -5,7 +5,27 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { X, Activity, Zap, Users, BarChart3, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import {
+  X,
+  Activity,
+  Zap,
+  Users,
+  BarChart3,
+  ArrowUpRight,
+  CheckCircle2,
+  TrendingUp,
+} from "lucide-react";
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+
+// Mock growth data for charts
+const growthData = [
+  { month: "Jan", value: 100 },
+  { month: "Feb", value: 150 },
+  { month: "Mar", value: 180 },
+  { month: "Apr", value: 220 },
+  { month: "May", value: 300 },
+  { month: "Jun", value: 380 },
+];
 
 const partnerData = {
   "Trading Ecosystem": {
@@ -18,7 +38,12 @@ const partnerData = {
       { label: "Slippage", value: "<0.1%" },
     ],
     features: ["Cross-chain swaps", "Limit orders", "Stop-loss/take-profit", "Slippage protection"],
-    partners: ["Uniswap", "Jupiter", "1inch", "Kyber Network"],
+    partners: [
+      { name: "Uniswap", logo: "https://cryptologos.cc/logos/uniswap-uni-logo.png" },
+      { name: "Jupiter", logo: "https://cryptologos.cc/logos/jupiter-jup-logo.png" },
+      { name: "1inch", logo: "https://cryptologos.cc/logos/1inch-1inch-logo.png" },
+      { name: "Kyber Network", logo: "https://cryptologos.cc/logos/kyber-network-knc-logo.png" },
+    ],
   },
   "Launch Partners": {
     tag: "Launchpads",
@@ -35,7 +60,12 @@ const partnerData = {
       "Liquidity lock verification",
       "Post-launch support",
     ],
-    partners: ["CoinList", "DAO Maker", "Starter", "TrustSwap"],
+    partners: [
+      { name: "CoinList", logo: "https://cryptologos.cc/logos/coinlist-cl-logo.png" },
+      { name: "DAO Maker", logo: "https://cryptologos.cc/logos/dao-maker-dao-logo.png" },
+      { name: "Starter", logo: "https://cryptologos.cc/logos/starter-strt-logo.png" },
+      { name: "TrustSwap", logo: "https://cryptologos.cc/logos/trustswap-swap-logo.png" },
+    ],
   },
   "Strategic Networks": {
     tag: "Strategy",
@@ -53,7 +83,12 @@ const partnerData = {
       "Community events",
       "Strategic investment",
     ],
-    partners: ["CoinGecko", "CoinMarketCap", "Messari", "DefiLlama"],
+    partners: [
+      { name: "CoinGecko", logo: "https://cryptologos.cc/logos/coingecko-cg-logo.png" },
+      { name: "CoinMarketCap", logo: "https://cryptologos.cc/logos/coinmarketcap-cmc-logo.png" },
+      { name: "Messari", logo: "https://cryptologos.cc/logos/messari-messari-logo.png" },
+      { name: "DefiLlama", logo: "https://cryptologos.cc/logos/defi-llama-llama-logo.png" },
+    ],
   },
 };
 
@@ -104,6 +139,50 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
           ))}
         </div>
 
+        {/* Growth Chart */}
+        <div className="mt-5">
+          <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2 flex items-center gap-1.5">
+            <TrendingUp className="size-3" /> Growth Trend
+          </div>
+          <div className="h-48 rounded-xl border border-white/10 p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={growthData}>
+                <XAxis
+                  dataKey="month"
+                  stroke="rgba(255,255,255,0.3)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="rgba(255,255,255,0.3)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}k`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#050505",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "8px",
+                    color: "#fff",
+                  }}
+                  itemStyle={{ color: "#6EE7B7" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#6EE7B7"
+                  strokeWidth={2}
+                  dot={{ fill: "#6EE7B7", r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         {/* Features */}
         <div className="mt-5">
           <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
@@ -119,7 +198,7 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
           </div>
         </div>
 
-        {/* Network Partners */}
+        {/* Network Partners with Logos */}
         <div className="mt-5">
           <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
             Network Members
@@ -128,9 +207,15 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
             {data.partners.map((p, i) => (
               <div
                 key={i}
-                className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-muted-foreground"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
               >
-                {p}
+                <img
+                  src={p.logo}
+                  alt={p.name}
+                  className="size-4 rounded-full object-cover"
+                  loading="lazy"
+                />
+                <span className="text-[11px] text-muted-foreground">{p.name}</span>
               </div>
             ))}
           </div>

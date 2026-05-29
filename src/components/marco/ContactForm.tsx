@@ -31,15 +31,37 @@ export function ContactForm() {
       return;
     }
     setSubmitting(true);
-    // Frontend-only: open Telegram with prefilled context.
-    const body = encodeURIComponent(
-      `New inbound from MARCOVAULT site\n\nName: ${parsed.data.name}\nEmail: ${parsed.data.email}\nTelegram: ${parsed.data.telegram || "—"}\nTopic: ${parsed.data.topic}\n\n${parsed.data.message}`,
-    );
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    (e.target as HTMLFormElement).reset();
-    toast.success("Message captured — opening Telegram to confirm.");
-    window.open(`https://t.me/DxmZone?text=${body}`, "_blank", "noopener,noreferrer");
+
+    try {
+      // Send to our backend API first
+      const apiResponse = await fetch("/api/partnership/inquiry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: parsed.data.name,
+          email: parsed.data.email,
+          organization: parsed.data.telegram,
+          partnershipType: parsed.data.topic,
+          message: parsed.data.message,
+        }),
+      });
+
+      const result = await apiResponse.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send inquiry");
+      }
+
+      setSubmitting(false);
+      (e.target as HTMLFormElement).reset();
+      toast.success("Inquiry submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting inquiry:", error);
+      setSubmitting(false);
+      toast.error("Failed to send inquiry, please try again.");
+    }
   }
 
   return (
