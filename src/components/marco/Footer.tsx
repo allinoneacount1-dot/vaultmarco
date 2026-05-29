@@ -1,112 +1,74 @@
-import {
-  ArrowUpRight,
-  Globe,
-  Twitter,
-  MessageCircle,
-  Terminal as TerminalIcon,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { Hexagon, Twitter, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="relative pt-16 pb-10 border-t border-white/5">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          <div className="lg:col-span-2">
-            <div className="font-display font-semibold text-chrome text-xl tracking-[0.18em]">
-              MARCOVAULT
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Built for the next generation of Web3 operators. Multi-chain alpha, AI workflows and
-              sniper-grade execution.
-            </p>
-          </div>
+    <footer className="border-t border-white/5 py-12 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
+          <motion.div
+            className="flex items-center gap-2"
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              className="text-primary"
+              animate={{
+                rotate: [0, 10, -10, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Hexagon className="size-5" />
+            </motion.div>
+            <span className="font-display text-foreground">Marco</span>
+            <span className="text-muted-foreground text-xs">v1.0</span>
+          </motion.div>
 
-          <div>
-            <div className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground mb-4">
-              NAVIGATE
-            </div>
-            <ul className="space-y-2 text-sm">
-              {["About", "Ecosystem", "Tools", "Partnerships", "Watchlist", "Contact", "FAQ"].map(
-                (l) => (
-                  <li key={l}>
-                    <a
-                      href={`#${l.toLowerCase()}`}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {l}
-                    </a>
-                  </li>
-                ),
-              )}
-            </ul>
-          </div>
+          <motion.div
+            className="flex items-center gap-5 text-muted-foreground"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <motion.a
+              href="https://x.com/dexmultichain"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-primary transition-colors"
+              whileHover={{ scale: 1.2, color: "#91E7FF" }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Twitter className="size-4" />
+            </motion.a>
+            <motion.a
+              href="https://t.me/DxmZone"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-primary transition-colors"
+              whileHover={{ scale: 1.2, color: "#91E7FF" }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <MessageCircle className="size-4" />
+            </motion.a>
+          </motion.div>
 
-          <div>
-            <div className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground mb-4">
-              CONNECT
-            </div>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a
-                  href="https://x.com/vaultmarco"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  X / Twitter
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://t.me/DxmZone"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Telegram Group
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://t.me/DexMultichain"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Telegram Channel
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://trade.padre.gg/rk/dexmultichain"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-                >
-                  Padre Terminal <ArrowUpRight className="size-3" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://t.me/achilles_trojanbot?start=r-oxjackpot"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-                >
-                  Sniper Bot <ArrowUpRight className="size-3" />
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="text-[11px] font-mono tracking-[0.2em] text-muted-foreground uppercase">
-            © {new Date().getFullYear()} MARCOVAULT · All rights reserved
-          </div>
-          <div className="text-[11px] font-mono tracking-[0.2em] text-primary uppercase">
-            Built For The Next Generation Of Web3 Operators
-          </div>
+          <motion.div
+            className="text-[11px] font-mono tracking-[0.2em] text-muted-foreground uppercase"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            © {new Date().getFullYear()} Marco. All rights reserved.
+          </motion.div>
         </div>
       </div>
     </footer>

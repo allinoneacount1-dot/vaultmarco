@@ -12,7 +12,6 @@ import {
   Footer,
 } from "@/components/marco/Sections";
 import { Faq } from "@/components/marco/Faq";
-import { Watchlist } from "@/components/marco/Watchlist";
 
 const SITE_URL = "https://vaultmarco.lovable.app";
 const OG_IMAGE = `${SITE_URL}/og-logo.png`;
@@ -106,7 +105,6 @@ function Index() {
       <CommandCenter />
       <Partnerships />
       <SocialProof />
-      <Watchlist />
       <Contact />
       <Faq />
       <Footer />

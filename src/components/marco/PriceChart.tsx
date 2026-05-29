@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
-import { createChart, IChartApi, ISeriesApi } from "lightweight-charts";
+import { useEffect, useRef, useState } from "react";
+import { createChart, IChartApi } from "lightweight-charts";
+import { motion } from "framer-motion";
 
 type CandlestickData = {
   time: string | number;
@@ -9,15 +10,15 @@ type CandlestickData = {
   close: number;
 };
 
-// Generate mock candlestick data for now
+// Generate realistic mock candlestick data
 const generateMockData = (count: number, symbol: string): CandlestickData[] => {
   const data: CandlestickData[] = [];
-  let basePrice = symbol === "BTC" ? 68000 : 3500;
+  let basePrice = symbol === "BTC" ? 69000 : 3600;
   const now = Math.floor(Date.now() / 1000);
 
   for (let i = count - 1; i >= 0; i--) {
     const time = now - i * 3600; // 1 hour candles
-    const volatility = 0.02;
+    const volatility = symbol === "BTC" ? 0.005 : 0.01;
     const change = (Math.random() - 0.5) * 2 * volatility * basePrice;
     const open = basePrice;
     const close = basePrice + change;
@@ -26,10 +27,10 @@ const generateMockData = (count: number, symbol: string): CandlestickData[] => {
 
     data.push({
       time,
-      open,
-      high,
-      low,
-      close,
+      open: parseFloat(open.toFixed(2)),
+      high: parseFloat(high.toFixed(2)),
+      low: parseFloat(low.toFixed(2)),
+      close: parseFloat(close.toFixed(2)),
     });
 
     basePrice = close;
@@ -40,7 +41,8 @@ const generateMockData = (count: number, symbol: string): CandlestickData[] => {
 export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const seriesRef = useRef<any>(null);
+  const [activeSymbol, setActiveSymbol] = useState(symbol);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -48,21 +50,23 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
     // Initialize chart
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 300,
+      height: 400,
       layout: {
         background: { type: "solid", color: "transparent" },
         textColor: "#9CA3AF",
       },
       grid: {
-        vertLines: { color: "#2D3748" },
-        horzLines: { color: "#2D3748" },
+        vertLines: { color: "rgba(255,255,255,0.05)" },
+        horzLines: { color: "rgba(255,255,255,0.05)" },
       },
       timeScale: {
-        borderColor: "#374151",
+        borderColor: "rgba(255,255,255,0.1)",
       },
     });
 
-    const candlestickSeries = chart.addCandlestickSeries({
+    // Create candlestick series
+    const candlestickSeries = chart.addSeries({
+      type: "Candlestick",
       upColor: "#22C55E",
       downColor: "#EF4444",
       borderUpColor: "#22C55E",
@@ -71,14 +75,14 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
       wickDownColor: "#EF4444",
     });
 
-    candlestickSeries.setData(generateMockData(100, symbol));
+    candlestickSeries.data = generateMockData(100, activeSymbol);
 
     chartRef.current = chart;
-    candlestickSeriesRef.current = candlestickSeries;
+    seriesRef.current = candlestickSeries;
 
     // Handle resize
     const handleResize = () => {
-      if (chartContainerRef.current) {
+      if (chartContainerRef.current && chart) {
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
         });
@@ -88,13 +92,40 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      chart.remove();
+      if (chart) chart.remove();
     };
-  }, [symbol]);
+  }, [activeSymbol]);
+
+  // Update data when symbol changes
+  useEffect(() => {
+    if (seriesRef.current) {
+      seriesRef.current.data = generateMockData(100, activeSymbol);
+    }
+  }, [activeSymbol]);
 
   return (
-    <div className="w-full rounded-xl border border-white/10 overflow-hidden">
-      <div ref={chartContainerRef} className="w-full" />
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        {["BTC", "ETH", "SOL", "HYPE"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setActiveSymbol(s)}
+            className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
+              activeSymbol === s ? "bg-primary text-primary-foreground glow-cyan" : "glass text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s}/USD
+          </button>
+        ))}
+      </div>
+
+      <motion.div
+        ref={chartContainerRef}
+        className="w-full rounded-xl border border-white/10 overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+      />
     </div>
   );
 }

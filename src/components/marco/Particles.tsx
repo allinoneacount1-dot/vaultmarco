@@ -9,6 +9,8 @@ interface Particle {
   size: number;
   opacity: number;
   color: string;
+  rotation: number;
+  rotationSpeed: number;
 }
 
 export function Particles() {
@@ -19,6 +21,7 @@ export function Particles() {
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef<number>();
+  const timeRef = useRef(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -60,35 +63,41 @@ export function Particles() {
     canvas.height = dimensions.height;
 
     const colors = [
-      "rgba(145, 231, 255, 0.4)",
-      "rgba(180, 255, 200, 0.3)",
-      "rgba(190, 150, 255, 0.3)",
+      "rgba(145, 231, 255, 0.6)",
+      "rgba(180, 255, 200, 0.5)",
+      "rgba(190, 150, 255, 0.5)",
+      "rgba(255, 180, 200, 0.4)",
+      "rgba(255, 230, 150, 0.4)",
     ];
 
     const initParticles = () => {
       const particles: Particle[] = [];
-      const numParticles = Math.floor((dimensions.width * dimensions.height) / 15000);
+      const numParticles = Math.floor((dimensions.width * dimensions.height) / 8000);
 
       for (let i = 0; i < numParticles; i++) {
         particles.push({
           x: Math.random() * dimensions.width,
           y: Math.random() * dimensions.height,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          size: Math.random() * 2 + 1,
-          opacity: Math.random() * 0.5 + 0.2,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6,
+          size: Math.random() * 4 + 1,
+          opacity: Math.random() * 0.6 + 0.2,
           color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * Math.PI * 2,
+          rotationSpeed: (Math.random() - 0.5) * 0.02,
         });
       }
       particlesRef.current = particles;
     };
 
     const animate = () => {
+      timeRef.current += 0.01;
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
       particlesRef.current.forEach((particle, i) => {
-        particle.x += particle.vx;
-        particle.y += particle.vy;
+        particle.x += particle.vx + Math.sin(timeRef.current + i) * 0.2;
+        particle.y += particle.vy + Math.cos(timeRef.current + i) * 0.2;
+        particle.rotation += particle.rotationSpeed;
 
         if (particle.x < 0 || particle.x > dimensions.width) particle.vx *= -1;
         if (particle.y < 0 || particle.y > dimensions.height) particle.vy *= -1;
@@ -97,17 +106,27 @@ export function Particles() {
         const dy = mouseRef.current.y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < 150) {
-          const force = (150 - distance) / 150;
-          particle.x -= dx * force * 0.02;
-          particle.y -= dy * force * 0.02;
+        if (distance < 200) {
+          const force = (200 - distance) / 200;
+          particle.x -= dx * force * 0.03;
+          particle.y -= dy * force * 0.03;
         }
 
+        ctx.save();
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.rotation);
+        
+        const pulse = Math.sin(timeRef.current * 2 + i) * 0.3 + 1;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        const alpha = particle.opacity * 0.5;
+        ctx.arc(0, 0, particle.size * pulse, 0, Math.PI * 2);
+        const alpha = particle.opacity * (0.5 + Math.sin(timeRef.current + i) * 0.3);
         ctx.fillStyle = particle.color.replace(/[\d.]+\)$/, `${alpha.toFixed(2)})`);
         ctx.fill();
+        
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = particle.color;
+        ctx.fill();
+        ctx.restore();
 
         for (let j = i + 1; j < particlesRef.current.length; j++) {
           const other = particlesRef.current[j];
@@ -115,10 +134,10 @@ export function Particles() {
           const dy2 = particle.y - other.y;
           const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
 
-          if (dist2 < 100) {
+          if (dist2 < 150) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(145, 231, 255, ${0.15 * (1 - dist2 / 100)})`;
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `rgba(145, 231, 255, ${0.2 * (1 - dist2 / 150) * (0.5 + Math.sin(timeRef.current) * 0.3)})`;
+            ctx.lineWidth = 0.8;
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(other.x, other.y);
             ctx.stroke();
@@ -151,9 +170,9 @@ export function Particles() {
     <motion.canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
+      initial={{ opacity: 0, scale: 1.1 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 1.5, ease: "easeOut" }}
     />
   );
 }

@@ -1,36 +1,56 @@
 import { motion } from "framer-motion";
-import { fadeUp } from "./SectionHeader";
+import { fadeUp, staggerContainer } from "./SectionHeader";
+
+const metrics = [
+  { v: "14+", label: "Chains", color: "text-primary" },
+  { v: "24/7", label: "Coverage", color: "text-[#BE96FF]" },
+  { v: "AI", label: "Powered", color: "text-[#B4FFC8]" },
+  { v: "∞", label: "Alpha", color: "text-primary" },
+];
 
 export function SocialProof() {
-  const items = [
-    { v: "14+", l: "Multi-Chain Ecosystem" },
-    { v: "10k+", l: "Growing Web3 Community" },
-    { v: "AI", l: "Enhanced Workflows" },
-    { v: "24/7", l: "Real-Time Market Analysis" },
-  ];
   return (
-    <section className="relative py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="glass-strong border-glow rounded-3xl p-8 sm:p-12 grid grid-cols-2 lg:grid-cols-4 gap-6 relative overflow-hidden">
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 size-[400px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-          {items.map((it, i) => (
+    <section className="relative py-20 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-10"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="whileInView"
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          {metrics.map((m, i) => (
             <motion.div
-              key={it.l}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.08 }}
-              className="relative text-center"
+              key={m.label}
+              className="flex flex-col items-center gap-1"
+              variants={fadeUp}
+              transition={{ ...fadeUp.transition, delay: i * 0.15 }}
             >
-              <div className="text-chrome font-display text-4xl sm:text-5xl font-semibold">
-                {it.v}
-              </div>
-              <div className="mt-2 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                {it.l}
+              <motion.div
+                className={`font-display text-5xl sm:text-6xl ${m.color}`}
+                animate={{
+                  scale: [1, 1.1, 1],
+                  textShadow: [
+                    "0 0 20px rgba(145,231,255,0.3)",
+                    "0 0 40px rgba(145,231,255,0.6)",
+                    "0 0 20px rgba(145,231,255,0.3)",
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.3,
+                }}
+              >
+                {m.v}
+              </motion.div>
+              <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                {m.label}
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

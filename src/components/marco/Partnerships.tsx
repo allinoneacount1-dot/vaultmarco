@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   ArrowUpRight,
   Cpu,
@@ -17,7 +17,7 @@ import {
   Flame,
   Network,
 } from "lucide-react";
-import { SectionHeader, fadeUp } from "./SectionHeader";
+import { SectionHeader, fadeUp, staggerContainer } from "./SectionHeader";
 import { PartnerDashboardModal } from "./PartnerDashboardModal";
 
 const partners = [
@@ -49,7 +49,6 @@ const partners = [
   },
 ];
 
-// Simple logo component using Lucide icons
 const PartnerLogo = ({ name }: { name: string }) => {
   const config: Record<string, { bg: string; icon: React.ReactNode }> = {
     solana: { bg: "#9945ff", icon: <Hexagon className="size-3" /> },
@@ -71,66 +70,111 @@ const PartnerLogo = ({ name }: { name: string }) => {
   const c = config[name] || { bg: "#64748b", icon: <Hexagon className="size-3" /> };
 
   return (
-    <div
+    <motion.div
       className="size-6 rounded-full border border-white/10 flex items-center justify-center"
       style={{ backgroundColor: c.bg }}
+      whileHover={{ scale: 1.2, rotate: 10 }}
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
     >
       {c.icon}
-    </div>
+    </motion.div>
   );
 };
 
 export function Partnerships() {
   const [openPartner, setOpenPartner] = useState<string | null>(null);
   return (
-    <section id="partnerships" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <motion.div {...fadeUp}>
-          <SectionHeader
-            kicker="05 / PARTNERSHIPS"
-            title="Allied Networks."
-            sub="Building bridges across communities, ecosystems and AI infrastructure. Future-proof collaborations only."
-          />
-        </motion.div>
+    <section id="partnerships" className="relative py-24 sm:py-32 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
+        <SectionHeader
+          kicker="05 / PARTNERSHIPS"
+          title="Allied Networks."
+          sub="Building bridges across communities, ecosystems and AI infrastructure. Future-proof collaborations only."
+        />
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div
+          className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="whileInView"
+          viewport={{ once: true, margin: "-100px" }}
+        >
           {partners.map((p, i) => (
             <motion.button
               key={p.name}
               type="button"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.05 }}
-              className="w-full group glass rounded-2xl p-6 border-glow hover:bg-white/[0.06] transition-all text-left"
+              className="w-full group glass rounded-2xl p-6 border-glow hover:bg-white/[0.06] transition-all text-left relative overflow-hidden"
+              variants={fadeUp}
+              transition={{ ...fadeUp.transition, delay: i * 0.1 }}
+              whileHover={{ scale: 1.03, y: -5, boxShadow: "0 20px 40px rgba(145,231,255,0.15)" }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setOpenPartner(p.name)}
             >
-              <div className="flex items-center gap-4">
-                <div className="size-12 grid place-items-center rounded-xl bg-white/5 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+              <motion.div
+                className="absolute -bottom-20 -right-20 size-40 rounded-full bg-primary/20 blur-xl"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.2, 0.4, 0.2],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.3,
+                }}
+              />
+              <div className="flex items-start gap-4 relative z-10">
+                <motion.div
+                  className="size-12 grid place-items-center rounded-xl bg-white/5 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all"
+                  whileHover={{
+                    scale: 1.1,
+                    rotate: -5,
+                    boxShadow: "0 0 20px rgba(145,231,255,0.3)",
+                  }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <p.icon className="size-5" />
-                </div>
+                </motion.div>
                 <div>
-                  <div className="font-display text-lg text-foreground">{p.name}</div>
+                  <motion.div
+                    className="font-display text-lg text-foreground"
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    {p.name}
+                  </motion.div>
                   <div className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground uppercase mt-1">
                     {p.tag}
                   </div>
                 </div>
               </div>
-              {/* Logo list */}
-              <div className="mt-4 flex items-center gap-2 flex-wrap">
+              <div className="mt-4 flex items-center gap-2 flex-wrap relative z-10">
                 {p.logos?.map((logo, idx) => (
                   <PartnerLogo key={idx} name={logo} />
                 ))}
               </div>
             </motion.button>
           ))}
-        </div>
+        </motion.div>
 
         <motion.div
           {...fadeUp}
-          className="mt-10 glass-strong border-glow rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
+          transition={{ ...fadeUp.transition, delay: 0.3 }}
+          className="mt-10 glass-strong border-glow rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative overflow-hidden"
+          whileHover={{ scale: 1.01 }}
         >
-          <div>
+          <motion.div
+            className="absolute -top-20 left-1/2 -translate-x-1/2 size-[300px] rounded-full bg-primary/20 blur-3xl"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <div className="relative z-10">
             <div className="font-display text-2xl sm:text-3xl text-chrome">
               Interested in Partnership?
             </div>
@@ -138,15 +182,22 @@ export function Partnerships() {
               Communities, AI projects, launchpads, KOL networks — let's build.
             </p>
           </div>
-          <a
+          <motion.a
             href="#contact"
-            className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform"
+            className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform relative z-10"
+            whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(145,231,255,0.5)" }}
+            whileTap={{ scale: 0.98 }}
           >
-            Contact For Collaboration <ArrowUpRight className="size-4" />
-          </a>
+            Contact For Collaboration
+            <motion.div
+              animate={{ x: [0, 4, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ArrowUpRight className="size-4" />
+            </motion.div>
+          </motion.a>
         </motion.div>
 
-        {/* Partner Dashboard Modal */}
         <PartnerDashboardModal partnerName={openPartner} onClose={() => setOpenPartner(null)} />
       </div>
     </section>

@@ -4,16 +4,13 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
-import { WatchlistQuickView } from "./WatchlistQuickView";
 import { ThemeToggle } from "./ThemeToggle";
-import { GasTracker } from "./GasTracker";
 
 const links = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
   { label: "Ecosystem", href: "#ecosystem" },
   { label: "Tools", href: "#tools" },
-  { label: "Watchlist", href: "#watchlist" },
   { label: "Partnerships", href: "#partnerships" },
   { label: "Contact", href: "#contact" },
   { label: "FAQ", href: "#faq" },
@@ -65,7 +62,6 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <GasTracker />
-            <WatchlistQuickView />
             <WhaleAlertIcon />
             <ThemeToggle />
             <ConnectButton.Custom>
