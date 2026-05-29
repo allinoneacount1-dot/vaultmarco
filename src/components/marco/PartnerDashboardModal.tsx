@@ -30,7 +30,8 @@ const growthData = [
 const partnerData = {
   "Trading Ecosystem": {
     tag: "Trading",
-    description: "Integrated trading infrastructure with DEXs, CEXs, and order book aggregators.",
+    description:
+      "Integrated trading infrastructure with DEXs, CEXs, and order book aggregators across multiple chains.",
     stats: [
       { label: "Total Volume", value: "$1.2B" },
       { label: "Active Traders", value: "24,500" },
@@ -41,13 +42,14 @@ const partnerData = {
     partners: [
       { name: "Uniswap", logo: "https://cryptologos.cc/logos/uniswap-uni-logo.png" },
       { name: "Jupiter", logo: "https://cryptologos.cc/logos/jupiter-jup-logo.png" },
+      { name: "PumpFun", logo: "https://cryptologos.cc/logos/pump-pump-logo.png" },
       { name: "1inch", logo: "https://cryptologos.cc/logos/1inch-1inch-logo.png" },
-      { name: "Kyber Network", logo: "https://cryptologos.cc/logos/kyber-network-knc-logo.png" },
     ],
   },
   "Launch Partners": {
     tag: "Launchpads",
-    description: "Curated launchpad network for vetted token launches and initial offerings.",
+    description:
+      "Curated launchpad network for vetted token launches and initial offerings across major chains.",
     stats: [
       { label: "Projects Launched", value: "120+" },
       { label: "Average ROI", value: "3.2x" },
@@ -70,7 +72,7 @@ const partnerData = {
   "Strategic Networks": {
     tag: "Strategy",
     description:
-      "Strategic network partnerships with KOLs, communities, and infrastructure providers.",
+      "Strategic network partnerships with KOLs, communities, and layer-1/2 infrastructure providers.",
     stats: [
       { label: "Community Size", value: "500,000+" },
       { label: "KOL Partners", value: "85+" },
@@ -84,6 +86,10 @@ const partnerData = {
       "Strategic investment",
     ],
     partners: [
+      { name: "Solana", logo: "https://cryptologos.cc/logos/solana-sol-logo.png" },
+      { name: "Ethereum", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+      { name: "BNB Chain", logo: "https://cryptologos.cc/logos/bnb-bnb-logo.png" },
+      { name: "Base", logo: "https://cryptologos.cc/logos/base-base-logo.png" },
       { name: "CoinGecko", logo: "https://cryptologos.cc/logos/coingecko-cg-logo.png" },
       { name: "CoinMarketCap", logo: "https://cryptologos.cc/logos/coinmarketcap-cmc-logo.png" },
       { name: "Messari", logo: "https://cryptologos.cc/logos/messari-messari-logo.png" },
