@@ -52,6 +52,9 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { MagneticButton } from "./MagneticButton";
 import { PriceAlertsPanel } from "./PriceAlertsPanel";
 import { Panel, Row } from "./Panel";
+import { PartnerDashboardModal } from "./PartnerDashboardModal";
+import { WhaleAlertIcon } from "./WhaleAlertIcon";
+import { WatchlistQuickView } from "./WatchlistQuickView";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
