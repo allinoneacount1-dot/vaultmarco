@@ -743,6 +743,7 @@ const partners = [
 ];
 
 export function Partnerships() {
+  const [openPartner, setOpenPartner] = useState<string | null>(null);
   return (
     <section id="partnerships" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -756,13 +757,15 @@ export function Partnerships() {
 
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {partners.map((p, i) => (
-            <motion.div
+            <motion.button
               key={p.name}
+              type="button"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.05 }}
-              className="group glass rounded-2xl p-6 border-glow hover:bg-white/[0.06] transition-all"
+              className="w-full group glass rounded-2xl p-6 border-glow hover:bg-white/[0.06] transition-all text-left"
+              onClick={() => setOpenPartner(p.name)}
             >
               <div className="flex items-center gap-4">
                 <div className="size-12 grid place-items-center rounded-xl bg-white/5 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
@@ -775,7 +778,7 @@ export function Partnerships() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
 
@@ -798,6 +801,9 @@ export function Partnerships() {
             Contact For Collaboration <ArrowUpRight className="size-4" />
           </a>
         </motion.div>
+
+        {/* Partner Dashboard Modal */}
+        <PartnerDashboardModal partnerName={openPartner} onClose={() => setOpenPartner(null)} />
       </div>
     </section>
   );
@@ -1005,6 +1011,7 @@ import { Watchlist } from "./Watchlist";
 import { Terminal } from "./Terminal";
 import { RugScannerModal } from "./RugScannerModal";
 import { DexRealtimeTab } from "./DexRealtimeTab";
+import { PartnerDashboardModal } from "./PartnerDashboardModal";
 
 export function Sections() {
   return (
