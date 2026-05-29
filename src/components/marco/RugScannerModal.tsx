@@ -1,4 +1,16 @@
-import { X, Search, ShieldAlert, ShieldCheck, Activity } from "lucide-react";
+import { X, ShieldAlert, ShieldCheck, Activity, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+type Check = {
+  name: string;
+  passed: boolean;
+};
+
+type ScanResult = {
+  symbol: string;
+  score: number;
+  checks: Check[];
+};
 
 interface RugScannerModalProps {
   isOpen: boolean;
@@ -6,30 +18,23 @@ interface RugScannerModalProps {
   token: { sym: string; name: string } | null;
 }
 
-// Mock rug scan data
-const mockRugScan = (tokenSym: string) => {
-  // Generate random score for demo
-  const score = Math.floor(Math.random() * 100);
-  return {
-    score,
-    checks: [
-      { name: "Liquidity Locked", passed: Math.random() > 0.3 },
-      { name: "Contract Renounced", passed: Math.random() > 0.5 },
-      { name: "Top 10 Holders < 50%", passed: Math.random() > 0.4 },
-      { name: "No Honeypot", passed: Math.random() > 0.2 },
-      { name: "Verified Contract", passed: Math.random() > 0.3 },
-    ],
-  };
-};
-
 export function RugScannerModal({ isOpen, onClose, token }: RugScannerModalProps) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["rugScan", token?.sym],
+    queryFn: async () => {
+      if (!token) return null;
+      const res = await fetch(`/api/rug/scan?symbol=${token.sym}`);
+      return res.json() as ScanResult;
+    },
+    enabled: !!token,
+  });
+
   if (!isOpen || !token) return null;
-  const scanResult = mockRugScan(token.sym);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="glass-strong border-glow rounded-3xl p-6 w-full max-w-md animate-fade-in">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+      <div className="glass-strong border-glow rounded-2xl p-6 w-full max-w-md animate-fade-in">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
           <div>
             <div className="text-[11px] font-mono tracking-wider text-primary">RUG SCANNER</div>
             <div className="text-lg font-display text-chrome mt-1">
@@ -41,39 +46,59 @@ export function RugScannerModal({ isOpen, onClose, token }: RugScannerModalProps
           </button>
         </div>
 
-        {/* Score Display */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <div className="text-[11px] text-muted-foreground mb-1">SAFETY SCORE</div>
-            <div
-              className={`text-4xl font-display ${scanResult.score > 70 ? "text-accent" : scanResult.score > 40 ? "text-yellow-400" : "text-red-400"}`}
-            >
-              {scanResult.score}/100
-            </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="size-10 text-accent animate-spin mb-4" />
+            <div className="text-[12px] text-muted-foreground font-mono">Scanning token...</div>
           </div>
-          {scanResult.score > 70 ? (
-            <ShieldCheck className="size-12 text-accent" />
-          ) : (
-            <ShieldAlert className="size-12 text-red-400" />
-          )}
-        </div>
-
-        {/* Checks List */}
-        <div className="space-y-2">
-          {scanResult.checks.map((check, i) => (
-            <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-white/5">
-              <div className="flex items-center gap-2">
-                <Activity className={`size-3 ${check.passed ? "text-accent" : "text-red-400"}`} />
-                <div className="text-[12px] text-foreground">{check.name}</div>
+        ) : (
+          <>
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <div className="text-[11px] text-muted-foreground mb-1">SAFETY SCORE</div>
+                <div
+                  className={`text-4xl font-display ${
+                    data?.score && data.score > 70
+                      ? "text-accent"
+                      : data?.score && data.score > 40
+                        ? "text-yellow-400"
+                        : "text-red-400"
+                  }`}
+                >
+                  {data?.score || 0}/100
+                </div>
               </div>
-              <div
-                className={`text-[11px] font-mono ${check.passed ? "text-accent" : "text-red-400"}`}
-              >
-                {check.passed ? "PASS" : "FAIL"}
-              </div>
+              {data?.score && data.score > 70 ? (
+                <ShieldCheck className="size-12 text-accent" />
+              ) : (
+                <ShieldAlert className="size-12 text-red-400" />
+              )}
             </div>
-          ))}
-        </div>
+
+            <div className="space-y-2">
+              {data?.checks?.map((check: Check, i: number) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-2 rounded-xl bg-white/5"
+                >
+                  <div className="flex items-center gap-2">
+                    <Activity
+                      className={`size-3 ${check.passed ? "text-accent" : "text-red-400"}`}
+                    />
+                    <div className="text-[12px] text-foreground">{check.name}</div>
+                  </div>
+                  <div
+                    className={`text-[11px] font-mono ${
+                      check.passed ? "text-accent" : "text-red-400"
+                    }`}
+                  >
+                    {check.passed ? "PASS" : "FAIL"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         <button
           onClick={onClose}

@@ -1,32 +1,63 @@
 import { useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, X, Volume2, VolumeX } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-// Mock whale alerts data
-const mockWhaleAlerts = [
-  { id: 1, chain: "Solana", token: "SOL", amount: "$125,000", type: "BUY", time: "2m ago" },
-  { id: 2, chain: "Base", token: "DEGEN", amount: "$89,500", type: "SELL", time: "5m ago" },
-  { id: 3, chain: "Ethereum", token: "PEPE", amount: "$242,000", type: "BUY", time: "12m ago" },
-];
+type WhaleAlert = {
+  id: number;
+  chain: string;
+  token: string;
+  amount: string;
+  type: "BUY" | "SELL";
+  time: string;
+};
 
 export function WhaleAlertIcon() {
   const [isOpen, setIsOpen] = useState(false);
-  const [hasNewAlert, setHasNewAlert] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["whaleAlerts"],
+    queryFn: async () => {
+      const res = await fetch("/api/whale/alerts");
+      return res.json() as WhaleAlert[];
+    },
+    refetchInterval: 20000, // 20 seconds
+    onSuccess: (newData) => {
+      if (soundEnabled && newData.length > 0) {
+        // Simple browser notification
+        toast.success("New whale alert!");
+      }
+    },
+  });
 
   return (
     <div className="relative">
-      <button
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setHasNewAlert(false);
-        }}
-        className="relative flex items-center justify-center size-9 rounded-full glass border border-white/10 hover:bg-white/5 transition-all"
-        aria-label="Whale Alerts"
-      >
-        <Bell className="size-4 text-muted-foreground hover:text-foreground" />
-        {hasNewAlert && (
-          <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-accent animate-pulse-glow" />
-        )}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          className="size-9 rounded-full glass border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center"
+          aria-label={soundEnabled ? "Mute whale alerts" : "Unmute whale alerts"}
+        >
+          {soundEnabled ? (
+            <Volume2 className="size-4 text-muted-foreground hover:text-foreground" />
+          ) : (
+            <VolumeX className="size-4 text-muted-foreground hover:text-foreground" />
+          )}
+        </button>
+        <button
+          onClick={() => {
+            setIsOpen(!isOpen);
+          }}
+          className="relative flex items-center justify-center size-9 rounded-full glass border border-white/10 hover:bg-white/5 transition-all"
+          aria-label="Whale Alerts"
+        >
+          <Bell className="size-4 text-muted-foreground hover:text-foreground" />
+          {data && data.length > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-accent animate-pulse-glow" />
+          )}
+        </button>
+      </div>
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-72 glass-strong border-glow rounded-2xl p-4 z-50 animate-fade-in">
@@ -40,28 +71,37 @@ export function WhaleAlertIcon() {
             </button>
           </div>
           <div className="space-y-2 max-h-60 overflow-y-auto">
-            {mockWhaleAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-start gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors"
-              >
-                <div
-                  className={`px-2 py-1 rounded-full text-[9px] font-mono ${
-                    alert.type === "BUY" ? "bg-accent/20 text-accent" : "bg-red-500/20 text-red-400"
-                  }`}
-                >
-                  {alert.type}
-                </div>
-                <div className="flex-1">
-                  <div className="text-[11px] text-foreground">
-                    {alert.amount} {alert.token}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-2 rounded-xl bg-white/5">
+                    <div className="h-3 w-16 bg-white/10 rounded animate-pulse mb-1" />
+                    <div className="h-3 w-32 bg-white/5 rounded animate-pulse" />
                   </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {alert.chain} • {alert.time}
+                ))
+              : data?.map((alert: WhaleAlert) => (
+                  <div
+                    key={alert.id}
+                    className="flex items-start gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors"
+                  >
+                    <div
+                      className={`px-2 py-1 rounded-full text-[9px] font-mono ${
+                        alert.type === "BUY"
+                          ? "bg-accent/20 text-accent"
+                          : "bg-red-500/20 text-red-400"
+                      }`}
+                    >
+                      {alert.type}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[11px] text-foreground">
+                        {alert.amount} {alert.token}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {alert.chain} • {alert.time}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
+import { WatchlistQuickView } from "./WatchlistQuickView";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -60,7 +61,8 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
+            <WatchlistQuickView />
             <WhaleAlertIcon />
             <ConnectButton.Custom>
               {({ account, chain, openConnectModal, mounted }) => {
