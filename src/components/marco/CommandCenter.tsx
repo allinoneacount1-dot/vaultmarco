@@ -41,7 +41,7 @@ export function CommandCenter() {
   ];
 
   return (
-    <section className="relative py-24 sm:py-32">
+    <section className="relative py-20 sm:py-24 md:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div {...fadeUp}>
           <SectionHeader
@@ -51,12 +51,12 @@ export function CommandCenter() {
           />
         </motion.div>
 
-        <motion.div {...fadeUp} className="mt-10 mb-6 flex gap-2 overflow-x-auto pb-2">
+        <motion.div {...fadeUp} className="mt-8 sm:mt-10 mb-5 sm:mb-6 flex gap-2 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all whitespace-nowrap ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] font-mono transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? "bg-primary text-primary-foreground glow-cyan"
                   : "glass text-muted-foreground hover:text-foreground"
@@ -67,7 +67,7 @@ export function CommandCenter() {
           ))}
         </motion.div>
 
-        <motion.div {...fadeUp} className="grid lg:grid-cols-3 gap-5">
+        <motion.div {...fadeUp} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {activeTab === "default" && (
             <>
               <LiveMarketPanel data={data} isLoading={isLoading} isError={isError} />
@@ -247,7 +247,7 @@ function LiveMarketPanel({
 
   return (
     <>
-      <div className="glass-strong border-glow rounded-2xl p-5 scanline lg:col-span-1 relative overflow-hidden">
+      <div className="glass-strong border-glow rounded-2xl p-4 sm:p-5 scanline md:col-span-2 lg:col-span-1 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 pointer-events-none" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">

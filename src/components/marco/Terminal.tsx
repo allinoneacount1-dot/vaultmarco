@@ -25,7 +25,7 @@ export function Terminal() {
       ];
 
   return (
-    <div className="relative glass-strong border-glow rounded-2xl p-4 sm:p-5 overflow-hidden scanline">
+    <div className="relative glass-strong border-glow rounded-2xl p-3 sm:p-4 md:p-5 overflow-hidden scanline">
       <div className="flex items-center justify-between pb-3 border-b border-white/5">
         <div className="flex items-center gap-2">
           <span className="size-2.5 rounded-full bg-red-500/80" />
@@ -41,8 +41,8 @@ export function Terminal() {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-3 pt-4">
-        <div className="col-span-3 glass rounded-xl p-3">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pt-4">
+        <div className="col-span-1 md:col-span-3 glass rounded-xl p-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono text-muted-foreground">
@@ -62,7 +62,7 @@ export function Terminal() {
           <MiniChart tick={tick} bias={sol?.ch ?? 0} />
         </div>
 
-        <div className="col-span-2 glass rounded-xl p-3">
+        <div className="col-span-1 md:col-span-2 glass rounded-xl p-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">
               LIVE · 24H
@@ -88,7 +88,7 @@ export function Terminal() {
           </div>
         </div>
 
-        <div className="col-span-5 glass rounded-xl p-3 h-28 overflow-hidden">
+        <div className="col-span-1 md:col-span-5 glass rounded-xl p-3 h-24 sm:h-28 overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">
               LIVE NEWS

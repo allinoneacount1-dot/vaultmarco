@@ -73,7 +73,7 @@ export function Navbar() {
                   return (
                     <button
                       onClick={openConnectModal}
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-primary px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
                     >
                       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-sweep" />
                       <Wallet className="size-3.5" />
@@ -89,7 +89,7 @@ export function Navbar() {
               href="https://t.me/DxmZone"
               target="_blank"
               rel="noreferrer"
-              className="group relative inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
+              className="hidden lg:flex group relative inline-flex items-center gap-2 rounded-full bg-primary px-3 sm:px-4 py-1.5 sm:py-2 text-[12px] font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-sweep" />
               Join Community
