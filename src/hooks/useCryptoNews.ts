@@ -30,25 +30,28 @@ async function fetchCryptoNews(): Promise<CryptoNewsArticle[]> {
   // Generate a rotating seed based on time to keep it fresh
   const now = Date.now();
   const seed = Math.floor(now / (30 * 60 * 1000)); // Rotate every 30 minutes
-  
+
   // Create a deterministic shuffle using seed
   const shuffle = (arr: string[], seedVal: number) => {
     const shuffled = [...arr];
     let currentIndex = shuffled.length;
     let randomSeed = seedVal;
-    
+
     while (currentIndex !== 0) {
       randomSeed = (randomSeed * 1103515245 + 12345) & 0x7fffffff;
       const randomIndex = randomSeed % currentIndex;
       currentIndex--;
-      [shuffled[currentIndex], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[currentIndex]];
+      [shuffled[currentIndex], shuffled[randomIndex]] = [
+        shuffled[randomIndex],
+        shuffled[currentIndex],
+      ];
     }
     return shuffled;
   };
-  
+
   const shuffledTitles = shuffle(FREETIER_NEWS_POOL, seed);
   const selectedTitles = shuffledTitles.slice(0, 4);
-  
+
   return selectedTitles.map((title, i) => ({
     id: `news-${seed}-${i}`,
     title,

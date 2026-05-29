@@ -59,7 +59,10 @@ export function ContactForm() {
         error={errors.email}
       />
       <div className="block sm:col-span-2">
-        <label htmlFor="field-topic" className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">
+        <label
+          htmlFor="field-topic"
+          className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase"
+        >
           Topic
         </label>
         <select
@@ -123,31 +126,38 @@ function Field({
   const fieldId = `field-${name}`;
   return (
     <div className={`block ${className}`}>
-      <label htmlFor={fieldId} className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">
+      <label
+        htmlFor={fieldId}
+        className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase"
+      >
         {label}
       </label>
       {textarea ? (
-        <textarea 
+        <textarea
           id={fieldId}
-          name={name} 
-          rows={4} 
-          placeholder={placeholder} 
-          className={cls} 
+          name={name}
+          rows={4}
+          placeholder={placeholder}
+          className={cls}
           aria-invalid={!!error}
           aria-describedby={error ? `${fieldId}-error` : undefined}
         />
       ) : (
-        <input 
+        <input
           id={fieldId}
-          name={name} 
-          type={type} 
-          placeholder={placeholder} 
-          className={cls} 
+          name={name}
+          type={type}
+          placeholder={placeholder}
+          className={cls}
           aria-invalid={!!error}
           aria-describedby={error ? `${fieldId}-error` : undefined}
         />
       )}
-      {error && <span id={`${fieldId}-error`} className="mt-1.5 block text-[11px] text-red-400 font-mono">{error}</span>}
+      {error && (
+        <span id={`${fieldId}-error`} className="mt-1.5 block text-[11px] text-red-400 font-mono">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

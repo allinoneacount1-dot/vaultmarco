@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Activity, TrendingUp, Zap } from "lucide-react";
-import { useMarketPrices, formatPrice } from "@/hooks/useMarketPrices";
+import { useMarketPrices, formatPrice, MarketCoin } from "@/hooks/useMarketPrices";
 import { useCryptoNews, formatNewsForFeed } from "@/hooks/useCryptoNews";
 
 export function Terminal() {
@@ -15,12 +15,14 @@ export function Terminal() {
 
   const sol = coins?.find((c) => c.sym === "SOL");
   const top4 = coins?.filter((c) => ["SOL", "ETH", "HYPE", "BTC"].includes(c.sym)) ?? [];
-  const feed = news ? formatNewsForFeed(news) : [
-    "[ALPHA] Whale moved 1.2M USDC into SOL/HYPE pool",
-    "[SCAN] New liquidity pool detected on Base · $48k locked",
-    "[SIG]  AI model flagged narrative shift: AI-agents +18%",
-    "[EXEC] Sniper armed · slippage 1.2% · MEV protected",
-  ];
+  const feed = news
+    ? formatNewsForFeed(news)
+    : [
+        "[ALPHA] Whale moved 1.2M USDC into SOL/HYPE pool",
+        "[SCAN] New liquidity pool detected on Base · $48k locked",
+        "[SIG]  AI model flagged narrative shift: AI-agents +18%",
+        "[EXEC] Sniper armed · slippage 1.2% · MEV protected",
+      ];
 
   return (
     <div className="relative glass-strong border-glow rounded-2xl p-4 sm:p-5 overflow-hidden scanline">
@@ -47,8 +49,11 @@ export function Terminal() {
                 SOL/USDC {sol && `· ${formatPrice(sol.px)}`}
               </span>
               {sol && (
-                <span className={`text-xs font-mono ${sol.ch >= 0 ? "text-accent" : "text-red-400"}`}>
-                  {sol.ch >= 0 ? "+" : ""}{sol.ch.toFixed(2)}%
+                <span
+                  className={`text-xs font-mono ${sol.ch >= 0 ? "text-accent" : "text-red-400"}`}
+                >
+                  {sol.ch >= 0 ? "+" : ""}
+                  {sol.ch.toFixed(2)}%
                 </span>
               )}
             </div>
@@ -59,26 +64,35 @@ export function Terminal() {
 
         <div className="col-span-2 glass rounded-xl p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">LIVE · 24H</span>
+            <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">
+              LIVE · 24H
+            </span>
             <Zap className="size-3 text-primary" />
           </div>
           <div className="space-y-1.5">
-            {(top4.length ? top4 : Array.from({ length: 4 })).map((t: any, i) => (
-              <div key={t?.sym ?? i} className="flex items-center justify-between text-[11px] font-mono">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-foreground">{t?.sym ?? "···"}</span>
+            {(top4.length ? top4 : Array.from({ length: 4 })).map(
+              (t: MarketCoin | undefined, i) => (
+                <div
+                  key={t?.sym ?? i}
+                  className="flex items-center justify-between text-[11px] font-mono"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-foreground">{t?.sym ?? "···"}</span>
+                  </div>
+                  <span className={t?.ch >= 0 ? "text-accent" : "text-red-400"}>
+                    {t ? `${t.ch >= 0 ? "+" : ""}${t.ch.toFixed(2)}%` : "—"}
+                  </span>
                 </div>
-                <span className={t?.ch >= 0 ? "text-accent" : "text-red-400"}>
-                  {t ? `${t.ch >= 0 ? "+" : ""}${t.ch.toFixed(2)}%` : "—"}
-                </span>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
 
         <div className="col-span-5 glass rounded-xl p-3 h-28 overflow-hidden">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">LIVE NEWS</span>
+            <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">
+              LIVE NEWS
+            </span>
             <TrendingUp className="size-3 text-violet-300" />
           </div>
           <div className="font-mono text-[11px] space-y-1">
@@ -104,7 +118,7 @@ function MiniChart({ tick, bias }: { tick: number; bias: number }) {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
-  
+
   const trend = bias / 100;
   const candles = Array.from({ length: 28 }, (_, i) => {
     const seed = (i + tick * 0.3) * 0.7;
@@ -135,7 +149,14 @@ function MiniChart({ tick, bias }: { tick: number; bias: number }) {
         const up = c.c >= c.o;
         return (
           <g key={i}>
-            <line x1={x + 3} x2={x + 3} y1={c.h} y2={c.l} stroke={up ? "oklch(0.88 0.2 165 / 0.6)" : "oklch(0.7 0.22 25 / 0.6)"} strokeWidth="1" />
+            <line
+              x1={x + 3}
+              x2={x + 3}
+              y1={c.h}
+              y2={c.l}
+              stroke={up ? "oklch(0.88 0.2 165 / 0.6)" : "oklch(0.7 0.22 25 / 0.6)"}
+              strokeWidth="1"
+            />
             <rect
               x={x}
               y={Math.min(c.o, c.c)}

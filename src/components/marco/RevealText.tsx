@@ -1,7 +1,7 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
 export function RevealText({ text, className }: { text: string; className?: string }) {
-  const words = text.split(' ');
+  const words = text.split(" ");
 
   return (
     <h1 className={className}>
@@ -9,9 +9,9 @@ export function RevealText({ text, className }: { text: string; className?: stri
         <span key={wordIndex} className="inline-block overflow-hidden">
           <motion.span
             className="inline-block"
-            initial={{ y: '100%' }}
+            initial={{ y: "100%" }}
             whileInView={{ y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
+            viewport={{ once: true, margin: "-100px" }}
             transition={{
               duration: 0.6,
               delay: wordIndex * 0.08,

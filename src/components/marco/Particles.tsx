@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 interface Particle {
   x: number;
@@ -26,12 +26,12 @@ export function Particles() {
 
   useEffect(() => {
     if (!isClient) return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mediaQuery.matches);
 
     const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, [isClient]);
 
   useEffect(() => {
@@ -44,31 +44,31 @@ export function Particles() {
     };
 
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
 
-    return () => window.removeEventListener('resize', updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, [isClient]);
 
   useEffect(() => {
     if (!isClient || !canvasRef.current || dimensions.width === 0 || prefersReducedMotion) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = dimensions.width;
     canvas.height = dimensions.height;
 
     const colors = [
-      'rgba(145, 231, 255, 0.4)',
-      'rgba(180, 255, 200, 0.3)',
-      'rgba(190, 150, 255, 0.3)',
+      "rgba(145, 231, 255, 0.4)",
+      "rgba(180, 255, 200, 0.3)",
+      "rgba(190, 150, 255, 0.3)",
     ];
 
     const initParticles = () => {
       const particles: Particle[] = [];
       const numParticles = Math.floor((dimensions.width * dimensions.height) / 15000);
-      
+
       for (let i = 0; i < numParticles; i++) {
         particles.push({
           x: Math.random() * dimensions.width,
@@ -85,7 +85,7 @@ export function Particles() {
 
     const animate = () => {
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);
-      
+
       particlesRef.current.forEach((particle, i) => {
         particle.x += particle.vx;
         particle.y += particle.vy;
@@ -96,7 +96,7 @@ export function Particles() {
         const dx = mouseRef.current.x - particle.x;
         const dy = mouseRef.current.y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance < 150) {
           const force = (150 - distance) / 150;
           particle.x -= dx * force * 0.02;
@@ -106,7 +106,7 @@ export function Particles() {
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         const alpha = particle.opacity * 0.5;
-        ctx.fillStyle = particle.color.replace(/[\d\.]+\)$/, `${alpha.toFixed(2)})`);
+        ctx.fillStyle = particle.color.replace(/[\d.]+\)$/, `${alpha.toFixed(2)})`);
         ctx.fill();
 
         for (let j = i + 1; j < particlesRef.current.length; j++) {
@@ -114,7 +114,7 @@ export function Particles() {
           const dx2 = particle.x - other.x;
           const dy2 = particle.y - other.y;
           const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-          
+
           if (dist2 < 100) {
             ctx.beginPath();
             ctx.strokeStyle = `rgba(145, 231, 255, ${0.15 * (1 - dist2 / 100)})`;
@@ -135,10 +135,10 @@ export function Particles() {
 
     initParticles();
     animate();
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }

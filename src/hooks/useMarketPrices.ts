@@ -57,7 +57,18 @@ const SYM_MAP: Record<string, string> = {
 };
 
 const CHAINS = [
-  "SOL", "ETH", "BASE", "HYPE", "BNB", "SUI", "TON", "AVAX", "ARB", "OP", "POL", "LINK",
+  "SOL",
+  "ETH",
+  "BASE",
+  "HYPE",
+  "BNB",
+  "SUI",
+  "TON",
+  "AVAX",
+  "ARB",
+  "OP",
+  "POL",
+  "LINK",
 ];
 
 async function fetchPrices(): Promise<MarketCoin[]> {
@@ -67,7 +78,18 @@ async function fetchPrices(): Promise<MarketCoin[]> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
   const data = await res.json();
-  return (data as any[]).map((c) => ({
+  return (
+    data as Array<{
+      id: string;
+      symbol: string;
+      name: string;
+      current_price: number;
+      price_change_percentage_24h?: number;
+      total_volume?: number;
+      market_cap?: number;
+      image?: string;
+    }>
+  ).map((c) => ({
     id: c.id,
     sym: SYM_MAP[c.id] ?? c.symbol.toUpperCase(),
     name: c.name,
@@ -92,8 +114,8 @@ export function useMarketPrices() {
 export function useChainHeatmap(data?: MarketCoin[]): ChainHeatmapItem[] {
   return CHAINS.map((sym, i) => {
     const coin = data?.find((c) => c.sym === sym);
-    const ch = coin?.ch ?? (Math.sin(Date.now() / 5000 + i) * 10);
-    const heat = Math.max(0, Math.min(100, Math.abs(ch) * 5 + (Math.random() * 20)));
+    const ch = coin?.ch ?? Math.sin(Date.now() / 5000 + i) * 10;
+    const heat = Math.max(0, Math.min(100, Math.abs(ch) * 5 + Math.random() * 20));
     return {
       name: sym,
       sym,
@@ -126,11 +148,21 @@ export function useMarketAlerts(data?: MarketCoin[]) {
     const ch = c.ch;
     let type = "UPDATE";
     let status: "ok" | "bad" = "ok";
-    if (ch > 10) { type = "BREAKOUT"; status = "ok"; }
-    else if (ch > 5) { type = "PUMP"; status = "ok"; }
-    else if (ch < -10) { type = "CRASH"; status = "bad"; }
-    else if (ch < -5) { type = "DUMP"; status = "bad"; }
-    else { type = "UPDATE"; }
+    if (ch > 10) {
+      type = "BREAKOUT";
+      status = "ok";
+    } else if (ch > 5) {
+      type = "PUMP";
+      status = "ok";
+    } else if (ch < -10) {
+      type = "CRASH";
+      status = "bad";
+    } else if (ch < -5) {
+      type = "DUMP";
+      status = "bad";
+    } else {
+      type = "UPDATE";
+    }
     return { sym: c.sym, type, status };
   });
 }
@@ -148,4 +180,3 @@ export function formatVolume(n: number) {
   if (n >= 1e3) return `$${(n / 1e3).toFixed(2)}K`;
   return `$${n}`;
 }
-

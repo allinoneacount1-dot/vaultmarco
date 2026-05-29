@@ -3,10 +3,7 @@ import logoUrl from "@/assets/marcovault-logo.png";
 export function Logo({ size = 36 }: { size?: number }) {
   return (
     <div className="flex items-center gap-3">
-      <div
-        className="relative grid place-items-center"
-        style={{ width: size, height: size }}
-      >
+      <div className="relative grid place-items-center" style={{ width: size, height: size }}>
         <img
           src={logoUrl}
           alt="MARCOVAULT - Multi-Chain Alpha & Web3 Intelligence Logo"

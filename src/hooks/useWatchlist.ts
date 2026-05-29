@@ -27,17 +27,17 @@ export function useWatchlist() {
   }, [watchlist]);
 
   const addToWatchlist = (item: WatchlistItem) => {
-    if (!watchlist.find(i => i.id === item.id)) {
+    if (!watchlist.find((i) => i.id === item.id)) {
       setWatchlist([...watchlist, item]);
     }
   };
 
   const removeFromWatchlist = (id: string) => {
-    setWatchlist(watchlist.filter(item => item.id !== id));
+    setWatchlist(watchlist.filter((item) => item.id !== id));
   };
 
   const isInWatchlist = (id: string) => {
-    return watchlist.some(item => item.id === id);
+    return watchlist.some((item) => item.id === id);
   };
 
   return {

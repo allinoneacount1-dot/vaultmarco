@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/marco/Navbar";
 import { Hero } from "@/components/marco/Hero";
 import {
-  About, Ecosystem, Features, CommandCenter, Partnerships, SocialProof, Contact, Footer,
+  About,
+  Ecosystem,
+  Features,
+  CommandCenter,
+  Partnerships,
+  SocialProof,
+  Contact,
+  Footer,
 } from "@/components/marco/Sections";
 import { Faq } from "@/components/marco/Faq";
 import { Watchlist } from "@/components/marco/Watchlist";
@@ -10,7 +17,8 @@ import { Watchlist } from "@/components/marco/Watchlist";
 const SITE_URL = "https://vaultmarco.lovable.app";
 const OG_IMAGE = `${SITE_URL}/og-logo.png`;
 const TITLE = "MARCOVAULT | Multi-Chain Alpha & Web3 Intelligence";
-const DESC = "Multi-chain alpha, AI workflows, and sniper-grade execution. Navigate the noise. Enter the vault.";
+const DESC =
+  "Multi-chain alpha, AI workflows, and sniper-grade execution. Navigate the noise. Enter the vault.";
 
 export const Route = createFileRoute("/")({
   head: () => ({

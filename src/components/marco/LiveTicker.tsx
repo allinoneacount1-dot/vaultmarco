@@ -28,7 +28,8 @@ export function LiveTicker() {
                 <span className="text-muted-foreground">{c.sym}</span>
                 {c.px > 0 && <span className="text-foreground/70">{formatPrice(c.px)}</span>}
                 <span className={c.ch < 0 ? "text-red-400" : "text-accent"}>
-                  {c.ch >= 0 ? "+" : ""}{c.ch.toFixed(2)}%
+                  {c.ch >= 0 ? "+" : ""}
+                  {c.ch.toFixed(2)}%
                 </span>
               </span>
             ))}

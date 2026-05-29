@@ -9,7 +9,7 @@ export function Watchlist() {
   const { data: prices, isLoading } = useMarketPrices();
 
   const getCoinPrice = (id: string) => {
-    return prices?.find(p => p.id === id);
+    return prices?.find((p) => p.id === id);
   };
 
   return (
@@ -28,7 +28,8 @@ export function Watchlist() {
             Your Watchlist
           </h2>
           <p className="mt-4 text-muted-foreground text-base sm:text-lg max-w-2xl">
-            Save your favorite coins and track their prices in real-time (data saved in your browser).
+            Save your favorite coins and track their prices in real-time (data saved in your
+            browser).
           </p>
         </motion.div>
 
@@ -42,7 +43,9 @@ export function Watchlist() {
           {watchlist.length === 0 ? (
             <div className="text-center py-10">
               <Star className="size-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Your watchlist is empty. Add coins from the Live Market Panel!</p>
+              <p className="text-muted-foreground">
+                Your watchlist is empty. Add coins from the Live Market Panel!
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -65,11 +68,14 @@ export function Watchlist() {
                         <Skeleton className="h-4 w-24" />
                       ) : (
                         <div className="text-right">
-                          <div className="text-foreground font-mono">{formatPrice(coinData.px)}</div>
+                          <div className="text-foreground font-mono">
+                            {formatPrice(coinData.px)}
+                          </div>
                           <div
                             className={`text-xs font-mono ${coinData.ch >= 0 ? "text-accent" : "text-red-400"}`}
                           >
-                            {coinData.ch >= 0 ? "+" : ""}{coinData.ch.toFixed(2)}%
+                            {coinData.ch >= 0 ? "+" : ""}
+                            {coinData.ch.toFixed(2)}%
                           </div>
                         </div>
                       )}

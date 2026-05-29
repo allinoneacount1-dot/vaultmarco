@@ -36,7 +36,12 @@ const loginSchema = z.object({
 });
 
 const signupSchema = loginSchema.extend({
-  handle: z.string().trim().min(2, "Min 2 chars").max(40).regex(/^[a-zA-Z0-9_-]+$/, "Letters, numbers, _ or -"),
+  handle: z
+    .string()
+    .trim()
+    .min(2, "Min 2 chars")
+    .max(40)
+    .regex(/^[a-zA-Z0-9_-]+$/, "Letters, numbers, _ or -"),
 });
 
 function AuthPage() {

@@ -61,9 +61,7 @@ export function usePriceAlerts() {
 
       if (triggered) {
         // Mark as triggered
-        setAlerts((prev) =>
-          prev.map((a) => (a.id === alert.id ? { ...a, triggered: true } : a))
-        );
+        setAlerts((prev) => prev.map((a) => (a.id === alert.id ? { ...a, triggered: true } : a)));
         // Show toast
         toast(
           `🚨 ALERT: ${alert.coinSymbol} is now ${alert.direction} $${alert.targetPrice} (Current: $${formatPrice(price)})`,
@@ -74,7 +72,7 @@ export function usePriceAlerts() {
               border: "1px solid #374151",
               color: "white",
             },
-          }
+          },
         );
       }
     });

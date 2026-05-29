@@ -20,9 +20,7 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
     e.preventDefault();
     if (!selectedCoin || !targetPrice) return;
 
-    const coin = marketData?.find(
-      (c) => c.sym === selectedCoin || c.id === selectedCoin
-    );
+    const coin = marketData?.find((c) => c.sym === selectedCoin || c.id === selectedCoin);
     if (!coin) return;
 
     addAlert({
@@ -74,9 +72,7 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
             <div className="flex gap-2">
               <select
                 value={direction}
-                onChange={(e) =>
-                  setDirection(e.target.value as "above" | "below")
-                }
+                onChange={(e) => setDirection(e.target.value as "above" | "below")}
                 className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
               >
                 <option value="above">Above</option>
@@ -126,9 +122,7 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
                     {alert.direction} ${alert.targetPrice}
                   </span>
                   {alert.triggered && (
-                    <span className="text-xs text-accent uppercase tracking-wider">
-                      Triggered
-                    </span>
+                    <span className="text-xs text-accent uppercase tracking-wider">Triggered</span>
                   )}
                 </div>
                 <button

@@ -1,11 +1,38 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import {
-  Activity, ArrowUpRight, Bot, Brain, Compass, Cpu, Crown, Database, Eye, Flame,
-  Globe2, LineChart, MessageCircle, Network, Radar, Send, Star, Target,
-  Terminal as TerminalIcon, Twitter, Wallet, Workflow, Zap,
+  Activity,
+  ArrowUpRight,
+  Bot,
+  Brain,
+  Compass,
+  Cpu,
+  Crown,
+  Database,
+  Eye,
+  Flame,
+  Globe2,
+  LineChart,
+  MessageCircle,
+  Network,
+  Radar,
+  Send,
+  Star,
+  Target,
+  Terminal as TerminalIcon,
+  Twitter,
+  Wallet,
+  Workflow,
+  Zap,
 } from "lucide-react";
-import { useMarketPrices, formatPrice, useChainHeatmap, useVolumeData, useMarketAlerts, formatVolume } from "@/hooks/useMarketPrices";
+import {
+  useMarketPrices,
+  formatPrice,
+  useChainHeatmap,
+  useVolumeData,
+  useMarketAlerts,
+  formatVolume,
+} from "@/hooks/useMarketPrices";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { ContactForm } from "./ContactForm";
 import { Skeleton, SkeletonRow } from "./Skeleton";
@@ -38,10 +65,10 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
     const centerY = rect.height / 2;
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     const xPct = (mouseX - centerX) / centerX;
     const yPct = (mouseY - centerY) / centerY;
-    
+
     x.set(xPct);
     y.set(yPct);
   };
@@ -62,9 +89,7 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
       onMouseLeave={handleMouseLeave}
       className={className}
     >
-      <div style={{ transform: "translateZ(20px)" }}>
-        {children}
-      </div>
+      <div style={{ transform: "translateZ(20px)" }}>{children}</div>
     </motion.div>
   );
 }
@@ -104,13 +129,32 @@ export function About() {
         </motion.div>
 
         <div className="mt-14 grid lg:grid-cols-12 gap-6">
-          <motion.div {...fadeUp} className="lg:col-span-7 glass border-glow rounded-2xl p-7 sm:p-10">
+          <motion.div
+            {...fadeUp}
+            className="lg:col-span-7 glass border-glow rounded-2xl p-7 sm:p-10"
+          >
             <div className="grid sm:grid-cols-2 gap-6">
               {[
-                { icon: Globe2, t: "Multi-Chain Native", d: "Solana, Ethereum, Base, Hyperliquid, BNB, Sui & beyond — one operator, every chain." },
-                { icon: Brain, t: "AI Workflow Builder", d: "Custom pipelines for signal extraction, narrative tracking and execution support." },
-                { icon: Network, t: "Trading Infrastructure", d: "Sniper-grade execution, terminals and scanners wired into a single command surface." },
-                { icon: MessageCircle, t: "Community Intel", d: "Live discussions, curated channels and signal sharing across the ecosystem." },
+                {
+                  icon: Globe2,
+                  t: "Multi-Chain Native",
+                  d: "Solana, Ethereum, Base, Hyperliquid, BNB, Sui & beyond — one operator, every chain.",
+                },
+                {
+                  icon: Brain,
+                  t: "AI Workflow Builder",
+                  d: "Custom pipelines for signal extraction, narrative tracking and execution support.",
+                },
+                {
+                  icon: Network,
+                  t: "Trading Infrastructure",
+                  d: "Sniper-grade execution, terminals and scanners wired into a single command surface.",
+                },
+                {
+                  icon: MessageCircle,
+                  t: "Community Intel",
+                  d: "Live discussions, curated channels and signal sharing across the ecosystem.",
+                },
               ].map((b) => (
                 <div key={t(b.t)} className="group">
                   <div className="size-9 grid place-items-center rounded-lg bg-primary/10 text-primary mb-3 group-hover:glow-cyan transition-shadow">
@@ -126,8 +170,12 @@ export function About() {
           <motion.div {...fadeUp} className="lg:col-span-5 grid grid-cols-2 gap-4">
             {stats.map((s) => (
               <div key={s.l} className="glass rounded-2xl p-6 border-glow relative overflow-hidden">
-                <div className="text-chrome font-display text-4xl sm:text-5xl font-semibold">{s.v}</div>
-                <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{s.l}</div>
+                <div className="text-chrome font-display text-4xl sm:text-5xl font-semibold">
+                  {s.v}
+                </div>
+                <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {s.l}
+                </div>
                 <div className="absolute -top-10 -right-10 size-24 rounded-full bg-primary/20 blur-2xl" />
               </div>
             ))}
@@ -137,7 +185,9 @@ export function About() {
     </section>
   );
 }
-function t(s: string) { return s; }
+function t(s: string) {
+  return s;
+}
 
 /* ECOSYSTEM ------------------------------------------------------- */
 const ecosystem = [
@@ -247,7 +297,6 @@ const ecosystem = [
   },
 ];
 
-
 export function Ecosystem() {
   return (
     <section id="ecosystem" className="relative py-24 sm:py-32">
@@ -276,17 +325,17 @@ export function Ecosystem() {
                   target="_blank"
                   rel="noreferrer"
                   className={`group relative h-full rounded-2xl p-7 overflow-hidden hover:bg-white/[0.06] transition-all block ${
-                    e.name === "Elite Access"
-                      ? "animated-gradient-border"
-                      : "glass border-glow"
+                    e.name === "Elite Access" ? "animated-gradient-border" : "glass border-glow"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className={`size-12 grid place-items-center rounded-xl text-primary group-hover:glow-cyan transition-all ${
-                      e.name === "Elite Access"
-                        ? "bg-gradient-to-br from-primary/20 to-violet-500/20"
-                        : "bg-primary/10"
-                    }`}>
+                    <div
+                      className={`size-12 grid place-items-center rounded-xl text-primary group-hover:glow-cyan transition-all ${
+                        e.name === "Elite Access"
+                          ? "bg-gradient-to-br from-primary/20 to-violet-500/20"
+                          : "bg-primary/10"
+                      }`}
+                    >
                       <e.icon className="size-5" />
                     </div>
                     <ArrowUpRight className="size-5 text-muted-foreground group-hover:text-foreground group-hover:-translate-y-1 group-hover:translate-x-1 transition-all" />
@@ -302,11 +351,13 @@ export function Ecosystem() {
                     <span className="size-1 rounded-full bg-primary animate-pulse-glow" />
                     {e.cta}
                   </div>
-                  <div className={`absolute -bottom-20 -right-20 size-48 rounded-full blur-3xl transition-opacity ${
-                    e.name === "Elite Access"
-                      ? "bg-gradient-to-br from-primary/30 to-violet-500/30 opacity-100"
-                      : "bg-primary/10 opacity-0 group-hover:opacity-100"
-                  }`} />
+                  <div
+                    className={`absolute -bottom-20 -right-20 size-48 rounded-full blur-3xl transition-opacity ${
+                      e.name === "Elite Access"
+                        ? "bg-gradient-to-br from-primary/30 to-violet-500/30 opacity-100"
+                        : "bg-primary/10 opacity-0 group-hover:opacity-100"
+                    }`}
+                  />
                 </a>
               </TiltCard>
             </motion.div>
@@ -390,10 +441,7 @@ export function CommandCenter() {
           />
         </motion.div>
 
-        <motion.div
-          {...fadeUp}
-          className="mt-14 grid lg:grid-cols-3 gap-5"
-        >
+        <motion.div {...fadeUp} className="mt-14 grid lg:grid-cols-3 gap-5">
           <LiveMarketPanel data={data} isLoading={isLoading} isError={isError} />
 
           <Panel title="WALLET TRACKING · LIVE" icon={Eye}>
@@ -401,7 +449,7 @@ export function CommandCenter() {
               ["0x4f...d21a", "ETH", "+$182k"],
               ["7Gp...J9xQ", "SOL", "+$58k"],
               ["0x91...77ee", "BASE", "-$11k"],
-              ["8Aq...kZv2", "HYPE",  "+$94k"],
+              ["8Aq...kZv2", "HYPE", "+$94k"],
             ].map(([a, c, p]) => (
               <Row key={a} label={a} mid={c} value={p} ok={!p.startsWith("-")} />
             ))}
@@ -409,37 +457,45 @@ export function CommandCenter() {
 
           <Panel title="TOKEN SCANNER · LIVE" icon={Radar}>
             {(data ?? []).slice(0, 4).map((c) => (
-              <Row key={c.id} label={c.sym} mid={c.name.slice(0, 8)} value={`${c.ch >= 0 ? "+" : ""}${c.ch.toFixed(1)}%`} ok={c.ch >= 0} />
+              <Row
+                key={c.id}
+                label={c.sym}
+                mid={c.name.slice(0, 8)}
+                value={`${c.ch >= 0 ? "+" : ""}${c.ch.toFixed(1)}%`}
+                ok={c.ch >= 0}
+              />
             ))}
           </Panel>
 
           <Panel title="CHAIN HEATMAP · LIVE" icon={Cpu}>
             <div className="grid grid-cols-4 gap-1.5 mt-1">
-              {!data ? (
-              Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square" />
-              ))
-            ) : (
-              heatmap.map((c) => (
-                <motion.div
-                  key={c.sym}
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="aspect-square rounded grid place-items-center text-[9px] font-mono cursor-pointer hover:scale-110 transition-transform"
-                  style={{
-                    background: c.ch >= 0
-                      ? `linear-gradient(135deg, oklch(0.88 0.2 165 / ${0.3 + c.heat / 200}), oklch(0.6 0.18 165 / ${0.2 + c.heat / 300}))`
-                      : `linear-gradient(135deg, oklch(0.6 0.24 27 / ${0.3 + c.heat / 200}), oklch(0.4 0.2 27 / ${0.2 + c.heat / 300}))`,
-                    color: c.heat > 60 ? "#050505" : "white",
-                    boxShadow: c.heat > 50 ? `0 0 ${c.heat / 2}px ${c.ch >= 0 ? "oklch(0.88 0.2 165 / 0.5)" : "oklch(0.6 0.24 27 / 0.5)"}` : "none",
-                  }}
-                  title={`${c.sym}: ${c.ch >= 0 ? "+" : ""}${c.ch.toFixed(1)}%`}
-                >
-                  {c.sym}
-                </motion.div>
-              ))
-            )}
+              {!data
+                ? Array.from({ length: 12 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square" />
+                  ))
+                : heatmap.map((c) => (
+                    <motion.div
+                      key={c.sym}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="aspect-square rounded grid place-items-center text-[9px] font-mono cursor-pointer hover:scale-110 transition-transform"
+                      style={{
+                        background:
+                          c.ch >= 0
+                            ? `linear-gradient(135deg, oklch(0.88 0.2 165 / ${0.3 + c.heat / 200}), oklch(0.6 0.18 165 / ${0.2 + c.heat / 300}))`
+                            : `linear-gradient(135deg, oklch(0.6 0.24 27 / ${0.3 + c.heat / 200}), oklch(0.4 0.2 27 / ${0.2 + c.heat / 300}))`,
+                        color: c.heat > 60 ? "#050505" : "white",
+                        boxShadow:
+                          c.heat > 50
+                            ? `0 0 ${c.heat / 2}px ${c.ch >= 0 ? "oklch(0.88 0.2 165 / 0.5)" : "oklch(0.6 0.24 27 / 0.5)"}`
+                            : "none",
+                      }}
+                      title={`${c.sym}: ${c.ch >= 0 ? "+" : ""}${c.ch.toFixed(1)}%`}
+                    >
+                      {c.sym}
+                    </motion.div>
+                  ))}
             </div>
           </Panel>
 
@@ -466,40 +522,39 @@ export function CommandCenter() {
 
           <PriceAlertsPanel marketData={data} />
 
-
           <Panel title="VOLUME INDICATORS · LIVE" icon={LineChart}>
             <div className="space-y-2 mt-1">
-              {!data ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="flex-1 h-3" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                ))
-              ) : (
-                volumeData.map((v, i) => (
-                  <motion.div
-                    key={v.sym}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: i * 0.05 }}
-                    className="flex items-center gap-3"
-                  >
-                    <span className="text-[11px] font-mono w-12 text-foreground">{v.sym}</span>
-                    <div className="flex-1 h-3 bg-white/5 rounded-sm overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-sm"
-                        style={{ background: v.color }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (v.volume / 1e10) * 100)}%` }}
-                        transition={{ duration: 0.8, delay: i * 0.05 }}
-                      />
+              {!data
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Skeleton className="h-3 w-12" />
+                      <Skeleton className="flex-1 h-3" />
+                      <Skeleton className="h-3 w-20" />
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground w-20 text-right">{formatVolume(v.volume)}</span>
-                  </motion.div>
-                ))
-              )}
+                  ))
+                : volumeData.map((v, i) => (
+                    <motion.div
+                      key={v.sym}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: i * 0.05 }}
+                      className="flex items-center gap-3"
+                    >
+                      <span className="text-[11px] font-mono w-12 text-foreground">{v.sym}</span>
+                      <div className="flex-1 h-3 bg-white/5 rounded-sm overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-sm"
+                          style={{ background: v.color }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (v.volume / 1e10) * 100)}%` }}
+                          transition={{ duration: 0.8, delay: i * 0.05 }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground w-20 text-right">
+                        {formatVolume(v.volume)}
+                      </span>
+                    </motion.div>
+                  ))}
             </div>
           </Panel>
         </motion.div>
@@ -508,9 +563,17 @@ export function CommandCenter() {
   );
 }
 
+import { MarketCoin } from "@/hooks/useMarketPrices";
 
-
-function LiveMarketPanel({ data, isLoading, isError }: { data?: any[], isLoading?: boolean, isError?: boolean }) {
+function LiveMarketPanel({
+  data,
+  isLoading,
+  isError,
+}: {
+  data?: MarketCoin[];
+  isLoading?: boolean;
+  isError?: boolean;
+}) {
   const { addToWatchlist, isInWatchlist } = useWatchlist();
   const coins = (data ?? []).slice(0, 8);
   return (
@@ -530,9 +593,7 @@ function LiveMarketPanel({ data, isLoading, isError }: { data?: any[], isLoading
               Market feed offline — retrying…
             </div>
           )}
-          {isLoading && !data && (
-            <SkeletonRow />
-          )}
+          {isLoading && !data && <SkeletonRow />}
           {coins.map((c, i) => (
             <motion.div
               key={c.sym}
@@ -542,16 +603,21 @@ function LiveMarketPanel({ data, isLoading, isError }: { data?: any[], isLoading
               className="flex items-center justify-between text-[11px] font-mono hover:bg-white/5 rounded-lg px-2 py-1 transition-colors"
             >
               <span className="text-foreground w-12">{c.sym}</span>
-              <span className="text-muted-foreground tabular-nums flex-1 text-right px-2">{formatPrice(c.px)}</span>
+              <span className="text-muted-foreground tabular-nums flex-1 text-right px-2">
+                {formatPrice(c.px)}
+              </span>
               <span
                 className={`tabular-nums w-16 text-right ${c.ch < 0 ? "text-red-400" : "text-accent"}`}
               >
-                {c.ch >= 0 ? "+" : ""}{c.ch.toFixed(2)}%
+                {c.ch >= 0 ? "+" : ""}
+                {c.ch.toFixed(2)}%
               </span>
               <button
                 onClick={() => addToWatchlist({ id: c.id, sym: c.sym, name: c.name })}
                 className={`ml-2 p-1 rounded-full transition-colors ${
-                  isInWatchlist(c.id) ? "text-accent bg-accent/10" : "text-muted-foreground hover:text-accent"
+                  isInWatchlist(c.id)
+                    ? "text-accent bg-accent/10"
+                    : "text-muted-foreground hover:text-accent"
                 }`}
                 aria-label={`Add ${c.sym} to watchlist`}
                 title="Add to watchlist"
@@ -566,16 +632,14 @@ function LiveMarketPanel({ data, isLoading, isError }: { data?: any[], isLoading
   );
 }
 
-
-
 /* PARTNERSHIPS ---------------------------------------------------- */
 const partners = [
-  { name: "Community Alpha", tag: "Network",      icon: MessageCircle },
-  { name: "Web3 Builders",   tag: "Builders",     icon: Cpu },
-  { name: "AI Infrastructure", tag: "AI",         icon: Brain },
-  { name: "Trading Ecosystem", tag: "Trading",    icon: LineChart },
-  { name: "Launch Partners", tag: "Launchpads",   icon: Flame },
-  { name: "Strategic Networks", tag: "Strategy",  icon: Network },
+  { name: "Community Alpha", tag: "Network", icon: MessageCircle },
+  { name: "Web3 Builders", tag: "Builders", icon: Cpu },
+  { name: "AI Infrastructure", tag: "AI", icon: Brain },
+  { name: "Trading Ecosystem", tag: "Trading", icon: LineChart },
+  { name: "Launch Partners", tag: "Launchpads", icon: Flame },
+  { name: "Strategic Networks", tag: "Strategy", icon: Network },
 ];
 
 export function Partnerships() {
@@ -606,17 +670,26 @@ export function Partnerships() {
                 </div>
                 <div>
                   <div className="font-display text-lg text-foreground">{p.name}</div>
-                  <div className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground uppercase mt-1">{p.tag}</div>
+                  <div className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground uppercase mt-1">
+                    {p.tag}
+                  </div>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <motion.div {...fadeUp} className="mt-10 glass-strong border-glow rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        <motion.div
+          {...fadeUp}
+          className="mt-10 glass-strong border-glow rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
+        >
           <div>
-            <div className="font-display text-2xl sm:text-3xl text-chrome">Interested in Partnership?</div>
-            <p className="text-muted-foreground mt-2 text-sm sm:text-base">Communities, AI projects, launchpads, KOL networks — let's build.</p>
+            <div className="font-display text-2xl sm:text-3xl text-chrome">
+              Interested in Partnership?
+            </div>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+              Communities, AI projects, launchpads, KOL networks — let's build.
+            </p>
           </div>
           <a
             href="#contact"
@@ -633,9 +706,9 @@ export function Partnerships() {
 /* SOCIAL PROOF ---------------------------------------------------- */
 export function SocialProof() {
   const items = [
-    { v: "14+",  l: "Multi-Chain Ecosystem" },
+    { v: "14+", l: "Multi-Chain Ecosystem" },
     { v: "10k+", l: "Growing Web3 Community" },
-    { v: "AI",   l: "Enhanced Workflows" },
+    { v: "AI", l: "Enhanced Workflows" },
     { v: "24/7", l: "Real-Time Market Analysis" },
   ];
   return (
@@ -652,8 +725,12 @@ export function SocialProof() {
               transition={{ duration: 0.6, delay: i * 0.08 }}
               className="relative text-center"
             >
-              <div className="text-chrome font-display text-4xl sm:text-5xl font-semibold">{it.v}</div>
-              <div className="mt-2 text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground">{it.l}</div>
+              <div className="text-chrome font-display text-4xl sm:text-5xl font-semibold">
+                {it.v}
+              </div>
+              <div className="mt-2 text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                {it.l}
+              </div>
             </motion.div>
           ))}
         </div>
@@ -683,16 +760,28 @@ export function Contact() {
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="https://t.me/DxmZone" target="_blank" rel="noreferrer"
-               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform">
+            <a
+              href="https://t.me/DxmZone"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform"
+            >
               <Send className="size-3.5" /> Join Telegram
             </a>
-            <a href="https://x.com/vaultmarco" target="_blank" rel="noreferrer"
-               className="inline-flex items-center gap-2 rounded-full glass border-glow px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] hover:bg-white/8 transition-colors">
+            <a
+              href="https://x.com/vaultmarco"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full glass border-glow px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] hover:bg-white/8 transition-colors"
+            >
               <Twitter className="size-3.5" /> Follow on X
             </a>
-            <a href="https://trade.padre.gg/rk/dexmultichain" target="_blank" rel="noreferrer"
-               className="inline-flex items-center gap-2 rounded-full glass border-glow px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] hover:bg-white/8 transition-colors">
+            <a
+              href="https://trade.padre.gg/rk/dexmultichain"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full glass border-glow px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] hover:bg-white/8 transition-colors"
+            >
               <TerminalIcon className="size-3.5" /> Open Terminal
             </a>
           </div>
@@ -704,7 +793,6 @@ export function Contact() {
   );
 }
 
-
 /* FOOTER ---------------------------------------------------------- */
 export function Footer() {
   return (
@@ -712,29 +800,90 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="lg:col-span-2">
-            <div className="font-display font-semibold text-chrome text-xl tracking-[0.18em]">MARCOVAULT</div>
+            <div className="font-display font-semibold text-chrome text-xl tracking-[0.18em]">
+              MARCOVAULT
+            </div>
             <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Built for the next generation of Web3 operators. Multi-chain alpha, AI workflows and sniper-grade execution.
+              Built for the next generation of Web3 operators. Multi-chain alpha, AI workflows and
+              sniper-grade execution.
             </p>
           </div>
 
           <div>
-            <div className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground mb-4">NAVIGATE</div>
+            <div className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground mb-4">
+              NAVIGATE
+            </div>
             <ul className="space-y-2 text-sm">
-              {["About","Ecosystem","Tools","Partnerships","Watchlist","Contact","FAQ"].map(l=>(
-                <li key={l}><a href={`#${l.toLowerCase()}`} className="text-muted-foreground hover:text-foreground transition-colors">{l}</a></li>
-              ))}
+              {["About", "Ecosystem", "Tools", "Partnerships", "Watchlist", "Contact", "FAQ"].map(
+                (l) => (
+                  <li key={l}>
+                    <a
+                      href={`#${l.toLowerCase()}`}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {l}
+                    </a>
+                  </li>
+                ),
+              )}
             </ul>
           </div>
 
           <div>
-            <div className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground mb-4">CONNECT</div>
+            <div className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground mb-4">
+              CONNECT
+            </div>
             <ul className="space-y-2 text-sm">
-              <li><a href="https://x.com/vaultmarco" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">X / Twitter</a></li>
-              <li><a href="https://t.me/DxmZone" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Telegram Group</a></li>
-              <li><a href="https://t.me/DexMultichain" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Telegram Channel</a></li>
-              <li><a href="https://trade.padre.gg/rk/dexmultichain" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Padre Terminal</a></li>
-              <li><a href="https://t.me/achilles_trojanbot?start=r-oxjackpot" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Sniper Bot</a></li>
+              <li>
+                <a
+                  href="https://x.com/vaultmarco"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  X / Twitter
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://t.me/DxmZone"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Telegram Group
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://t.me/DexMultichain"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Telegram Channel
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://trade.padre.gg/rk/dexmultichain"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Padre Terminal
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://t.me/achilles_trojanbot?start=r-oxjackpot"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sniper Bot
+                </a>
+              </li>
             </ul>
           </div>
         </div>

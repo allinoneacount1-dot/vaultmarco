@@ -25,7 +25,6 @@ export function Hero() {
         className="hidden md:block pointer-events-none select-none absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] lg:w-[1100px] max-w-none animate-float-y"
       />
 
-
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           {/* left */}
@@ -50,7 +49,9 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="text-chrome font-display font-semibold text-[44px] sm:text-[64px] lg:text-[80px] leading-[0.95] tracking-tight"
             >
-              MARCO<br/>VAULT
+              MARCO
+              <br />
+              VAULT
               <span className="block mt-4 text-[16px] sm:text-[20px] lg:text-[24px] text-muted-foreground font-normal tracking-normal">
                 Multi-Chain Alpha & Web3 Intelligence Platform
               </span>
@@ -71,9 +72,9 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed"
             >
-              Navigating Web3 markets through multi-chain intelligence,
-              AI-powered workflows, sniper infrastructure, and
-              community-driven alpha. <span className="text-foreground">Navigate the noise. Enter the vault.</span>
+              Navigating Web3 markets through multi-chain intelligence, AI-powered workflows, sniper
+              infrastructure, and community-driven alpha.{" "}
+              <span className="text-foreground">Navigate the noise. Enter the vault.</span>
             </motion.p>
 
             <motion.div
@@ -138,12 +139,7 @@ function CTA({
   ariaLabel?: string;
 }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={ariaLabel}
-    >
+    <a href={href} target="_blank" rel="noreferrer" aria-label={ariaLabel}>
       <MagneticButton
         className={`group relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.15em] transition-all overflow-hidden ${
           primary
