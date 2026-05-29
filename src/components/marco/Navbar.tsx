@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -59,12 +60,26 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              to="/auth"
-              className="text-[12px] font-medium tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Sign In
-            </Link>
+            <ConnectButton.Custom>
+              {({ account, chain, openConnectModal, mounted }) => {
+                if (!mounted) return null;
+
+                if (!account) {
+                  return (
+                    <button
+                      onClick={openConnectModal}
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
+                    >
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-sweep" />
+                      <Wallet className="size-3.5" />
+                      Connect Wallet
+                    </button>
+                  );
+                }
+
+                return <ConnectButton />;
+              }}
+            </ConnectButton.Custom>
             <a
               href="https://t.me/DxmZone"
               target="_blank"
@@ -99,6 +114,28 @@ export function Navbar() {
                   {l.label}
                 </a>
               ))}
+              <div className="mt-3">
+                <ConnectButton.Custom>
+                  {({ account, chain, openConnectModal, mounted }) => {
+                    if (!mounted) return null;
+
+                    if (!account) {
+                      return (
+                        <button
+                          onClick={openConnectModal}
+                          className="w-full group relative inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
+                        >
+                          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-sweep" />
+                          <Wallet className="size-3.5" />
+                          Connect Wallet
+                        </button>
+                      );
+                    }
+
+                    return <ConnectButton />;
+                  }}
+                </ConnectButton.Custom>
+              </div>
               <a
                 href="https://t.me/DxmZone"
                 target="_blank"
