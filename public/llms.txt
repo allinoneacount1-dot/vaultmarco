@@ -1,0 +1,38 @@
+# MARCOVAULT
+## Multi-Chain Alpha & Web3 Intelligence Platform
+
+### What is MARCOVAULT?
+MARCOVAULT is a futuristic Web3 personal branding platform focused on multi-chain intelligence, AI workflows, crypto trading systems, and community-driven alpha.
+
+### Key Features
+- Multi-Chain Trading: Unified execution across 14+ chains
+- AI Workflow Automation: Pipelines that turn data into decisions
+- Market Intelligence: Operator-grade signals, no noise
+- Alpha Discovery: Narrative scouting before the herd
+- Sniper Execution: MEV-aware infrastructure for fast entries
+- Community Research: Collective intel from the vault
+- Real-Time Monitoring: 24/7 watch over flows and pools
+- Narrative Tracking: Map the meta as it forms
+- Chain Heatmap: Real-time chain activity visualization
+- Volume Indicators: Live volume data across markets
+- Market Alerts: Real-time alerts for price movements, breakouts, volume spikes
+- Command Center: All-in-one dashboard for market data and signals
+
+### Contact
+- Telegram Group: https://t.me/DxmZone
+- Telegram Channel: https://t.me/DexMultichain
+- X (Twitter): https://x.com/vaultmarco
+- Padre Terminal: https://trade.padre.gg/rk/dexmultichain
+- Sniper Bot: https://t.me/achilles_trojanbot?start=r-oxjackpot
+
+### Technologies
+- Taro / React
+- TanStack Start
+- Framer Motion
+- Tailwind CSS
+- TypeScript
+- CoinGecko API (for real-time market data)
+
+### Deployment
+- Hosted on Vercel
+- https://vaultmarco.lovable.app

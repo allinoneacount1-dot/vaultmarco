@@ -8,8 +8,10 @@ const links = [
   { label: "About", href: "#about" },
   { label: "Ecosystem", href: "#ecosystem" },
   { label: "Tools", href: "#tools" },
+  { label: "Watchlist", href: "#watchlist" },
   { label: "Partnerships", href: "#partnerships" },
   { label: "Contact", href: "#contact" },
+  { label: "FAQ", href: "#faq" },
 ];
 
 export function Navbar() {

@@ -58,11 +58,12 @@ export function ContactForm() {
         className="sm:col-span-2"
         error={errors.email}
       />
-      <label className="block sm:col-span-2">
-        <span className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">
+      <div className="block sm:col-span-2">
+        <label htmlFor="field-topic" className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">
           Topic
-        </span>
+        </label>
         <select
+          id="field-topic"
           name="topic"
           defaultValue="partnership"
           className="w-full bg-white/[0.03] border border-white/8 rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40"
@@ -72,7 +73,7 @@ export function ContactForm() {
           <option value="press">Press / Media</option>
           <option value="other">Other</option>
         </select>
-      </label>
+      </div>
       <Field
         label="Message"
         name="message"
@@ -119,17 +120,34 @@ function Field({
   const ok = "border-white/8 focus:border-primary/60 focus:ring-primary/40";
   const bad = "border-red-500/50 focus:border-red-500 focus:ring-red-500/40";
   const cls = `${base} ${error ? bad : ok}`;
+  const fieldId = `field-${name}`;
   return (
-    <label className={`block ${className}`}>
-      <span className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">
+    <div className={`block ${className}`}>
+      <label htmlFor={fieldId} className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">
         {label}
-      </span>
+      </label>
       {textarea ? (
-        <textarea name={name} rows={4} placeholder={placeholder} className={cls} />
+        <textarea 
+          id={fieldId}
+          name={name} 
+          rows={4} 
+          placeholder={placeholder} 
+          className={cls} 
+          aria-invalid={!!error}
+          aria-describedby={error ? `${fieldId}-error` : undefined}
+        />
       ) : (
-        <input name={name} type={type} placeholder={placeholder} className={cls} />
+        <input 
+          id={fieldId}
+          name={name} 
+          type={type} 
+          placeholder={placeholder} 
+          className={cls} 
+          aria-invalid={!!error}
+          aria-describedby={error ? `${fieldId}-error` : undefined}
+        />
       )}
-      {error && <span className="mt-1.5 block text-[11px] text-red-400 font-mono">{error}</span>}
-    </label>
+      {error && <span id={`${fieldId}-error`} className="mt-1.5 block text-[11px] text-red-400 font-mono">{error}</span>}
+    </div>
   );
 }

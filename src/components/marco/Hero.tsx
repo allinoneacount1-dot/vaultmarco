@@ -3,6 +3,7 @@ import { ArrowUpRight, Send, Twitter } from "lucide-react";
 import { Terminal } from "./Terminal";
 import { LiveTicker } from "./LiveTicker";
 import logoUrl from "@/assets/marcovault-logo.png";
+import { MagneticButton } from "./MagneticButton";
 
 export function Hero() {
   return (
@@ -50,6 +51,9 @@ export function Hero() {
               className="text-chrome font-display font-semibold text-[44px] sm:text-[64px] lg:text-[80px] leading-[0.95] tracking-tight"
             >
               MARCO<br/>VAULT
+              <span className="block mt-4 text-[16px] sm:text-[20px] lg:text-[24px] text-muted-foreground font-normal tracking-normal">
+                Multi-Chain Alpha & Web3 Intelligence Platform
+              </span>
             </motion.h1>
 
             <motion.p
@@ -139,15 +143,18 @@ function CTA({
       target="_blank"
       rel="noreferrer"
       aria-label={ariaLabel}
-      className={`group relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.15em] transition-all overflow-hidden ${
-        primary
-          ? "bg-primary text-primary-foreground glow-cyan hover:scale-[1.03]"
-          : "glass text-foreground hover:bg-white/8 border-glow"
-      }`}
     >
-      {icon}
-      {children}
-      <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      <MagneticButton
+        className={`group relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.15em] transition-all overflow-hidden ${
+          primary
+            ? "bg-primary text-primary-foreground glow-cyan hover:scale-[1.03]"
+            : "glass text-foreground hover:bg-white/8 border-glow"
+        }`}
+      >
+        {icon}
+        {children}
+        <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      </MagneticButton>
     </a>
   );
 }

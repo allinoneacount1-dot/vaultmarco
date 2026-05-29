@@ -7,9 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { Particles } from "@/components/marco/Particles";
+import { ScrollProgress } from "@/components/marco/ScrollProgress";
 
 function NotFoundComponent() {
   return (
@@ -124,9 +128,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ScrollProgress />
+      <Particles />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster />
+      <Analytics />
+      <SpeedInsights />
     </QueryClientProvider>
   );
 }

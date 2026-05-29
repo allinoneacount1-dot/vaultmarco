@@ -9,7 +9,7 @@ export function Logo({ size = 36 }: { size?: number }) {
       >
         <img
           src={logoUrl}
-          alt="MARCOVAULT"
+          alt="MARCOVAULT - Multi-Chain Alpha & Web3 Intelligence Logo"
           width={size}
           height={size}
           className="relative z-10 drop-shadow-[0_0_8px_rgba(0,240,255,0.35)]"

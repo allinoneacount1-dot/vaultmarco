@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-
-const BASE_URL = "https://vaultmarco.lovable.app";
+import { config } from "@/lib/config";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
@@ -16,7 +15,7 @@ export const Route = createFileRoute("/sitemap.xml")({
 ${urls
   .map(
     (u) =>
-      `  <url><loc>${BASE_URL}${u.loc}</loc><lastmod>${today}</lastmod><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`,
+      `  <url><loc>${config.siteUrl}${u.loc}</loc><lastmod>${today}</lastmod><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`,
   )
   .join("\n")}
 </urlset>`;
