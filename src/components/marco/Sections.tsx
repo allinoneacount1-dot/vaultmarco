@@ -744,17 +744,37 @@ function LiveMarketPanel({
 
 /* PARTNERSHIPS ---------------------------------------------------- */
 const partners = [
-  { name: "Community Alpha", tag: "Network", icon: MessageCircle, logos: ["solana", "telegram", "discord"] },
+  {
+    name: "Community Alpha",
+    tag: "Network",
+    icon: MessageCircle,
+    logos: ["solana", "telegram", "discord"],
+  },
   { name: "Web3 Builders", tag: "Builders", icon: Cpu, logos: ["ethereum", "solana", "bnb"] },
   { name: "AI Infrastructure", tag: "AI", icon: Brain, logos: ["nvidia", "openai", "coingecko"] },
-  { name: "Trading Ecosystem", tag: "Trading", icon: LineChart, logos: ["uniswap", "jupiter", "pumpfun"] },
-  { name: "Launch Partners", tag: "Launchpads", icon: Flame, logos: ["coinlist", "daomaker", "trustswap"] },
-  { name: "Strategic Networks", tag: "Strategy", icon: Network, logos: ["solana", "ethereum", "bnb", "base"] },
+  {
+    name: "Trading Ecosystem",
+    tag: "Trading",
+    icon: LineChart,
+    logos: ["uniswap", "jupiter", "pumpfun"],
+  },
+  {
+    name: "Launch Partners",
+    tag: "Launchpads",
+    icon: Flame,
+    logos: ["coinlist", "daomaker", "trustswap"],
+  },
+  {
+    name: "Strategic Networks",
+    tag: "Strategy",
+    icon: Network,
+    logos: ["solana", "ethereum", "bnb", "base"],
+  },
 ];
 
 // Simple logo component using Lucide icons
 const PartnerLogo = ({ name }: { name: string }) => {
-  const config: Record<string, { bg: string, icon: React.ReactNode }> = {
+  const config: Record<string, { bg: string; icon: React.ReactNode }> = {
     solana: { bg: "#9945ff", icon: <Hexagon className="size-3" /> },
     ethereum: { bg: "#627eea", icon: <Layers className="size-3" /> },
     bnb: { bg: "#f0b90b", icon: <Coins className="size-3" /> },
@@ -772,9 +792,10 @@ const PartnerLogo = ({ name }: { name: string }) => {
     trustswap: { bg: "#fca311", icon: <Layers className="size-3" /> },
   };
   const c = config[name] || { bg: "#64748b", icon: <Hexagon className="size-3" /> };
-  
+
   return (
-    <div className="size-6 rounded-full border border-white/10 flex items-center justify-center"
+    <div
+      className="size-6 rounded-full border border-white/10 flex items-center justify-center"
       style={{ backgroundColor: c.bg }}
     >
       {c.icon}

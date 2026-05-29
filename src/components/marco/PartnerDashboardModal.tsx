@@ -1,14 +1,37 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { 
-  X, Activity, Zap, Users, BarChart3, ArrowUpRight, CheckCircle2, TrendingUp,
-  ShieldCheck, Sparkles, Globe, Rocket, Coins, Hexagon, Layers, RadioTower, 
-  Terminal, Cpu, Bot, LineChart as LineChartIcon
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  X,
+  Activity,
+  Zap,
+  Users,
+  BarChart3,
+  ArrowUpRight,
+  CheckCircle2,
+  TrendingUp,
+  ShieldCheck,
+  Sparkles,
+  Globe,
+  Rocket,
+  Coins,
+  Hexagon,
+  Layers,
+  RadioTower,
+  Terminal,
+  Cpu,
+  Bot,
+  LineChart as LineChartIcon,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 // Simple logo component using Lucide icons
 const PartnerLogo = ({ name }: { name: string }) => {
-  const config: Record<string, { bg: string, icon: React.ReactNode }> = {
+  const config: Record<string, { bg: string; icon: React.ReactNode }> = {
     solana: { bg: "#9945ff", icon: <Hexagon className="size-3" /> },
     ethereum: { bg: "#627eea", icon: <Layers className="size-3" /> },
     bnb: { bg: "#f0b90b", icon: <Coins className="size-3" /> },
@@ -31,9 +54,10 @@ const PartnerLogo = ({ name }: { name: string }) => {
     starter: { bg: "#22d3ee", icon: <Rocket className="size-3" /> },
   };
   const c = config[name.toLowerCase()] || { bg: "#64748b", icon: <Hexagon className="size-3" /> };
-  
+
   return (
-    <div className="size-6 rounded-full border border-white/10 flex items-center justify-center"
+    <div
+      className="size-6 rounded-full border border-white/10 flex items-center justify-center"
       style={{ backgroundColor: c.bg }}
     >
       {c.icon}
@@ -54,19 +78,15 @@ const growthData = [
 const partnerData = {
   "Trading Ecosystem": {
     tag: "Trading",
-    description: "Integrated trading infrastructure with DEXs, CEXs, and order book aggregators across multiple chains.",
+    description:
+      "Integrated trading infrastructure with DEXs, CEXs, and order book aggregators across multiple chains.",
     stats: [
       { label: "Total Volume", value: "$1.2B" },
       { label: "Active Traders", value: "24,500" },
       { label: "Trading Pairs", value: "3,200" },
       { label: "Slippage", value: "<0.1%" },
     ],
-    features: [
-      "Cross-chain swaps",
-      "Limit orders",
-      "Stop-loss/take-profit",
-      "Slippage protection",
-    ],
+    features: ["Cross-chain swaps", "Limit orders", "Stop-loss/take-profit", "Slippage protection"],
     partners: [
       { name: "Uniswap", key: "uniswap" },
       { name: "Jupiter", key: "jupiter" },
@@ -76,7 +96,8 @@ const partnerData = {
   },
   "Launch Partners": {
     tag: "Launchpads",
-    description: "Curated launchpad network for vetted token launches and initial offerings across major chains.",
+    description:
+      "Curated launchpad network for vetted token launches and initial offerings across major chains.",
     stats: [
       { label: "Projects Launched", value: "120+" },
       { label: "Average ROI", value: "3.2x" },
@@ -98,7 +119,8 @@ const partnerData = {
   },
   "Strategic Networks": {
     tag: "Strategy",
-    description: "Strategic network partnerships with KOLs, communities, and layer-1/2 infrastructure providers.",
+    description:
+      "Strategic network partnerships with KOLs, communities, and layer-1/2 infrastructure providers.",
     stats: [
       { label: "Community Size", value: "500,000+" },
       { label: "KOL Partners", value: "85+" },
@@ -231,22 +253,22 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
         </div>
 
         {/* Network Partners with Logos */}
-    <div className="mt-5">
-      <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
-        Network Members
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {data.partners.map((p, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
-          >
-            <PartnerLogo name={p.key} />
-            <span className="text-[11px] text-muted-foreground">{p.name}</span>
+        <div className="mt-5">
+          <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
+            Network Members
           </div>
-        ))}
-      </div>
-    </div>
+          <div className="flex flex-wrap gap-2">
+            {data.partners.map((p, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+              >
+                <PartnerLogo name={p.key} />
+                <span className="text-[11px] text-muted-foreground">{p.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="mt-6">
           <a
