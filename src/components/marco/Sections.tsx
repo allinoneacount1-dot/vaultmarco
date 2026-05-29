@@ -25,6 +25,16 @@ import {
   Wallet,
   Workflow,
   Zap,
+  ShieldCheck,
+  Sparkles,
+  Globe,
+  Rocket,
+  Coins,
+  TrendingUp,
+  Hexagon,
+  Layers,
+  RadioTower,
+  Terminal,
 } from "lucide-react";
 import {
   useMarketPrices,
@@ -742,32 +752,32 @@ const partners = [
   { name: "Strategic Networks", tag: "Strategy", icon: Network, logos: ["solana", "ethereum", "bnb", "base"] },
 ];
 
-// Simple SVG logo component
+// Simple logo component using Lucide icons
 const PartnerLogo = ({ name }: { name: string }) => {
-  const colors: Record<string, { bg: string, text: string }> = {
-    solana: { bg: "#9945ff", text: "S" },
-    ethereum: { bg: "#627eea", text: "E" },
-    bnb: { bg: "#f0b90b", text: "B" },
-    base: { bg: "#22c55e", text: "Ba" },
-    uniswap: { bg: "#ff007a", text: "U" },
-    jupiter: { bg: "#9945ff", text: "J" },
-    pumpfun: { bg: "#06b6d4", text: "P" },
-    telegram: { bg: "#0ea5e9", text: "T" },
-    discord: { bg: "#6366f1", text: "D" },
-    nvidia: { bg: "#76b900", text: "N" },
-    openai: { bg: "#10a37f", text: "O" },
-    coingecko: { bg: "#fca311", text: "CG" },
-    coinlist: { bg: "#38bdf8", text: "C" },
-    daomaker: { bg: "#818cf8", text: "D" },
-    trustswap: { bg: "#fca311", text: "TS" },
+  const config: Record<string, { bg: string, icon: React.ReactNode }> = {
+    solana: { bg: "#9945ff", icon: <Hexagon className="size-3" /> },
+    ethereum: { bg: "#627eea", icon: <Layers className="size-3" /> },
+    bnb: { bg: "#f0b90b", icon: <Coins className="size-3" /> },
+    base: { bg: "#22c55e", icon: <Globe className="size-3" /> },
+    uniswap: { bg: "#ff007a", icon: <TrendingUp className="size-3" /> },
+    jupiter: { bg: "#9945ff", icon: <Zap className="size-3" /> },
+    pumpfun: { bg: "#06b6d4", icon: <Rocket className="size-3" /> },
+    telegram: { bg: "#0ea5e9", icon: <MessageCircle className="size-3" /> },
+    discord: { bg: "#6366f1", icon: <RadioTower className="size-3" /> },
+    nvidia: { bg: "#76b900", icon: <Cpu className="size-3" /> },
+    openai: { bg: "#10a37f", icon: <Bot className="size-3" /> },
+    coingecko: { bg: "#fca311", icon: <Sparkles className="size-3" /> },
+    coinlist: { bg: "#38bdf8", icon: <Terminal className="size-3" /> },
+    daomaker: { bg: "#818cf8", icon: <ShieldCheck className="size-3" /> },
+    trustswap: { bg: "#fca311", icon: <Layers className="size-3" /> },
   };
-  const c = colors[name] || { bg: "#64748b", text: "?" };
+  const c = config[name] || { bg: "#64748b", icon: <Hexagon className="size-3" /> };
   
   return (
-    <div className="size-6 rounded-full border border-white/10 flex items-center justify-center text-[9px] font-mono font-bold"
+    <div className="size-6 rounded-full border border-white/10 flex items-center justify-center"
       style={{ backgroundColor: c.bg }}
     >
-      {c.text}
+      {c.icon}
     </div>
   );
 };
