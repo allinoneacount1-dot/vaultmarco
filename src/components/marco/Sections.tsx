@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import {
-  Activity, ArrowUpRight, Bot, Brain, Compass, Cpu, Eye, Flame,
+  Activity, ArrowUpRight, Bot, Brain, Compass, Cpu, Database, Eye, Flame,
   Globe2, LineChart, MessageCircle, Network, Radar, Send, Target,
-  Terminal as TerminalIcon, Twitter, Workflow, Zap,
+  Terminal as TerminalIcon, Twitter, Wallet, Workflow, Zap,
 } from "lucide-react";
+import { useMarketPrices, formatPrice } from "@/hooks/useMarketPrices";
+import { ContactForm } from "./ContactForm";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -116,7 +118,22 @@ const ecosystem = [
     href: "https://trade.padre.gg/rk/dexmultichain",
     tone: "cyan",
   },
-];
+  {
+    icon: Database,
+    name: "Research Vault",
+    desc: "Curated dossiers on chains, narratives and protocols — operator's research desk.",
+    cta: "BROWSE RESEARCH",
+    href: "https://t.me/DexMultichain",
+    tone: "violet",
+  },
+  {
+    icon: Wallet,
+    name: "Wallet Tracker",
+    desc: "Watch whales and smart money across SOL, ETH, BASE & Hyperliquid in real time.",
+    cta: "TRACK WALLETS",
+    href: "https://t.me/DxmZone",
+    tone: "mint",
+  },
 
 export function Ecosystem() {
   return (
