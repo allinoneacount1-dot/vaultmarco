@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
 import { Activity, TrendingUp, Zap } from "lucide-react";
 import { useMarketPrices, formatPrice } from "@/hooks/useMarketPrices";
-
-const feed = [
-  "[ALPHA] Whale moved 1.2M USDC into SOL/HYPE pool",
-  "[SCAN] New liquidity pool detected on Base · $48k locked",
-  "[SIG]  AI model flagged narrative shift: AI-agents +18%",
-  "[EXEC] Sniper armed · slippage 1.2% · MEV protected",
-];
+import { useCryptoNews, formatNewsForFeed } from "@/hooks/useCryptoNews";
 
 export function Terminal() {
   const [tick, setTick] = useState(0);
   const { data: coins, isLoading } = useMarketPrices();
+  const { data: news, isLoading: isNewsLoading } = useCryptoNews();
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1500);
@@ -20,6 +15,12 @@ export function Terminal() {
 
   const sol = coins?.find((c) => c.sym === "SOL");
   const top4 = coins?.filter((c) => ["SOL", "ETH", "HYPE", "BTC"].includes(c.sym)) ?? [];
+  const feed = news ? formatNewsForFeed(news) : [
+    "[ALPHA] Whale moved 1.2M USDC into SOL/HYPE pool",
+    "[SCAN] New liquidity pool detected on Base · $48k locked",
+    "[SIG]  AI model flagged narrative shift: AI-agents +18%",
+    "[EXEC] Sniper armed · slippage 1.2% · MEV protected",
+  ];
 
   return (
     <div className="relative glass-strong border-glow rounded-2xl p-4 sm:p-5 overflow-hidden scanline">
@@ -34,7 +35,7 @@ export function Terminal() {
         </div>
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-accent">
           <span className="size-1.5 rounded-full bg-accent animate-pulse-glow" />
-          {isLoading ? "SYNC" : "LIVE"}
+          {isLoading || isNewsLoading ? "SYNC" : "LIVE"}
         </div>
       </div>
 
@@ -77,7 +78,7 @@ export function Terminal() {
 
         <div className="col-span-5 glass rounded-xl p-3 h-28 overflow-hidden">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">AI FEED · ILLUSTRATIVE</span>
+            <span className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">LIVE NEWS</span>
             <TrendingUp className="size-3 text-violet-300" />
           </div>
           <div className="font-mono text-[11px] space-y-1">
