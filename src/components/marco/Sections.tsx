@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import {
-  Activity, ArrowUpRight, Bot, Brain, Compass, Cpu, Eye, Flame,
+  Activity, ArrowUpRight, Bot, Brain, Compass, Cpu, Database, Eye, Flame,
   Globe2, LineChart, MessageCircle, Network, Radar, Send, Target,
-  Terminal as TerminalIcon, Twitter, Workflow, Zap,
+  Terminal as TerminalIcon, Twitter, Wallet, Workflow, Zap,
 } from "lucide-react";
+import { useMarketPrices, formatPrice } from "@/hooks/useMarketPrices";
+import { ContactForm } from "./ContactForm";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -116,7 +118,24 @@ const ecosystem = [
     href: "https://trade.padre.gg/rk/dexmultichain",
     tone: "cyan",
   },
+  {
+    icon: Database,
+    name: "Research Vault",
+    desc: "Curated dossiers on chains, narratives and protocols — operator's research desk.",
+    cta: "BROWSE RESEARCH",
+    href: "https://t.me/DexMultichain",
+    tone: "violet",
+  },
+  {
+    icon: Wallet,
+    name: "Wallet Tracker",
+    desc: "Watch whales and smart money across SOL, ETH, BASE & Hyperliquid in real time.",
+    cta: "TRACK WALLETS",
+    href: "https://t.me/DxmZone",
+    tone: "mint",
+  },
 ];
+
 
 export function Ecosystem() {
   return (
@@ -127,11 +146,11 @@ export function Ecosystem() {
           <SectionHeader
             kicker="02 / ECOSYSTEM"
             title="The Vault Ecosystem."
-            sub="Four operational surfaces — community, signals, execution and analytics — engineered to compound."
+            sub="Six operational surfaces — community, signals, execution, research, analytics — engineered to compound."
           />
         </motion.div>
 
-        <div className="mt-14 grid sm:grid-cols-2 gap-5">
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {ecosystem.map((e, i) => (
             <motion.a
               key={e.name}
@@ -219,9 +238,9 @@ export function CommandCenter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div {...fadeUp}>
           <SectionHeader
-            kicker="04 / COMMAND CENTER · ILLUSTRATIVE PREVIEW"
+            kicker="04 / COMMAND CENTER"
             title="Inside The Vault."
-            sub="A cinematic surface that fuses charts, scanners, alerts and AI signals into one professional crypto command center. Panels below are an illustrative preview of the operator workspace — not live market data."
+            sub="A cinematic surface that fuses live market data, charts, scanners, alerts and AI signals into one professional crypto command center. The LIVE MARKET panel below streams real prices from CoinGecko; other panels are illustrative previews of the operator workspace."
           />
         </motion.div>
 
@@ -229,7 +248,9 @@ export function CommandCenter() {
           {...fadeUp}
           className="mt-14 grid lg:grid-cols-3 gap-5"
         >
-          <Panel title="WALLET TRACKING" icon={Eye}>
+          <LiveMarketPanel />
+
+          <Panel title="WALLET TRACKING · DEMO" icon={Eye}>
             {[
               ["0x4f...d21a", "ETH", "+$182k"],
               ["7Gp...J9xQ", "SOL", "+$58k"],
@@ -240,7 +261,7 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="TOKEN SCANNER" icon={Radar}>
+          <Panel title="TOKEN SCANNER · DEMO" icon={Radar}>
             {[
               ["AION",  "SOL",  "0:14"],
               ["NEXUS", "BASE", "1:02"],
@@ -251,7 +272,7 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="CHAIN HEATMAP" icon={Cpu}>
+          <Panel title="CHAIN HEATMAP · DEMO" icon={Cpu}>
             <div className="grid grid-cols-4 gap-1.5 mt-1">
               {["SOL","ETH","BASE","HL","BNB","SUI","TON","AVAX","ARB","OP","POL","LIN"].map((c, i) => {
                 const heat = (i * 37) % 100;
@@ -271,7 +292,7 @@ export function CommandCenter() {
             </div>
           </Panel>
 
-          <Panel title="AI SIGNAL FEED" icon={Brain}>
+          <Panel title="AI SIGNAL FEED · DEMO" icon={Brain}>
             {[
               "Narrative shift: AI-agents +18%",
               "Whale rotation SOL → HYPE",
@@ -285,7 +306,7 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="MARKET ALERTS" icon={Zap}>
+          <Panel title="MARKET ALERTS · DEMO" icon={Zap}>
             {[
               ["HYPE", "BREAKOUT", "ok"],
               ["BONK", "VOL SPIKE", "ok"],
@@ -296,7 +317,8 @@ export function CommandCenter() {
             ))}
           </Panel>
 
-          <Panel title="VOLUME INDICATORS" icon={LineChart}>
+
+          <Panel title="VOLUME INDICATORS · DEMO" icon={LineChart}>
             <div className="flex items-end gap-1 h-24 mt-2">
               {Array.from({ length: 22 }).map((_, i) => {
                 const h = 20 + ((i * 53) % 70);
@@ -328,6 +350,44 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: any; chil
         <Icon className="size-3.5 text-primary" />
       </div>
       <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function LiveMarketPanel() {
+  const { data, isLoading, isError } = useMarketPrices();
+  const coins = (data ?? []).slice(0, 6);
+  return (
+    <div className="glass-strong border-glow rounded-2xl p-5 scanline lg:col-span-1 relative">
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+        <span className="text-[10px] font-mono tracking-[0.3em] text-accent flex items-center gap-2">
+          <span className="size-1.5 rounded-full bg-accent animate-pulse-glow" />
+          LIVE MARKET · COINGECKO
+        </span>
+        <Activity className="size-3.5 text-accent" />
+      </div>
+      <div className="space-y-2">
+        {isError && (
+          <div className="text-[11px] font-mono text-red-400">
+            Market feed offline — retrying…
+          </div>
+        )}
+        {isLoading && !data && (
+          <div className="text-[11px] font-mono text-muted-foreground">Connecting to feed…</div>
+        )}
+        {coins.map((c) => (
+          <div key={c.sym} className="flex items-center justify-between text-[11px] font-mono">
+            <span className="text-foreground w-12">{c.sym}</span>
+            <span className="text-muted-foreground tabular-nums">{formatPrice(c.px)}</span>
+            <span
+              className={`tabular-nums w-16 text-right ${c.ch < 0 ? "text-red-400" : "text-accent"}`}
+            >
+              {c.ch >= 0 ? "+" : ""}
+              {c.ch.toFixed(2)}%
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -472,50 +532,12 @@ export function Contact() {
           </div>
         </motion.div>
 
-        <motion.form
-          {...fadeUp}
-          onSubmit={(e) => { e.preventDefault(); alert("Message captured. Marco will reach out."); }}
-          className="mt-14 glass-strong border-glow rounded-3xl p-6 sm:p-10 grid sm:grid-cols-2 gap-4"
-        >
-          <Field label="Name" name="name" placeholder="Your name" />
-          <Field label="Telegram" name="telegram" placeholder="@handle" />
-          <Field label="Email" name="email" type="email" placeholder="you@domain.com" className="sm:col-span-2" />
-          <Field label="Message" name="message" placeholder="Tell us about the collaboration…" textarea className="sm:col-span-2" />
-          <div className="sm:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
-            <span className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground">
-              SECURE · ENCRYPTED · DIRECT
-            </span>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform"
-            >
-              Transmit <ArrowUpRight className="size-4" />
-            </button>
-          </div>
-        </motion.form>
+        <ContactForm />
       </div>
     </section>
   );
 }
 
-function Field({
-  label, name, placeholder, type = "text", textarea, className = "",
-}: {
-  label: string; name: string; placeholder?: string; type?: string; textarea?: boolean; className?: string;
-}) {
-  const cls =
-    "w-full bg-white/[0.03] border border-white/8 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-all";
-  return (
-    <label className={`block ${className}`}>
-      <span className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">{label}</span>
-      {textarea ? (
-        <textarea name={name} rows={4} placeholder={placeholder} className={cls} />
-      ) : (
-        <input name={name} type={type} placeholder={placeholder} className={cls} />
-      )}
-    </label>
-  );
-}
 
 /* FOOTER ---------------------------------------------------------- */
 export function Footer() {
