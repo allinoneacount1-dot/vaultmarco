@@ -98,14 +98,20 @@ export function Terminal() {
 }
 
 function MiniChart({ tick, bias }: { tick: number; bias: number }) {
+  // Simple seeded random for consistent output between server and client
+  const seededRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+  
   const trend = bias / 100;
   const candles = Array.from({ length: 28 }, (_, i) => {
     const seed = (i + tick * 0.3) * 0.7;
     const drift = trend * i * 0.6;
     const o = 50 + Math.sin(seed) * 18 + drift;
     const c = 50 + Math.sin(seed + 0.8) * 20 + drift;
-    const h = Math.max(o, c) + 4 + Math.random() * 2;
-    const l = Math.min(o, c) - 4 - Math.random() * 2;
+    const h = Math.max(o, c) + 4 + seededRandom(seed + 100) * 2;
+    const l = Math.min(o, c) - 4 - seededRandom(seed + 200) * 2;
     return { o, c, h, l };
   });
   return (
