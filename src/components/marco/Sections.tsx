@@ -134,6 +134,8 @@ const ecosystem = [
     href: "https://t.me/DxmZone",
     tone: "mint",
   },
+];
+
 
 export function Ecosystem() {
   return (
