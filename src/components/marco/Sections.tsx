@@ -734,12 +734,12 @@ function LiveMarketPanel({
 
 /* PARTNERSHIPS ---------------------------------------------------- */
 const partners = [
-  { name: "Community Alpha", tag: "Network", icon: MessageCircle, logos: ["https://assets.coingecko.com/coins/images/4128/large/solana.png", "https://placehold.co/24x24/0f172a/0ea5e9?text=T", "https://placehold.co/24x24/0f172a/6366f1?text=D"] },
-  { name: "Web3 Builders", tag: "Builders", icon: Cpu, logos: ["https://assets.coingecko.com/coins/images/279/large/ethereum.png", "https://assets.coingecko.com/coins/images/4128/large/solana.png", "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png"] },
-  { name: "AI Infrastructure", tag: "AI", icon: Brain, logos: ["https://placehold.co/24x24/0f172a/76b900?text=N", "https://placehold.co/24x24/0f172a/10a37f?text=O", "https://assets.coingecko.com/coins/images/17156/large/coingecko_symbol.png"] },
-  { name: "Trading Ecosystem", tag: "Trading", icon: LineChart, logos: ["https://assets.coingecko.com/coins/images/12541/large/uniswap-uni.png", "https://assets.coingecko.com/coins/images/28605/large/jup.png", "https://placehold.co/24x24/0f172a/06b6d4?text=P"] },
-  { name: "Launch Partners", tag: "Launchpads", icon: Flame, logos: ["https://placehold.co/24x24/0f172a/38bdf8?text=C", "https://placehold.co/24x24/0f172a/818cf8?text=D", "https://placehold.co/24x24/0f172a/22d3ee?text=T"] },
-  { name: "Strategic Networks", tag: "Strategy", icon: Network, logos: ["https://assets.coingecko.com/coins/images/4128/large/solana.png", "https://assets.coingecko.com/coins/images/279/large/ethereum.png", "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png", "https://placehold.co/24x24/0f172a/22c55e?text=B"] },
+  { name: "Community Alpha", tag: "Network", icon: MessageCircle, logos: ["https://via.placeholder.com/24/0f172a/22c55e?text=S", "https://via.placeholder.com/24/0f172a/0ea5e9?text=T", "https://via.placeholder.com/24/0f172a/6366f1?text=D"] },
+  { name: "Web3 Builders", tag: "Builders", icon: Cpu, logos: ["https://via.placeholder.com/24/0f172a/627eea?text=E", "https://via.placeholder.com/24/0f172a/9945ff?text=S", "https://via.placeholder.com/24/0f172a/f0b90b?text=B"] },
+  { name: "AI Infrastructure", tag: "AI", icon: Brain, logos: ["https://via.placeholder.com/24/0f172a/76b900?text=N", "https://via.placeholder.com/24/0f172a/10a37f?text=O", "https://via.placeholder.com/24/0f172a/fca311?text=C"] },
+  { name: "Trading Ecosystem", tag: "Trading", icon: LineChart, logos: ["https://via.placeholder.com/24/0f172a/ff007a?text=U", "https://via.placeholder.com/24/0f172a/9945ff?text=J", "https://via.placeholder.com/24/0f172a/06b6d4?text=P"] },
+  { name: "Launch Partners", tag: "Launchpads", icon: Flame, logos: ["https://via.placeholder.com/24/0f172a/38bdf8?text=C", "https://via.placeholder.com/24/0f172a/818cf8?text=D", "https://via.placeholder.com/24/0f172a/22d3ee?text=T"] },
+  { name: "Strategic Networks", tag: "Strategy", icon: Network, logos: ["https://via.placeholder.com/24/0f172a/9945ff?text=S", "https://via.placeholder.com/24/0f172a/627eea?text=E", "https://via.placeholder.com/24/0f172a/f0b90b?text=B", "https://via.placeholder.com/24/0f172a/22c55e?text=Ba"] },
 ];
 
 export function Partnerships() {
