@@ -6,6 +6,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
 import { WatchlistQuickView } from "./WatchlistQuickView";
 import { ThemeToggle } from "./ThemeToggle";
+import { GasTracker } from "./GasTracker";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -63,6 +64,7 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
+            <GasTracker />
             <WatchlistQuickView />
             <WhaleAlertIcon />
             <ThemeToggle />

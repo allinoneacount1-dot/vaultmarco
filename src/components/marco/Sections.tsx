@@ -58,6 +58,7 @@ import { Watchlist } from "./Watchlist";
 import { Terminal } from "./Terminal";
 import { RugScannerModal } from "./RugScannerModal";
 import { DexRealtimeTab } from "./DexRealtimeTab";
+import { PriceChart } from "./PriceChart";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -451,6 +452,7 @@ export function CommandCenter() {
   const tabs = [
     { id: "default", label: "All Panels" },
     { id: "dex", label: "DEX Realtime" },
+    { id: "chart", label: "Price Chart" },
   ];
 
   return (
@@ -606,6 +608,13 @@ export function CommandCenter() {
           {activeTab === "dex" && (
             <div className="lg:col-span-3">
               <DexRealtimeTab />
+            </div>
+          )}
+          {activeTab === "chart" && (
+            <div className="lg:col-span-3">
+              <Panel title="PRICE CHART · LIVE" icon={Activity}>
+                <PriceChart />
+              </Panel>
             </div>
           )}
         </motion.div>
