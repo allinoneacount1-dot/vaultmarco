@@ -532,50 +532,12 @@ export function Contact() {
           </div>
         </motion.div>
 
-        <motion.form
-          {...fadeUp}
-          onSubmit={(e) => { e.preventDefault(); alert("Message captured. Marco will reach out."); }}
-          className="mt-14 glass-strong border-glow rounded-3xl p-6 sm:p-10 grid sm:grid-cols-2 gap-4"
-        >
-          <Field label="Name" name="name" placeholder="Your name" />
-          <Field label="Telegram" name="telegram" placeholder="@handle" />
-          <Field label="Email" name="email" type="email" placeholder="you@domain.com" className="sm:col-span-2" />
-          <Field label="Message" name="message" placeholder="Tell us about the collaboration…" textarea className="sm:col-span-2" />
-          <div className="sm:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
-            <span className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground">
-              SECURE · ENCRYPTED · DIRECT
-            </span>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform"
-            >
-              Transmit <ArrowUpRight className="size-4" />
-            </button>
-          </div>
-        </motion.form>
+        <ContactForm />
       </div>
     </section>
   );
 }
 
-function Field({
-  label, name, placeholder, type = "text", textarea, className = "",
-}: {
-  label: string; name: string; placeholder?: string; type?: string; textarea?: boolean; className?: string;
-}) {
-  const cls =
-    "w-full bg-white/[0.03] border border-white/8 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-all";
-  return (
-    <label className={`block ${className}`}>
-      <span className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase">{label}</span>
-      {textarea ? (
-        <textarea name={name} rows={4} placeholder={placeholder} className={cls} />
-      ) : (
-        <input name={name} type={type} placeholder={placeholder} className={cls} />
-      )}
-    </label>
-  );
-}
 
 /* FOOTER ---------------------------------------------------------- */
 export function Footer() {
