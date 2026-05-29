@@ -238,9 +238,9 @@ export function CommandCenter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div {...fadeUp}>
           <SectionHeader
-            kicker="04 / COMMAND CENTER · ILLUSTRATIVE PREVIEW"
+            kicker="04 / COMMAND CENTER"
             title="Inside The Vault."
-            sub="A cinematic surface that fuses charts, scanners, alerts and AI signals into one professional crypto command center. Panels below are an illustrative preview of the operator workspace — not live market data."
+            sub="A cinematic surface that fuses live market data, charts, scanners, alerts and AI signals into one professional crypto command center. The LIVE MARKET panel below streams real prices from CoinGecko; other panels are illustrative previews of the operator workspace."
           />
         </motion.div>
 
@@ -248,7 +248,9 @@ export function CommandCenter() {
           {...fadeUp}
           className="mt-14 grid lg:grid-cols-3 gap-5"
         >
-          <Panel title="WALLET TRACKING" icon={Eye}>
+          <LiveMarketPanel />
+
+          <Panel title="WALLET TRACKING · DEMO" icon={Eye}>
             {[
               ["0x4f...d21a", "ETH", "+$182k"],
               ["7Gp...J9xQ", "SOL", "+$58k"],
