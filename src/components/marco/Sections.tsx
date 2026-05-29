@@ -34,7 +34,6 @@ import {
   Hexagon,
   Layers,
   RadioTower,
-  Terminal,
 } from "lucide-react";
 import {
   useMarketPrices,
@@ -55,6 +54,10 @@ import { Panel, Row } from "./Panel";
 import { PartnerDashboardModal } from "./PartnerDashboardModal";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
 import { WatchlistQuickView } from "./WatchlistQuickView";
+import { Watchlist } from "./Watchlist";
+import { Terminal } from "./Terminal";
+import { RugScannerModal } from "./RugScannerModal";
+import { DexRealtimeTab } from "./DexRealtimeTab";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -1076,30 +1079,3 @@ export function Footer() {
     </footer>
   );
 }
-
-import { Watchlist } from "./Watchlist";
-import { Terminal } from "./Terminal";
-import { RugScannerModal } from "./RugScannerModal";
-import { DexRealtimeTab } from "./DexRealtimeTab";
-import { PartnerDashboardModal } from "./PartnerDashboardModal";
-
-export function Sections() {
-  return (
-    <>
-      <Terminal />
-      <About />
-      <Ecosystem />
-      <Features />
-      <CommandCenter />
-      <Watchlist />
-      <Partnerships />
-      <SocialProof />
-      <Contact />
-      <Faq />
-      <Footer />
-    </>
-  );
-}
-
-// silence unused
-export const _ = { Bot };
