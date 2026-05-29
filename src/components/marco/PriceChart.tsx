@@ -1,116 +1,56 @@
 import { useEffect, useRef, useState } from "react";
-import { createChart } from "lightweight-charts";
 import { motion } from "framer-motion";
-
-type CandlestickData = {
-  time: string | number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-};
-
-// Generate realistic mock candlestick data
-const generateMockData = (count: number, symbol: string): CandlestickData[] => {
-  const data: CandlestickData[] = [];
-  let basePrice = symbol === "BTC" ? 69000 : 3600;
-  const now = Math.floor(Date.now() / 1000);
-
-  for (let i = count - 1; i >= 0; i--) {
-    const time = now - i * 3600; // 1 hour candles
-    const volatility = symbol === "BTC" ? 0.005 : 0.01;
-    const change = (Math.random() - 0.5) * 2 * volatility * basePrice;
-    const open = basePrice;
-    const close = basePrice + change;
-    const high = Math.max(open, close) + Math.random() * volatility * basePrice;
-    const low = Math.min(open, close) - Math.random() * volatility * basePrice;
-
-    data.push({
-      time,
-      open: parseFloat(open.toFixed(2)),
-      high: parseFloat(high.toFixed(2)),
-      low: parseFloat(low.toFixed(2)),
-      close: parseFloat(close.toFixed(2)),
-    });
-
-    basePrice = close;
-  }
-  return data;
-};
 
 export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<any | null>(null);
-  const seriesRef = useRef<any>(null);
   const [activeSymbol, setActiveSymbol] = useState(symbol);
 
+  // Simple SVG chart for reliability instead of lightweight-charts
+  const [chartData, setChartData] = useState<number[]>([]);
+
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    // Initialize chart
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: 400,
-      layout: {
-        background: { type: "solid", color: "transparent" },
-        textColor: "#9CA3AF",
-      },
-      grid: {
-        vertLines: { color: "rgba(255,255,255,0.05)" },
-        horzLines: { color: "rgba(255,255,255,0.05)" },
-      },
-      timeScale: {
-        borderColor: "rgba(255,255,255,0.1)",
-      },
-    });
-
-    // Create candlestick series
-    const candlestickSeries = chart.addSeries({
-      type: "Candlestick",
-      upColor: "#22C55E",
-      downColor: "#EF4444",
-      borderUpColor: "#22C55E",
-      borderDownColor: "#EF4444",
-      wickUpColor: "#22C55E",
-      wickDownColor: "#EF4444",
-    });
-
-    candlestickSeries.data = generateMockData(100, activeSymbol);
-
-    chartRef.current = chart;
-    seriesRef.current = candlestickSeries;
-
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current && chart) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-        });
-      }
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (chart) chart.remove();
-    };
-  }, [activeSymbol]);
-
-  // Update data when symbol changes
-  useEffect(() => {
-    if (seriesRef.current) {
-      seriesRef.current.data = generateMockData(100, activeSymbol);
+    // Generate simple price data
+    const data: number[] = [];
+    let price = activeSymbol === "BTC" ? 69000 : activeSymbol === "ETH" ? 3600 : activeSymbol === "SOL" ? 140 : 65;
+    
+    for (let i = 0; i < 100; i++) {
+      price += (Math.random() - 0.48) * (price * 0.01);
+      data.push(price);
     }
+    setChartData(data);
   }, [activeSymbol]);
+
+  // Create SVG path
+  const getPath = () => {
+    if (chartData.length === 0) return "";
+    
+    const width = 800;
+    const height = 300;
+    const max = Math.max(...chartData);
+    const min = Math.min(...chartData);
+    const range = max - min || 1;
+    
+    const points = chartData.map((value, i) => {
+      const x = (i / (chartData.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+    }).join(" ");
+    
+    const areaPoints = points + ` L ${width} ${height} L 0 ${height} Z`;
+    
+    return { path: points, area: areaPoints };
+  };
+
+  const { path, area } = getPath();
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {["BTC", "ETH", "SOL", "HYPE"].map((s) => (
           <button
             key={s}
             onClick={() => setActiveSymbol(s)}
-            className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
+            className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all whitespace-nowrap ${
               activeSymbol === s ? "bg-primary text-primary-foreground glow-cyan" : "glass text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -125,7 +65,24 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-      />
+      >
+        <svg viewBox="0 0 800 300" className="w-full h-80">
+          <defs>
+            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#91E7FF" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#91E7FF" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          
+          <path d={area} fill="url(#chartGradient)" />
+          <path d={path} fill="none" stroke="#91E7FF" strokeWidth="2" />
+          
+          {/* Grid lines */}
+          <line x1="0" y1="150" x2="800" y2="150" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          <line x1="0" y1="75" x2="800" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          <line x1="0" y1="225" x2="800" y2="225" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+        </svg>
+      </motion.div>
     </div>
   );
 }
