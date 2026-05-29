@@ -5,6 +5,7 @@ import { Logo } from "./Logo";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
 import { WatchlistQuickView } from "./WatchlistQuickView";
+import { ThemeToggle } from "./ThemeToggle";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -64,6 +65,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             <WatchlistQuickView />
             <WhaleAlertIcon />
+            <ThemeToggle />
             <ConnectButton.Custom>
               {({ account, chain, openConnectModal, mounted }) => {
                 if (!mounted) return null;
