@@ -75,6 +75,59 @@ export type Meta = {
   image: string;
 };
 
+// DexScreener API Response Types
+interface DexScreenerToken {
+  symbol?: string;
+  name?: string;
+  chainId?: string;
+  address?: string;
+  image?: string;
+  logo?: string;
+  priceUsd?: number;
+  priceChange?: { h24?: number };
+  volume?: { h24?: number };
+  liquidity?: { usd?: number };
+}
+
+interface DexScreenerBoost {
+  token?: DexScreenerToken;
+  dex?: string;
+  amount?: number;
+  tier?: BoostTier;
+}
+
+interface DexScreenerAd {
+  token?: DexScreenerToken;
+  type?: string;
+  timestamp?: number;
+}
+
+interface DexScreenerPair {
+  baseToken?: { symbol?: string; name?: string; address?: string };
+  chainId?: string;
+  dexId?: string;
+  priceUsd?: number;
+  priceChange?: { h24?: number };
+  volume?: { h24?: number };
+  info?: { imageUrl?: string };
+}
+
+interface DexScreenerBoostResponse {
+  boosts?: DexScreenerBoost[];
+}
+
+interface DexScreenerAdsResponse {
+  ads?: DexScreenerAd[];
+}
+
+interface DexScreenerTakeoversResponse {
+  takeovers?: DexScreenerAd[];
+}
+
+interface DexScreenerTrendingResponse {
+  pairs?: DexScreenerPair[];
+}
+
 // ------------------------------
 // API Helpers
 // ------------------------------
@@ -104,21 +157,21 @@ async function fetchTokenBoosts(): Promise<TokenBoost[]> {
   try {
     const res = await fetch(`${API_BASE}/token-boosts/latest/v1`);
     if (!res.ok) throw new Error(`Token Boosts ${res.status}`);
-    const data = await res.json();
+    const data: DexScreenerBoostResponse = await res.json();
     
-    return (data?.boosts || []).map((item: any, index: number) => ({
+    return (data.boosts || []).map((item, index) => ({
       id: `boost-${index}`,
-      symbol: item?.token?.symbol || "UNKNOWN",
-      name: item?.token?.name || "Unknown Token",
-      chain: normalizeChain(item?.token?.chainId || "eth"),
-      dex: item?.dex || "Unknown",
-      price: item?.token?.priceUsd || 0,
-      change24h: item?.token?.priceChange?.h24 || 0,
-      volume24h: item?.token?.volume?.h24 || 0,
-      boostAmount: item?.amount || 0,
-      boostTier: item?.tier || "Low Boost",
-      tokenAddress: item?.token?.address || "",
-      icon: item?.token?.image || item?.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item?.token?.chainId || "eth"}/${item?.token?.address}.png`,
+      symbol: item.token?.symbol || "UNKNOWN",
+      name: item.token?.name || "Unknown Token",
+      chain: normalizeChain(item.token?.chainId || "eth"),
+      dex: item.dex || "Unknown",
+      price: item.token?.priceUsd || 0,
+      change24h: item.token?.priceChange?.h24 || 0,
+      volume24h: item.token?.volume?.h24 || 0,
+      boostAmount: item.amount || 0,
+      boostTier: item.tier || "Low Boost",
+      tokenAddress: item.token?.address || "",
+      icon: item.token?.image || item.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item.token?.chainId || "eth"}/${item.token?.address || ""}.png`,
     }));
   } catch (err) {
     console.warn("DexScreener Token Boosts API failed, using fallback:", err);
@@ -130,21 +183,21 @@ async function fetchTopTokenBoosts(): Promise<TokenBoost[]> {
   try {
     const res = await fetch(`${API_BASE}/token-boosts/top/v1`);
     if (!res.ok) throw new Error(`Top Token Boosts ${res.status}`);
-    const data = await res.json();
+    const data: DexScreenerBoostResponse = await res.json();
     
-    return (data?.boosts || []).map((item: any, index: number) => ({
+    return (data.boosts || []).map((item, index) => ({
       id: `top-boost-${index}`,
-      symbol: item?.token?.symbol || "UNKNOWN",
-      name: item?.token?.name || "Unknown Token",
-      chain: normalizeChain(item?.token?.chainId || "eth"),
-      dex: item?.dex || "Unknown",
-      price: item?.token?.priceUsd || 0,
-      change24h: item?.token?.priceChange?.h24 || 0,
-      volume24h: item?.token?.volume?.h24 || 0,
-      boostAmount: item?.amount || 0,
-      boostTier: item?.tier || "Low Boost",
-      tokenAddress: item?.token?.address || "",
-      icon: item?.token?.image || item?.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item?.token?.chainId || "eth"}/${item?.token?.address}.png`,
+      symbol: item.token?.symbol || "UNKNOWN",
+      name: item.token?.name || "Unknown Token",
+      chain: normalizeChain(item.token?.chainId || "eth"),
+      dex: item.dex || "Unknown",
+      price: item.token?.priceUsd || 0,
+      change24h: item.token?.priceChange?.h24 || 0,
+      volume24h: item.token?.volume?.h24 || 0,
+      boostAmount: item.amount || 0,
+      boostTier: item.tier || "Low Boost",
+      tokenAddress: item.token?.address || "",
+      icon: item.token?.image || item.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item.token?.chainId || "eth"}/${item.token?.address || ""}.png`,
     }));
   } catch (err) {
     console.warn("DexScreener Top Token Boosts API failed, using fallback:", err);
@@ -157,21 +210,21 @@ async function fetchAds(): Promise<AdToken[]> {
   try {
     const res = await fetch(`${API_BASE}/ads/latest/v1`);
     if (!res.ok) throw new Error(`Ads ${res.status}`);
-    const data = await res.json();
+    const data: DexScreenerAdsResponse = await res.json();
     
-    return (data?.ads || []).map((item: any, index: number) => ({
+    return (data.ads || []).map((item, index) => ({
       id: `ad-${index}`,
-      type: item?.type || "AD",
-      symbol: item?.token?.symbol || "UNKNOWN",
-      name: item?.token?.name || "Unknown Token",
-      price: item?.token?.priceUsd || 0,
-      change24h: item?.token?.priceChange?.h24 || 0,
-      volume: item?.token?.volume?.h24 || 0,
-      liquidity: item?.token?.liquidity?.usd || 0,
-      timestamp: item?.timestamp || Date.now(),
-      chain: normalizeChain(item?.token?.chainId || "eth"),
-      tokenAddress: item?.token?.address || "",
-      icon: item?.token?.image || item?.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item?.token?.chainId || "eth"}/${item?.token?.address}.png`,
+      type: item.type || "AD",
+      symbol: item.token?.symbol || "UNKNOWN",
+      name: item.token?.name || "Unknown Token",
+      price: item.token?.priceUsd || 0,
+      change24h: item.token?.priceChange?.h24 || 0,
+      volume: item.token?.volume?.h24 || 0,
+      liquidity: item.token?.liquidity?.usd || 0,
+      timestamp: item.timestamp || Date.now(),
+      chain: normalizeChain(item.token?.chainId || "eth"),
+      tokenAddress: item.token?.address || "",
+      icon: item.token?.image || item.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item.token?.chainId || "eth"}/${item.token?.address || ""}.png`,
     }));
   } catch (err) {
     console.warn("DexScreener Ads API failed, using fallback:", err);
@@ -183,21 +236,21 @@ async function fetchCommunityTakeovers(): Promise<AdToken[]> {
   try {
     const res = await fetch(`${API_BASE}/community-takeovers/latest/v1`);
     if (!res.ok) throw new Error(`Community Takeovers ${res.status}`);
-    const data = await res.json();
+    const data: DexScreenerTakeoversResponse = await res.json();
     
-    return (data?.takeovers || []).map((item: any, index: number) => ({
+    return (data.takeovers || []).map((item, index) => ({
       id: `takeover-${index}`,
       type: "Takeover",
-      symbol: item?.token?.symbol || "UNKNOWN",
-      name: item?.token?.name || "Unknown Token",
-      price: item?.token?.priceUsd || 0,
-      change24h: item?.token?.priceChange?.h24 || 0,
-      volume: item?.token?.volume?.h24 || 0,
-      liquidity: item?.token?.liquidity?.usd || 0,
-      timestamp: item?.timestamp || Date.now(),
-      chain: normalizeChain(item?.token?.chainId || "eth"),
-      tokenAddress: item?.token?.address || "",
-      icon: item?.token?.image || item?.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item?.token?.chainId || "eth"}/${item?.token?.address}.png`,
+      symbol: item.token?.symbol || "UNKNOWN",
+      name: item.token?.name || "Unknown Token",
+      price: item.token?.priceUsd || 0,
+      change24h: item.token?.priceChange?.h24 || 0,
+      volume: item.token?.volume?.h24 || 0,
+      liquidity: item.token?.liquidity?.usd || 0,
+      timestamp: item.timestamp || Date.now(),
+      chain: normalizeChain(item.token?.chainId || "eth"),
+      tokenAddress: item.token?.address || "",
+      icon: item.token?.image || item.token?.logo || `https://dd.dexscreener.com/ds-data/tokens/${item.token?.chainId || "eth"}/${item.token?.address || ""}.png`,
     }));
   } catch (err) {
     console.warn("DexScreener Community Takeovers API failed, using fallback:", err);
@@ -210,21 +263,21 @@ async function fetchTrending(): Promise<BoostToken[]> {
   try {
     const res = await fetch(`${API_BASE}/metas/trending/v1`);
     if (!res.ok) throw new Error(`Trending ${res.status}`);
-    const data = await res.json();
+    const data: DexScreenerTrendingResponse = await res.json();
     
-    return (data?.pairs || []).map((item: any, index: number) => ({
+    return (data.pairs || []).map((item, index) => ({
       id: `trending-${index}`,
-      symbol: item?.baseToken?.symbol || "UNKNOWN",
-      name: item?.baseToken?.name || "Unknown Token",
-      chain: normalizeChain(item?.chainId || "eth"),
-      dex: item?.dexId || "Unknown",
-      price: item?.priceUsd || 0,
-      change24h: item?.priceChange?.h24 || 0,
-      volume24h: item?.volume?.h24 || 0,
+      symbol: item.baseToken?.symbol || "UNKNOWN",
+      name: item.baseToken?.name || "Unknown Token",
+      chain: normalizeChain(item.chainId || "eth"),
+      dex: item.dexId || "Unknown",
+      price: item.priceUsd || 0,
+      change24h: item.priceChange?.h24 || 0,
+      volume24h: item.volume?.h24 || 0,
       boostAmount: 0,
       boostTier: "Low Boost" as BoostTier,
-      tokenAddress: item?.baseToken?.address || "",
-      icon: item?.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/${item?.chainId || "eth"}/${item?.baseToken?.address}.png`,
+      tokenAddress: item.baseToken?.address || "",
+      icon: item.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/${item.chainId || "eth"}/${item.baseToken?.address || ""}.png`,
     }));
   } catch (err) {
     console.warn("DexScreener Trending API failed, using fallback:", err);
@@ -239,7 +292,7 @@ async function fetchTokenProfileUpdates(): Promise<TokenProfileUpdate[]> {
     if (!res.ok) throw new Error(`Token Profile Updates ${res.status}`);
     const data = await res.json();
     
-    return (data?.updates || []).map((item: any, index: number) => ({
+    return (data?.updates || []).map((item, index) => ({
       id: `profile-update-${index}`,
       tokenAddress: item?.token?.address || "",
       chain: normalizeChain(item?.token?.chainId || "eth"),
@@ -262,7 +315,7 @@ async function fetchOrders(chainId: string, tokenAddress: string): Promise<Order
     if (!res.ok) throw new Error(`Orders ${res.status}`);
     const data = await res.json();
     
-    return (data?.orders || []).map((item: any, index: number) => ({
+    return (data?.orders || []).map((item, index) => ({
       id: `order-${index}`,
       pairAddress: item?.pairAddress || "",
       side: item?.side === "sell" ? "sell" : "buy",
@@ -415,7 +468,7 @@ export function useTrending() {
 
 // Token Profile Updates Hook
 export function useTokenProfileUpdates() {
-  return useQuery({
+  return useQuery<TokenProfileUpdate[]>({
     queryKey: ["dexscreener-profile-updates"],
     queryFn: fetchTokenProfileUpdates,
     refetchInterval: 300_000,
@@ -427,7 +480,7 @@ export function useTokenProfileUpdates() {
 
 // Orders Hook
 export function useOrders(chainId: string, tokenAddress: string) {
-  return useQuery({
+  return useQuery<Order[]>({
     queryKey: ["dexscreener-orders", chainId, tokenAddress],
     queryFn: () => fetchOrders(chainId, tokenAddress),
     refetchInterval: 30_000,
@@ -440,7 +493,7 @@ export function useOrders(chainId: string, tokenAddress: string) {
 
 // Pair Hook
 export function usePair(chainId: string, pairId: string) {
-  return useQuery({
+  return useQuery<Pair | null>({
     queryKey: ["dexscreener-pair", chainId, pairId],
     queryFn: () => fetchPair(chainId, pairId),
     refetchInterval: 60_000,
@@ -453,7 +506,7 @@ export function usePair(chainId: string, pairId: string) {
 
 // Search Hook
 export function useSearchPairs(query: string) {
-  return useQuery({
+  return useQuery<Pair[]>({
     queryKey: ["dexscreener-search", query],
     queryFn: () => searchPairs(query),
     refetchInterval: 300_000,
@@ -466,7 +519,7 @@ export function useSearchPairs(query: string) {
 
 // Token Pairs Hook
 export function useTokenPairs(chainId: string, tokenAddress: string) {
-  return useQuery({
+  return useQuery<Pair[]>({
     queryKey: ["dexscreener-token-pairs", chainId, tokenAddress],
     queryFn: () => fetchTokenPairs(chainId, tokenAddress),
     refetchInterval: 60_000,
@@ -479,7 +532,7 @@ export function useTokenPairs(chainId: string, tokenAddress: string) {
 
 // Tokens Hook
 export function useTokens(chainId: string, tokenAddresses: string[]) {
-  return useQuery({
+  return useQuery<Token[]>({
     queryKey: ["dexscreener-tokens", chainId, tokenAddresses.join(",")],
     queryFn: () => fetchTokens(chainId, tokenAddresses),
     refetchInterval: 60_000,
@@ -492,7 +545,7 @@ export function useTokens(chainId: string, tokenAddresses: string[]) {
 
 // Meta Hook
 export function useMeta(slug: string) {
-  return useQuery({
+  return useQuery<Meta | null>({
     queryKey: ["dexscreener-meta", slug],
     queryFn: () => fetchMeta(slug),
     refetchInterval: 600_000,
@@ -502,4 +555,3 @@ export function useMeta(slug: string) {
     enabled: !!slug,
   });
 }
-
