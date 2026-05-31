@@ -9,6 +9,7 @@ import { GasTracker } from "./GasTracker";
 
 const links = [
   { label: "Home", href: "#home" },
+  { label: "Dashboard", href: "/dashboard" },
   { label: "About", href: "#about" },
   { label: "Ecosystem", href: "#ecosystem" },
   { label: "Tools", href: "#tools" },
@@ -50,14 +51,25 @@ export function Navbar() {
 
           <nav className="hidden md:flex items-center gap-7">
             {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="text-[13px] tracking-wide text-muted-foreground hover:text-foreground transition-colors relative group"
-              >
-                {l.label}
-                <span className="absolute -bottom-1 left-0 h-px w-0 group-hover:w-full bg-primary transition-all duration-300" />
-              </a>
+              l.href.startsWith("/") ? (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  className="text-[13px] tracking-wide text-muted-foreground hover:text-foreground transition-colors relative group"
+                >
+                  {l.label}
+                  <span className="absolute -bottom-1 left-0 h-px w-0 group-hover:w-full bg-primary transition-all duration-300" />
+                </Link>
+              ) : (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="text-[13px] tracking-wide text-muted-foreground hover:text-foreground transition-colors relative group"
+                >
+                  {l.label}
+                  <span className="absolute -bottom-1 left-0 h-px w-0 group-hover:w-full bg-primary transition-all duration-300" />
+                </a>
+              )
             ))}
           </nav>
 
@@ -110,14 +122,25 @@ export function Navbar() {
           <div className="md:hidden mt-2 glass-strong rounded-2xl p-4 animate-fade-in">
             <div className="flex flex-col gap-1">
               {links.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                >
-                  {l.label}
-                </a>
+                l.href.startsWith("/") ? (
+                  <Link
+                    key={l.href}
+                    to={l.href}
+                    onClick={() => setOpen(false)}
+                    className="px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                  >
+                    {l.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className="px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                  >
+                    {l.label}
+                  </a>
+                )
               ))}
               <div className="mt-3">
                 <ConnectButton.Custom>

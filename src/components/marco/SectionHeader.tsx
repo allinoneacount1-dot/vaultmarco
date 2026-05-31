@@ -4,7 +4,7 @@ export const fadeUp = {
   initial: { opacity: 0, y: 60, filter: "blur(10px)" },
   whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
   viewport: { once: true, margin: "-100px", amount: 0.2 },
-  transition: { duration: 0.8, ease: [0.21, 0.9, 0.28, 1] },
+  transition: { duration: 0.8, ease: [0.21, 0.9, 0.28, 1] as any },
 };
 
 export const fadeIn = {
@@ -46,7 +46,7 @@ export function SectionHeader({ kicker, title, sub }: { kicker: string; title: s
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease: [0.21, 0.9, 0.28, 1], delay: 0.1 }}
+        transition={{ duration: 0.7, ease: [0.21, 0.9, 0.28, 1] as any, delay: 0.1 }}
       >
         {title}
       </motion.h2>

@@ -1,0 +1,194 @@
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { motion, memo } from "framer-motion";
+import { DashboardLayout } from "@/components/marco/DashboardLayout";
+import { KPICards } from "@/components/marco/KPICards";
+import { Panel } from "@/components/marco/Panel";
+import { Activity, TrendingUp, Zap, Eye } from "lucide-react";
+import { DexRealtimeTab } from "@/components/marco/DexRealtimeTab";
+import { useTokenBoosts, useAds } from "@/hooks/useDexScreener";
+import { getTierColor, getAdTypeIcon, formatNumber, formatPrice2 } from "@/components/marco/shared/helpers";
+import type { BoostToken, AdToken } from "@/components/marco/shared/types";
+
+function DashboardComponent() {
+  return (
+    <DashboardLayout>
+      <Outlet />
+    </DashboardLayout>
+  );
+}
+
+export const Route = createFileRoute("/dashboard")({
+  component: DashboardComponent,
+});
+
+const DashboardIndex = memo(function DashboardIndex() {
+  const { data: boosts, isLoading: boostsLoading } = useTokenBoosts();
+  const { data: ads, isLoading: adsLoading } = useAds();
+
+  return (
+    <div className="space-y-4 lg:space-y-6">
+      <motion.div 
+        className="mb-6 lg:mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 className="text-2xl lg:text-3xl font-bold text-gradient mb-2">Dashboard</h1>
+        <p className="text-muted-foreground text-sm lg:text-base">Overview of your crypto intelligence platform</p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
+        <KPICards />
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+        {/* Boost Feed */}
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Panel title="BOOST FEED · LIVE" icon={Zap}>
+            <div className="space-y-2 lg:space-y-3">
+              {(boostsLoading ? Array.from<BoostToken | undefined>({ length: 3 }) : (Array.isArray(boosts) ? boosts : []).slice(0, 3)).map((token, i) => (
+                <motion.div 
+                  key={token?.id || i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  className="flex items-center justify-between rounded-xl border border-white/10 p-2 lg:p-3 hover:bg-white/5 transition-all"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {token && (
+                        <>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[9px] lg:text-[10px] font-mono border ${getTierColor(token.boostTier || "Low Boost")}`}>
+                            {token.boostTier || "Low Boost"}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] lg:text-[10px] font-mono">
+                            {(token.chain || "eth").toUpperCase()}
+                          </span>
+                        </>
+                      )}
+                      <span className="text-[11px] lg:text-[12px] font-mono text-foreground truncate">{token?.symbol || "Loading..."}</span>
+                    </div>
+                    {token && (
+                      <div className="text-[10px] lg:text-[11px] text-muted-foreground mt-1">
+                        Vol: {formatNumber(token.volume24h || 0)} • Boost: {formatNumber(token.boostAmount || 0)}
+                      </div>
+                    )}
+                  </div>
+                  {token && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{formatPrice2(token.price || 0)}</div>
+                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-accent" : "text-red-400"}`}>
+                        {(token.change24h || 0) >= 0 ? "+" : ""}{(token.change24h || 0).toFixed(1)}%
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </Panel>
+        </motion.div>
+
+        {/* Ads Feed */}
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <Panel title="ADS FEED · LIVE" icon={TrendingUp}>
+            <div className="space-y-2 lg:space-y-3">
+              {(adsLoading ? Array.from<AdToken | undefined>({ length: 3 }) : (Array.isArray(ads) ? ads : []).slice(0, 3)).map((token, i) => (
+                <motion.div 
+                  key={token?.id || i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  className="flex items-center justify-between rounded-xl border border-white/10 p-2 lg:p-3 hover:bg-white/5 transition-all"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {token && (
+                        <>
+                          <span className="text-[11px] lg:text-[12px]">{getAdTypeIcon(token.type || "Ad")}</span>
+                          <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[9px] lg:text-[10px] font-mono border border-violet-500/30">
+                            {(token.type || "Ad").toUpperCase()}
+                          </span>
+                        </>
+                      )}
+                      <span className="text-[11px] lg:text-[12px] font-mono text-foreground truncate">{token?.symbol || "Loading..."}</span>
+                    </div>
+                    {token && (
+                      <div className="text-[10px] lg:text-[11px] text-muted-foreground mt-1">
+                        Liq: {formatNumber(token.liquidity || 0)} • Vol: {formatNumber(token.volume || 0)}
+                      </div>
+                    )}
+                  </div>
+                  {token && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{formatPrice2(token.price || 0)}</div>
+                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-accent" : "text-red-400"}`}>
+                        {(token.change24h || 0) >= 0 ? "+" : ""}{(token.change24h || 0).toFixed(1)}%
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </Panel>
+        </motion.div>
+
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <Panel title="QUICK STATS" icon={Activity}>
+            <div className="space-y-2">
+              {[
+                { label: "Solana Gas", value: "45 Gwei", color: "text-green-400" },
+                { label: "Ethereum Gas", value: "32 Gwei", color: "text-yellow-400" },
+                { label: "BTC Dominance", value: "52.4%", color: "text-accent" },
+                { label: "Fear & Greed", value: "72 (Greed)", color: "text-orange-400" },
+              ].map((stat, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
+                  className="flex items-center justify-between py-1.5 lg:py-2 border-b border-white/5 last:border-0"
+                >
+                  <span className="text-[11px] lg:text-[12px] font-mono text-muted-foreground">{stat.label}</span>
+                  <span className={`text-[11px] lg:text-[12px] font-mono ${stat.color}`}>{stat.value}</span>
+                </motion.div>
+              ))}
+            </div>
+          </Panel>
+        </motion.div>
+
+        {/* DEX Realtime (full width) */}
+        <motion.div 
+          className="xl:col-span-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <Panel title="DEX REALTIME · LIVE" icon={Eye}>
+            <DexRealtimeTab />
+          </Panel>
+        </motion.div>
+      </div>
+    </div>
+  );
+});
+
+export { DashboardIndex };

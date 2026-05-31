@@ -1,12 +1,11 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Activity, ArrowUpRight, Eye, Radar, Cpu, Brain, LineChart, ShieldAlert, Star } from "lucide-react";
+import { Activity, ArrowUpRight, Eye, Radar, Cpu, Brain, LineChart, ShieldAlert, Star, Zap, TrendingUp, Users } from "lucide-react";
 import {
   useMarketPrices,
   formatPrice,
   useChainHeatmap,
   useVolumeData,
-  useMarketAlerts,
   formatVolume,
   MarketCoin,
 } from "@/hooks/useMarketPrices";
@@ -20,12 +19,46 @@ import { DexRealtimeTab } from "./DexRealtimeTab";
 import { PriceChart } from "./PriceChart";
 import { SectionHeader, fadeUp } from "./SectionHeader";
 
+// Import shared files and DexScreener hooks
+import type { Chain, BoostToken, AdToken } from "./shared/types";
+import { getTokenIcon } from "./shared/tokenIcon";
+import { CHAIN_MAP, getTierColor, getAdTypeIcon, formatTimestamp, formatNumber, formatPrice2 } from "./shared/helpers";
+import { useTokenBoosts, useAds, useCommunityTakeovers } from "@/hooks/useDexScreener";
+
+
 export function CommandCenter() {
   const { data, isLoading, isError } = useMarketPrices();
   const { checkAlerts } = usePriceAlerts();
   const heatmap = useChainHeatmap(data);
   const volumeData = useVolumeData(data);
   const [activeTab, setActiveTab] = useState("default");
+  const [selectedChain, setSelectedChain] = useState<Chain>("all");
+
+  // Use DexScreener API
+  const { data: boosts, isLoading: boostsLoading } = useTokenBoosts();
+  const { data: ads, isLoading: adsLoading } = useAds();
+  const { data: takeovers, isLoading: takeoversLoading } = useCommunityTakeovers();
+
+  const filteredBoosts = (boosts || []).filter((token: BoostToken) => 
+    selectedChain === "all" || token.chain === selectedChain
+  ).sort((a: BoostToken, b: BoostToken) => {
+    if (b.boostAmount !== a.boostAmount) return b.boostAmount - a.boostAmount;
+    return b.volume24h - a.volume24h;
+  });
+
+  const filteredAds = (ads || []).filter((token: AdToken) =>
+    selectedChain === "all" || token.chain === selectedChain
+  ).sort((a: AdToken, b: AdToken) => {
+    if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
+    return b.liquidity - a.liquidity;
+  });
+
+  const filteredTakeovers = (takeovers || []).filter((token: AdToken) =>
+    selectedChain === "all" || token.chain === selectedChain
+  ).sort((a: AdToken, b: AdToken) => {
+    if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
+    return b.liquidity - a.liquidity;
+  });
 
   // Check alerts whenever market data updates
   useEffect(() => {
@@ -37,6 +70,8 @@ export function CommandCenter() {
   const tabs = [
     { id: "default", label: "All Panels" },
     { id: "dex", label: "DEX Realtime" },
+    { id: "dex-trending", label: "DEX Trending" },
+    { id: "takeovers", label: "Community Takeovers" },
     { id: "chart", label: "Price Chart" },
   ];
 
@@ -52,10 +87,15 @@ export function CommandCenter() {
         </motion.div>
 
         <motion.div {...fadeUp} className="mt-8 sm:mt-10 mb-5 sm:mb-6 flex gap-2 overflow-x-auto pb-2">
-          {tabs.map((tab) => (
-            <button
+          {tabs.map((tab, i) => (
+            <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] font-mono transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? "bg-primary text-primary-foreground glow-cyan"
@@ -63,7 +103,7 @@ export function CommandCenter() {
               }`}
             >
               {tab.label}
-            </button>
+            </motion.button>
           ))}
         </motion.div>
 
@@ -71,6 +111,232 @@ export function CommandCenter() {
           {activeTab === "default" && (
             <>
               <LiveMarketPanel data={data} isLoading={isLoading} isError={isError} />
+
+              <Panel title="BOOST FEED · LIVE" icon={Zap}>
+                <div className="space-y-2 mt-1">
+                  {boostsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-xl border border-white/10 p-2"
+                      >
+                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse mb-1" />
+                        <div className="h-2 w-48 bg-white/5 rounded animate-pulse" />
+                      </motion.div>
+                    ))
+                  ) : (
+                    filteredBoosts.slice(0, 4).map((token: BoostToken, i: number) => {
+                      const chain = CHAIN_MAP[token.chain] || token.chain;
+                      const url = `https://dexscreener.com/${chain}/${token.tokenAddress}`;
+                      return (
+                        <motion.a
+                          key={token.id || i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          whileHover={{ x: 5, boxShadow: "0 0 20px rgba(145,231,255,0.15)" }}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between rounded-lg border border-white/10 p-2 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src={getTokenIcon(token)} 
+                              alt={token.symbol}
+                              className="w-7 h-7 rounded-full bg-white/10"
+                              onError={(e) => {
+                                // Fallback if image fails
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-mono border ${getTierColor(token.boostTier)}`}>
+                                  {token.boostTier}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[8px] font-mono">
+                                  {token.chain.toUpperCase()}
+                                </span>
+                                <span className="text-[10px] font-mono text-foreground">
+                                  {token.symbol}
+                                </span>
+                              </div>
+                              <div className="text-[9px] text-muted-foreground mt-0.5">
+                                Vol: {formatNumber(token.volume24h)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] font-mono text-foreground">
+                              {formatPrice2(token.price)}
+                            </div>
+                            <div
+                              className={`text-[9px] font-mono ${
+                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                              }`}
+                            >
+                              {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
+                            </div>
+                          </div>
+                        </motion.a>
+                      );
+                    })
+                  )}
+                </div>
+              </Panel>
+
+              <Panel title="ADS FEED · LIVE" icon={TrendingUp}>
+                <div className="space-y-2 mt-1">
+                  {adsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-xl border border-white/10 p-2"
+                      >
+                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse mb-1" />
+                        <div className="h-2 w-48 bg-white/5 rounded animate-pulse" />
+                      </motion.div>
+                    ))
+                  ) : (
+                    filteredAds.slice(0, 4).map((token: AdToken, i: number) => {
+                      const chain = CHAIN_MAP[token.chain] || token.chain;
+                      const url = `https://dexscreener.com/${chain}/${token.tokenAddress}`;
+                      return (
+                        <motion.a
+                          key={token.id || i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          whileHover={{ x: 5, boxShadow: "0 0 20px rgba(139,92,246,0.15)" }}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between rounded-lg border border-white/10 p-2 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src={getTokenIcon(token)} 
+                              alt={token.symbol}
+                              className="w-7 h-7 rounded-full bg-white/10"
+                              onError={(e) => {
+                                // Fallback if image fails
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px]">{getAdTypeIcon(token.type)}</span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[8px] font-mono border border-violet-500/30">
+                                  {token.type.toUpperCase()}
+                                </span>
+                                <span className="text-[10px] font-mono text-foreground">
+                                  {token.symbol}
+                                </span>
+                              </div>
+                              <div className="text-[9px] text-muted-foreground mt-0.5">
+                                Liq: {formatNumber(token.liquidity)} · {formatTimestamp(token.timestamp)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] font-mono text-foreground">
+                              {formatPrice2(token.price)}
+                            </div>
+                            <div
+                              className={`text-[9px] font-mono ${
+                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                              }`}
+                            >
+                              {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
+                            </div>
+                          </div>
+                        </motion.a>
+                      );
+                    })
+                  )}
+                </div>
+              </Panel>
+
+              <Panel title="COMMUNITY TAKEOVERS · LIVE" icon={Users}>
+                <div className="space-y-2 mt-1">
+                  {takeoversLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-xl border border-white/10 p-2"
+                      >
+                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse mb-1" />
+                        <div className="h-2 w-48 bg-white/5 rounded animate-pulse" />
+                      </motion.div>
+                    ))
+                  ) : (
+                    filteredTakeovers.slice(0, 4).map((token: AdToken, i: number) => {
+                      const chain = CHAIN_MAP[token.chain] || token.chain;
+                      const url = `https://dexscreener.com/${chain}/${token.tokenAddress}`;
+                      return (
+                        <motion.a
+                          key={token.id || i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          whileHover={{ x: 5, boxShadow: "0 0 20px rgba(167,139,250,0.15)" }}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between rounded-lg border border-white/10 p-2 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src={getTokenIcon(token)} 
+                              alt={token.symbol}
+                              className="w-7 h-7 rounded-full bg-white/10"
+                              onError={(e) => {
+                                // Fallback if image fails
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[8px] font-mono border border-violet-500/30">
+                                  TAKEOVER
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[8px] font-mono">
+                                  {token.chain.toUpperCase()}
+                                </span>
+                                <span className="text-[10px] font-mono text-foreground">
+                                  {token.symbol}
+                                </span>
+                              </div>
+                              <div className="text-[9px] text-muted-foreground mt-0.5">
+                                Vol: {formatNumber(token.volume)} · {formatTimestamp(token.timestamp)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] font-mono text-foreground">
+                              {formatPrice2(token.price)}
+                            </div>
+                            <div
+                              className={`text-[9px] font-mono ${
+                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                              }`}
+                            >
+                              {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
+                            </div>
+                          </div>
+                        </motion.a>
+                      );
+                    })
+                  )}
+                </div>
+              </Panel>
 
               <Panel title="WALLET TRACKING · LIVE" icon={Eye}>
                 {[
@@ -195,6 +461,345 @@ export function CommandCenter() {
               <DexRealtimeTab />
             </div>
           )}
+
+          {activeTab === "dex-trending" && (
+            <div className="lg:col-span-3 space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                {(
+                  [
+                    { id: "all", label: "ALL" },
+                    { id: "sol", label: "SOL" },
+                    { id: "eth", label: "ETH" },
+                    { id: "base", label: "BASE" },
+                    { id: "bnb", label: "BNB" }
+                  ] as const
+                ).map((chain, i) => (
+                  <motion.button
+                    key={chain.id}
+                    onClick={() => setSelectedChain(chain.id)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all border ${
+                      selectedChain === chain.id
+                        ? "bg-primary/20 text-primary border-primary/50"
+                        : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                    }`}
+                  >
+                    {chain.label}
+                  </motion.button>
+                ))}
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-4">
+                <Panel title="BOOST FEED · LIVE" icon={Zap}>
+                  <div className="space-y-3">
+                    {boostsLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl border border-white/10 p-3"
+                        >
+                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
+                          <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                        </motion.div>
+                      ))
+                    ) : filteredBoosts.length > 0 ? (
+                      filteredBoosts.map((token: BoostToken, i: number) => {
+                        const chain = CHAIN_MAP[token.chain] || token.chain;
+                        const url = `https://dexscreener.com/${chain}/${token.tokenAddress}`;
+                        return (
+                          <motion.a
+                            key={token.id || i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                            whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(145,231,255,0.1)" }}
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <img 
+                                src={getTokenIcon(token)} 
+                                alt={token.symbol}
+                                className="w-9 h-9 rounded-full bg-white/10 flex-shrink-0"
+                                onError={(e) => {
+                                  // Fallback if image fails
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${getTierColor(token.boostTier)}`}>
+                                    {token.boostTier}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                                    {token.chain.toUpperCase()}
+                                  </span>
+                                  <span className="text-[12px] font-mono text-foreground">
+                                    {token.symbol} · {token.name}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-3">
+                                  <span>DEX: {token.dex}</span>
+                                  <span>Vol: {formatNumber(token.volume24h)}</span>
+                                  <span>Boost: {formatNumber(token.boostAmount)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right flex items-center gap-2">
+                              <div>
+                                <div className="text-[12px] font-mono text-foreground">
+                                  {formatPrice2(token.price)}
+                                </div>
+                                <div
+                                  className={`text-[11px] font-mono mt-1 ${
+                                    token.change24h > 0 ? "text-accent" : "text-red-400"
+                                  }`}
+                                >
+                                  {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
+                                </div>
+                              </div>
+                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
+                            </div>
+                          </motion.a>
+                        );
+                      })
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex flex-col items-center justify-center py-8 px-4 text-center"
+                      >
+                        <p className="text-muted-foreground text-sm font-mono">No boosts found for this chain</p>
+                      </motion.div>
+                    )}
+                  </div>
+                </Panel>
+
+                <Panel title="ADS FEED · LIVE" icon={TrendingUp}>
+                  <div className="space-y-3">
+                    {adsLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl border border-white/10 p-3"
+                        >
+                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
+                          <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                        </motion.div>
+                      ))
+                    ) : filteredAds.length > 0 ? (
+                      filteredAds.map((token: AdToken, i: number) => {
+                        const chain = CHAIN_MAP[token.chain] || token.chain;
+                        const url = `https://dexscreener.com/${chain}/${token.tokenAddress}`;
+                        return (
+                          <motion.a
+                            key={token.id || i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                            whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(139,92,246,0.1)" }}
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <img 
+                                src={getTokenIcon(token)} 
+                                alt={token.symbol}
+                                className="w-9 h-9 rounded-full bg-white/10 flex-shrink-0"
+                                onError={(e) => {
+                                  // Fallback if image fails
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[12px]">{getAdTypeIcon(token.type)}</span>
+                                  <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-mono border border-violet-500/30">
+                                    {token.type.toUpperCase()}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                                    {token.chain.toUpperCase()}
+                                  </span>
+                                  <span className="text-[12px] font-mono text-foreground">
+                                    {token.symbol} · {token.name}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-3">
+                                  <span>Liq: {formatNumber(token.liquidity)}</span>
+                                  <span>Vol: {formatNumber(token.volume)}</span>
+                                  <span>{formatTimestamp(token.timestamp)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right flex items-center gap-2">
+                              <div>
+                                <div className="text-[12px] font-mono text-foreground">
+                                  {formatPrice2(token.price)}
+                                </div>
+                                <div
+                                  className={`text-[11px] font-mono mt-1 ${
+                                    token.change24h > 0 ? "text-accent" : "text-red-400"
+                                  }`}
+                                >
+                                  {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
+                                </div>
+                              </div>
+                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-violet-400 transition-all opacity-0 group-hover:opacity-100" />
+                            </div>
+                          </motion.a>
+                        );
+                      })
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex flex-col items-center justify-center py-8 px-4 text-center"
+                      >
+                        <p className="text-muted-foreground text-sm font-mono">No ads found for this chain</p>
+                      </motion.div>
+                    )}
+                  </div>
+                </Panel>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "takeovers" && (
+            <div className="lg:col-span-3 space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                {(
+                  [
+                    { id: "all", label: "ALL" },
+                    { id: "sol", label: "SOL" },
+                    { id: "eth", label: "ETH" },
+                    { id: "base", label: "BASE" },
+                    { id: "bnb", label: "BNB" }
+                  ] as const
+                ).map((chain, i) => (
+                  <motion.button
+                    key={chain.id}
+                    onClick={() => setSelectedChain(chain.id)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all border ${
+                      selectedChain === chain.id
+                        ? "bg-primary/20 text-primary border-primary/50"
+                        : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                    }`}
+                  >
+                    {chain.label}
+                  </motion.button>
+                ))}
+              </div>
+
+              <div className="grid lg:grid-cols-1 gap-4">
+                <Panel title="COMMUNITY TAKEOVERS · LIVE" icon={Users}>
+                  <div className="space-y-3">
+                    {takeoversLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="rounded-xl border border-white/10 p-3"
+                        >
+                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
+                          <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                        </motion.div>
+                      ))
+                    ) : filteredTakeovers.length > 0 ? (
+                      filteredTakeovers.map((token: AdToken, i: number) => {
+                        const chain = CHAIN_MAP[token.chain] || token.chain;
+                        const url = `https://dexscreener.com/${chain}/${token.tokenAddress}`;
+                        return (
+                          <motion.a
+                            key={token.id || i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                            whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(167,139,250,0.15)" }}
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <img 
+                                src={getTokenIcon(token)} 
+                                alt={token.symbol}
+                                className="w-9 h-9 rounded-full bg-violet-500/20 flex-shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-mono border border-violet-500/30">
+                                    TAKEOVER
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                                    {token.chain.toUpperCase()}
+                                  </span>
+                                  <span className="text-[12px] font-mono text-foreground">
+                                    {token.symbol} · {token.name}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-3">
+                                  <span>Liq: {formatNumber(token.liquidity)}</span>
+                                  <span>Vol: {formatNumber(token.volume)}</span>
+                                  <span>{formatTimestamp(token.timestamp)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right flex items-center gap-2">
+                              <div>
+                                <div className="text-[12px] font-mono text-foreground">
+                                  {formatPrice2(token.price)}
+                                </div>
+                                <div
+                                  className={`text-[11px] font-mono mt-1 ${
+                                    token.change24h > 0 ? "text-accent" : "text-red-400"
+                                  }`}
+                                >
+                                  {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
+                                </div>
+                              </div>
+                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-violet-400 transition-all opacity-0 group-hover:opacity-100" />
+                            </div>
+                          </motion.a>
+                        );
+                      })
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex flex-col items-center justify-center py-8 px-4 text-center"
+                      >
+                        <p className="text-muted-foreground text-sm font-mono">No takeovers found for this chain</p>
+                      </motion.div>
+                    )}
+                  </div>
+                </Panel>
+              </div>
+            </div>
+          )}
+
           {activeTab === "chart" && (
             <div className="lg:col-span-3">
               <Panel title="PRICE CHART · LIVE" icon={Activity}>
@@ -298,19 +903,23 @@ function LiveMarketPanel({
                     {c.ch.toFixed(2)}%
                   </span>
                   <div className="flex items-center gap-1">
-                    <button
+                    <motion.button
                       onClick={() => {
                         setScanningToken({ sym: c.sym, name: c.name });
                         setIsModalOpen(true);
                       }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       className="p-1 rounded-full text-muted-foreground hover:text-accent hover:bg-white/5 transition-all"
                       aria-label={`Scan ${c.sym} for rug`}
                       title="Scan Rug"
                     >
                       <ShieldAlert className="size-3.5" />
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={() => addToWatchlist({ id: c.id, sym: c.sym, name: c.name })}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       className={`p-1 rounded-full transition-colors ${
                         isInWatchlist(c.id)
                           ? "text-accent bg-accent/10"
@@ -323,7 +932,7 @@ function LiveMarketPanel({
                         className="size-3.5"
                         fill={isInWatchlist(c.id) ? "currentColor" : "none"}
                       />
-                    </button>
+                    </motion.button>
                   </div>
                 </motion.div>
               );

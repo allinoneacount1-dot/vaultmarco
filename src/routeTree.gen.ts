@@ -10,12 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardToolsRouteImport } from './routes/dashboard.tools'
+import { Route as DashboardRugScannerRouteImport } from './routes/dashboard.rug-scanner'
+import { Route as DashboardPaidTrendingRouteImport } from './routes/dashboard.paid-trending'
+import { Route as DashboardLiveMarketRouteImport } from './routes/dashboard.live-market'
+import { Route as DashboardFaqRouteImport } from './routes/dashboard.faq'
+import { Route as DashboardDexTrendingRouteImport } from './routes/dashboard.dex-trending'
+import { Route as DashboardCommunityTakeoversRouteImport } from './routes/dashboard.community-takeovers'
+import { Route as DashboardCommandCenterRouteImport } from './routes/dashboard.command-center'
+import { Route as DashboardBoostFeedRouteImport } from './routes/dashboard.boost-feed'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -28,34 +44,160 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardToolsRoute = DashboardToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardRugScannerRoute = DashboardRugScannerRouteImport.update({
+  id: '/rug-scanner',
+  path: '/rug-scanner',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardPaidTrendingRoute = DashboardPaidTrendingRouteImport.update({
+  id: '/paid-trending',
+  path: '/paid-trending',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardLiveMarketRoute = DashboardLiveMarketRouteImport.update({
+  id: '/live-market',
+  path: '/live-market',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardFaqRoute = DashboardFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDexTrendingRoute = DashboardDexTrendingRouteImport.update({
+  id: '/dex-trending',
+  path: '/dex-trending',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCommunityTakeoversRoute =
+  DashboardCommunityTakeoversRouteImport.update({
+    id: '/community-takeovers',
+    path: '/community-takeovers',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardCommandCenterRoute = DashboardCommandCenterRouteImport.update({
+  id: '/command-center',
+  path: '/command-center',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBoostFeedRoute = DashboardBoostFeedRouteImport.update({
+  id: '/boost-feed',
+  path: '/boost-feed',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/boost-feed': typeof DashboardBoostFeedRoute
+  '/dashboard/command-center': typeof DashboardCommandCenterRoute
+  '/dashboard/community-takeovers': typeof DashboardCommunityTakeoversRoute
+  '/dashboard/dex-trending': typeof DashboardDexTrendingRoute
+  '/dashboard/faq': typeof DashboardFaqRoute
+  '/dashboard/live-market': typeof DashboardLiveMarketRoute
+  '/dashboard/paid-trending': typeof DashboardPaidTrendingRoute
+  '/dashboard/rug-scanner': typeof DashboardRugScannerRoute
+  '/dashboard/tools': typeof DashboardToolsRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/boost-feed': typeof DashboardBoostFeedRoute
+  '/dashboard/command-center': typeof DashboardCommandCenterRoute
+  '/dashboard/community-takeovers': typeof DashboardCommunityTakeoversRoute
+  '/dashboard/dex-trending': typeof DashboardDexTrendingRoute
+  '/dashboard/faq': typeof DashboardFaqRoute
+  '/dashboard/live-market': typeof DashboardLiveMarketRoute
+  '/dashboard/paid-trending': typeof DashboardPaidTrendingRoute
+  '/dashboard/rug-scanner': typeof DashboardRugScannerRoute
+  '/dashboard/tools': typeof DashboardToolsRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/boost-feed': typeof DashboardBoostFeedRoute
+  '/dashboard/command-center': typeof DashboardCommandCenterRoute
+  '/dashboard/community-takeovers': typeof DashboardCommunityTakeoversRoute
+  '/dashboard/dex-trending': typeof DashboardDexTrendingRoute
+  '/dashboard/faq': typeof DashboardFaqRoute
+  '/dashboard/live-market': typeof DashboardLiveMarketRoute
+  '/dashboard/paid-trending': typeof DashboardPaidTrendingRoute
+  '/dashboard/rug-scanner': typeof DashboardRugScannerRoute
+  '/dashboard/tools': typeof DashboardToolsRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/sitemap.xml'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/sitemap.xml'
+    | '/dashboard/boost-feed'
+    | '/dashboard/command-center'
+    | '/dashboard/community-takeovers'
+    | '/dashboard/dex-trending'
+    | '/dashboard/faq'
+    | '/dashboard/live-market'
+    | '/dashboard/paid-trending'
+    | '/dashboard/rug-scanner'
+    | '/dashboard/tools'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/sitemap.xml'
-  id: '__root__' | '/' | '/auth' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/auth'
+    | '/sitemap.xml'
+    | '/dashboard/boost-feed'
+    | '/dashboard/command-center'
+    | '/dashboard/community-takeovers'
+    | '/dashboard/dex-trending'
+    | '/dashboard/faq'
+    | '/dashboard/live-market'
+    | '/dashboard/paid-trending'
+    | '/dashboard/rug-scanner'
+    | '/dashboard/tools'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/sitemap.xml'
+    | '/dashboard/boost-feed'
+    | '/dashboard/command-center'
+    | '/dashboard/community-takeovers'
+    | '/dashboard/dex-trending'
+    | '/dashboard/faq'
+    | '/dashboard/live-market'
+    | '/dashboard/paid-trending'
+    | '/dashboard/rug-scanner'
+    | '/dashboard/tools'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -66,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -82,24 +231,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/tools': {
+      id: '/dashboard/tools'
+      path: '/tools'
+      fullPath: '/dashboard/tools'
+      preLoaderRoute: typeof DashboardToolsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/rug-scanner': {
+      id: '/dashboard/rug-scanner'
+      path: '/rug-scanner'
+      fullPath: '/dashboard/rug-scanner'
+      preLoaderRoute: typeof DashboardRugScannerRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/paid-trending': {
+      id: '/dashboard/paid-trending'
+      path: '/paid-trending'
+      fullPath: '/dashboard/paid-trending'
+      preLoaderRoute: typeof DashboardPaidTrendingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/live-market': {
+      id: '/dashboard/live-market'
+      path: '/live-market'
+      fullPath: '/dashboard/live-market'
+      preLoaderRoute: typeof DashboardLiveMarketRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/faq': {
+      id: '/dashboard/faq'
+      path: '/faq'
+      fullPath: '/dashboard/faq'
+      preLoaderRoute: typeof DashboardFaqRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/dex-trending': {
+      id: '/dashboard/dex-trending'
+      path: '/dex-trending'
+      fullPath: '/dashboard/dex-trending'
+      preLoaderRoute: typeof DashboardDexTrendingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/community-takeovers': {
+      id: '/dashboard/community-takeovers'
+      path: '/community-takeovers'
+      fullPath: '/dashboard/community-takeovers'
+      preLoaderRoute: typeof DashboardCommunityTakeoversRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/command-center': {
+      id: '/dashboard/command-center'
+      path: '/command-center'
+      fullPath: '/dashboard/command-center'
+      preLoaderRoute: typeof DashboardCommandCenterRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/boost-feed': {
+      id: '/dashboard/boost-feed'
+      path: '/boost-feed'
+      fullPath: '/dashboard/boost-feed'
+      preLoaderRoute: typeof DashboardBoostFeedRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardBoostFeedRoute: typeof DashboardBoostFeedRoute
+  DashboardCommandCenterRoute: typeof DashboardCommandCenterRoute
+  DashboardCommunityTakeoversRoute: typeof DashboardCommunityTakeoversRoute
+  DashboardDexTrendingRoute: typeof DashboardDexTrendingRoute
+  DashboardFaqRoute: typeof DashboardFaqRoute
+  DashboardLiveMarketRoute: typeof DashboardLiveMarketRoute
+  DashboardPaidTrendingRoute: typeof DashboardPaidTrendingRoute
+  DashboardRugScannerRoute: typeof DashboardRugScannerRoute
+  DashboardToolsRoute: typeof DashboardToolsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardBoostFeedRoute: DashboardBoostFeedRoute,
+  DashboardCommandCenterRoute: DashboardCommandCenterRoute,
+  DashboardCommunityTakeoversRoute: DashboardCommunityTakeoversRoute,
+  DashboardDexTrendingRoute: DashboardDexTrendingRoute,
+  DashboardFaqRoute: DashboardFaqRoute,
+  DashboardLiveMarketRoute: DashboardLiveMarketRoute,
+  DashboardPaidTrendingRoute: DashboardPaidTrendingRoute,
+  DashboardRugScannerRoute: DashboardRugScannerRoute,
+  DashboardToolsRoute: DashboardToolsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

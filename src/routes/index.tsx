@@ -5,13 +5,11 @@ import {
   About,
   Ecosystem,
   Features,
-  CommandCenter,
   Partnerships,
   SocialProof,
   Contact,
   Footer,
 } from "@/components/marco/Sections";
-import { Faq } from "@/components/marco/Faq";
 
 const SITE_URL = "https://vaultmarco.lovable.app";
 const OG_IMAGE = `${SITE_URL}/og-logo.png`;
@@ -102,11 +100,9 @@ function Index() {
       <About />
       <Ecosystem />
       <Features />
-      <CommandCenter />
       <Partnerships />
       <SocialProof />
       <Contact />
-      <Faq />
       <Footer />
     </main>
   );
