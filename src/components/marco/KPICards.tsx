@@ -5,7 +5,7 @@ interface KPI {
   value: string;
   change: string;
   isPositive: boolean;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
 const kpis: KPI[] = [

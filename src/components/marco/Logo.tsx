@@ -16,7 +16,7 @@ export function Logo({ size = 34, sub = true }: { size?: number; sub?: boolean }
           MARCOVAULT
         </span>
         {sub && (
-          <span className="mono-label mt-1.5 block text-[8px]! tracking-[0.34em]!">
+          <span className="mono-label logo-sub mt-1.5 block text-[8px]! tracking-[0.34em]!">
             MULTI-CHAIN INTELLIGENCE
           </span>
         )}

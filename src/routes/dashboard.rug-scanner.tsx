@@ -31,7 +31,7 @@ function RugScannerPage() {
             <motion.a
               href="https://rugcheck.xyz/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 text-(--gold) hover:text-(--gold)/80 text-sm font-medium"
             >
               <ExternalLink className="size-4" />

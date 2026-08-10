@@ -146,7 +146,7 @@ const partnerData = {
   },
 };
 
-type PartnerName = keyof typeof partnerData;
+export type PartnerName = keyof typeof partnerData;
 
 interface PartnerDashboardModalProps {
   partnerName: PartnerName | null;

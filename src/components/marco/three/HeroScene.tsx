@@ -15,7 +15,7 @@ const goldMat = createGoldMaterial();
 function MonogramMesh(props: { scale?: number; position?: [number, number, number] }) {
   const geometry = useMemo(() => {
     const svg = new SVGLoader().parse(monogramSvgRaw);
-    const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
+    const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p as never));
     const geo = new THREE.ExtrudeGeometry(shapes, {
       depth: 90,
       bevelEnabled: true,

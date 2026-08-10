@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as DevHeroRouteImport } from './routes/dev-hero'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -28,11 +27,6 @@ import { Route as DashboardBoostFeedRouteImport } from './routes/dashboard.boost
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevHeroRoute = DevHeroRouteImport.update({
-  id: '/dev-hero',
-  path: '/dev-hero',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -106,7 +100,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/dev-hero': typeof DevHeroRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/boost-feed': typeof DashboardBoostFeedRoute
   '/dashboard/command-center': typeof DashboardCommandCenterRoute
@@ -122,7 +115,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/dev-hero': typeof DevHeroRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/boost-feed': typeof DashboardBoostFeedRoute
   '/dashboard/command-center': typeof DashboardCommandCenterRoute
@@ -140,7 +132,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/dev-hero': typeof DevHeroRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/boost-feed': typeof DashboardBoostFeedRoute
   '/dashboard/command-center': typeof DashboardCommandCenterRoute
@@ -159,7 +150,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
-    | '/dev-hero'
     | '/sitemap.xml'
     | '/dashboard/boost-feed'
     | '/dashboard/command-center'
@@ -175,7 +165,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/dev-hero'
     | '/sitemap.xml'
     | '/dashboard/boost-feed'
     | '/dashboard/command-center'
@@ -192,7 +181,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
-    | '/dev-hero'
     | '/sitemap.xml'
     | '/dashboard/boost-feed'
     | '/dashboard/command-center'
@@ -210,7 +198,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRouteWithChildren
-  DevHeroRoute: typeof DevHeroRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -221,13 +208,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-hero': {
-      id: '/dev-hero'
-      path: '/dev-hero'
-      fullPath: '/dev-hero'
-      preLoaderRoute: typeof DevHeroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -358,7 +338,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRouteWithChildren,
-  DevHeroRoute: DevHeroRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport

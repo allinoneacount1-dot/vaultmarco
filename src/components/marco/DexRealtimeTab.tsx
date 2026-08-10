@@ -125,7 +125,7 @@ export function DexRealtimeTab() {
                       variants={fadeUp}
                       href={p.url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
                       >
                       <div>

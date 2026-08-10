@@ -162,7 +162,7 @@ function DexTrending() {
                               <a
                                 href={url}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 className="text-[12px] font-mono text-foreground hover:text-(--gold) transition-colors"
                               >
                                 {token.symbol} · {token.name}
@@ -205,7 +205,7 @@ function DexTrending() {
                             <motion.a
                               href={padreUrl}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                               title="Trade on Padre"
                             >
@@ -214,7 +214,7 @@ function DexTrending() {
                             <motion.a
                               href={url}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                               title="View on DexScreener"
                             >
@@ -288,7 +288,7 @@ function DexTrending() {
                               <a
                                 href={url}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 className="text-[12px] font-mono text-foreground hover:text-(--champagne) transition-colors"
                               >
                                 {token.symbol} · {token.name}
@@ -331,7 +331,7 @@ function DexTrending() {
                             <motion.a
                               href={padreUrl}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                               title="Trade on Padre"
                             >
@@ -340,7 +340,7 @@ function DexTrending() {
                             <motion.a
                               href={url}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--champagne) transition-all"
                               title="View on DexScreener"
                             >

@@ -1,68 +1,69 @@
-# VaultMarco
+# MARCOVAULT
 
-All-in-one crypto intelligence platform with real-time DexScreener data, token boosts, community takeovers, and more!
+Multi-chain alpha, curated research, and execution infrastructure — behind machined steel.
 
-## 🚀 Fitur Utama
+Landing + intelligence dashboard for the Vault community: live DexScreener/CoinGecko data,
+boost & paid feeds, community takeovers, rug scanner, watchlist and price alerts.
 
-- **Dashboard Overview**: Semua data penting di satu halaman
-- **Boost Feed**: Lihat token yang sedang di-boost secara real-time
-- **Dex Trending**: Token trending di berbagai DEX
-- **Paid Trending & Ads**: Lihat promosi berbayar dan community takeovers
-- **Live Market**: Data pasar real-time
-- **Rug Scanner**: Cek keamanan token
-- **FAQ & Tools**: Panduan dan tools bermanfaat
+## Design System — "MONOLITH"
 
-## 📦 Tech Stack
+Cinematic chrome for the big moments, private-bank discipline for content. Anchored on the
+VM monogram: one chrome ramp (sampled from the logo), graphite void surfaces, champagne-gold
+hairlines, sage/oxide market deltas. Full spec:
+`docs/superpowers/specs/2026-08-10-vaultmarco-redesign-design.md`.
 
-- **Framework**: [TanStack Start](https://tanstack.com/start) + React 19
-- **Router**: [TanStack Router](https://tanstack.com/router)
-- **Data Fetching**: [TanStack Query](https://tanstack.com/query)
-- **Styling**: Tailwind CSS + Framer Motion
-- **Web3**: RainbowKit + Wagmi + Viem
-- **UI Components**: Radix UI + shadcn/ui
-- **APIs**: DexScreener (via proxy API)
+- **Hero** — real 3D: the display type and monogram are extruded meshes sharing one PBR
+  chrome material and studio rig (three + react-three-fiber). Static fallback for mobile,
+  reduced-motion and no-WebGL.
+- **Type** — Unbounded (display) · Instrument Sans (UI) · Spline Sans Mono (data), all
+  self-hosted via Fontsource.
+- **Motion** — Lenis smooth scroll + Framer Motion; vault-door preloader (once per
+  session); everything respects `prefers-reduced-motion`.
 
-## 🛠️ Cara Menjalankan
+## Tech Stack
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+- React 19 + Vite 7 (static SPA) · TanStack Router · TanStack Query
+- Tailwind CSS v4 (CSS-first tokens in `src/styles.css`) · Radix UI / shadcn
+- three / @react-three/fiber / drei (hero only, lazy-loaded & code-split)
+- Data: DexScreener + CoinGecko public APIs, fetched directly from the client
+  (CORS-open; graceful mock fallbacks). No server, no env vars required.
 
-2. **Jalankan development server**:
-   ```bash
-   npm run dev
-   ```
-   Buka [http://localhost:3000](http://localhost:3000) di browser kamu!
+## Run
 
-3. **Build untuk Production**:
-   ```bash
-   npm run build
-   ```
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # static output in dist/
+```
 
-## 📁 Struktur Project
+## Deploy (Vercel)
+
+Pure static SPA: `vite build` → `dist/` with the existing `vercel.json` rewrite.
+Push to deploy — no configuration or environment variables needed.
+
+## Brand asset pipeline (`scripts/`)
+
+- `prep-monogram.py` — un-mattes the logo's white fringe (`marcovault-logo-dark.png`,
+  favicon) and builds the letterform mask
+- `trace-monogram.mjs` — potrace → `src/assets/monogram.svg` (3D extrusion source)
+- `woff2-to-ttf.py` + `ttf-to-typeface.mjs` — Unbounded → three.js typeface JSON for the
+  3D display text
+- `audit.mjs` — route crawl: console errors, internal link/anchor resolution, external
+  `rel=noopener` (run with dev server up: `node scripts/audit.mjs`)
+
+## Structure
 
 ```
 src/
-├── components/
-│   ├── marco/          # Komponen khusus untuk VaultMarco
-│   └── ui/             # Komponen shadcn/ui
-├── hooks/              # Custom hooks (useDexScreener dll)
-├── routes/             # Halaman dan API routes
-│   └── api/            # API endpoints (proxy untuk DexScreener)
-└── lib/                # Utilities dan konfigurasi
+├── components/marco/         # landing scenes + dashboard surfaces
+│   ├── shell/                # SmoothScroll, Preloader, Reveal, SectionHeading
+│   └── three/                # HeroScene (3D chrome), fallbacks, shared material
+├── components/ui/            # shadcn/ui primitives (restyled via tokens)
+├── hooks/                    # data hooks (DexScreener, CoinGecko, watchlist, alerts)
+├── routes/                   # TanStack file routes (/ + /dashboard/*)
+└── styles.css                # MONOLITH tokens & utilities (single source of truth)
 ```
 
-## 📝 Environment Variables
-
-Salin file `.env.example` menjadi `.env` dan isi sesuai kebutuhan:
-
-```env
-# Contoh konfigurasi
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-## 📜 Lisensi
+## License
 
 MIT

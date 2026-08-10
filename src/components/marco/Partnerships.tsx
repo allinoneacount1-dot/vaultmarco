@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SectionHeading } from "./shell/SectionHeading";
 import { FadeIn } from "./shell/Reveal";
 import { scrollToId } from "./shell/SmoothScroll";
-import { PartnerDashboardModal } from "./PartnerDashboardModal";
+import { PartnerDashboardModal, type PartnerName } from "./PartnerDashboardModal";
 
 const PARTNERS = [
   { name: "Community Alpha", tag: "NETWORK", marks: ["SOL", "TG", "DC"] },
@@ -15,7 +15,7 @@ const PARTNERS = [
 
 /** SCENE 06 — allied networks: an engraved registry, not a logo carousel. */
 export function Partnerships() {
-  const [openPartner, setOpenPartner] = useState<string | null>(null);
+  const [openPartner, setOpenPartner] = useState<PartnerName | null>(null);
   return (
     <section id="partnerships" className="relative bg-(--void)">
       <div className="u-container py-28 md:py-36">
@@ -31,7 +31,7 @@ export function Partnerships() {
             <FadeIn key={p.name} delay={(i % 3) * 0.06}>
               <button
                 type="button"
-                onClick={() => setOpenPartner(p.name)}
+                onClick={() => setOpenPartner(p.name as PartnerName)}
                 className="group flex h-full w-full flex-col justify-between border-(--hairline) p-7 text-left transition-colors duration-500 hover:bg-(--graphite) sm:border-r sm:border-b"
               >
                 <div>

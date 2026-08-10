@@ -52,7 +52,12 @@ export function Navbar() {
         }}
       >
         <div className="u-container flex h-[72px] items-center justify-between">
-          <Link to="/" onClick={onHome ? () => scrollToId("hero") : undefined} aria-label="MARCOVAULT home">
+          <Link
+            to="/"
+            onClick={onHome ? () => scrollToId("hero") : undefined}
+            aria-label="MARCOVAULT home"
+            className="[&_.logo-sub]:max-lg:hidden"
+          >
             <Logo />
           </Link>
 
@@ -80,10 +85,12 @@ export function Navbar() {
 
           {/* mobile burger — two machined lines */}
           <button
-            className="relative grid size-10 place-items-center md:hidden"
+            className={`relative grid size-10 place-items-center md:hidden ${open ? "invisible" : ""}`}
             onClick={() => setOpen(!open)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
+            aria-hidden={open}
+            tabIndex={open ? -1 : 0}
           >
             <span
               className="absolute h-px w-6 bg-(--bone) transition-transform duration-500"

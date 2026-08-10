@@ -197,7 +197,7 @@ function BoostFeedPage() {
                     <motion.a
                       href={padreUrl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="p-2 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                       title="Trade on Padre"
                     >
@@ -206,7 +206,7 @@ function BoostFeedPage() {
                     <motion.a
                       href={`https://dexscreener.com/${boost.chain.toLowerCase()}/${boost.tokenAddress}`}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="p-2 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                       title="View on DexScreener"
                     >

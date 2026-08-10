@@ -49,7 +49,7 @@ export function FadeIn({
       className={className}
       initial={{ opacity: 0, y: 22 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+      viewport={{ once: true, margin: "0px 0px -8% 0px" }}
       transition={{ duration: 0.9, delay, ease: EASE_VAULT }}
     >
       {children}

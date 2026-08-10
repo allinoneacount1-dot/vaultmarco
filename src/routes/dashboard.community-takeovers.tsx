@@ -68,7 +68,7 @@ function CommunityTakeoversPage() {
             <motion.a
               href="https://dexscreener.com/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 text-(--gold) hover:text-(--gold)/80 text-sm font-medium"
             >
               <ExternalLink className="size-4" />
@@ -113,7 +113,7 @@ function CommunityTakeoversPage() {
                               <a
                                 href={dexScreenerUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 className="text-foreground font-medium hover:text-(--champagne) transition-colors"
                               >
                                 {token.symbol}
@@ -153,7 +153,7 @@ function CommunityTakeoversPage() {
                             <motion.a
                               href={padreUrl}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                               title="Trade on Padre"
                             >
@@ -162,7 +162,7 @@ function CommunityTakeoversPage() {
                             <motion.a
                               href={dexScreenerUrl}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--champagne) transition-all"
                               title="View on DexScreener"
                             >
