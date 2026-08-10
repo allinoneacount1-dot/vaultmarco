@@ -43,8 +43,8 @@ function PaidTrendingPage() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-6 right-6 bg-primary text-background px-4 py-2 rounded-lg shadow-lg z-50 font-mono text-sm"
           >
@@ -59,7 +59,7 @@ function PaidTrendingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Paid Trending</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Paid Trending</h1>
         <p className="text-muted-foreground">DexScreener & DexTools paid trending and boosts</p>
       </motion.div>
 
@@ -75,15 +75,14 @@ function PaidTrendingPage() {
               href="https://dexscreener.com/"
               target="_blank"
               rel="noreferrer"
-              whileHover={{ x: 5 }}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium"
+              className="flex items-center gap-2 text-(--gold) hover:text-(--gold)/80 text-sm font-medium"
             >
               <ExternalLink className="size-4" />
               Open DexScreener in new tab
             </motion.a>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="animate-spin text-primary" />
+                <Loader2 className="animate-spin text-(--gold)" />
               </div>
             ) : dexScreenerPaid.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
@@ -104,12 +103,11 @@ function PaidTrendingPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      whileHover={{ scale: 1.01, x: 5 }}
-                      className="rounded-xl border border-white/10 p-4 hover:bg-white/5 hover:border-primary/30 transition-all"
+                      className="rounded-md border border-(--hairline) p-4 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden relative">
+                          <div className="w-10 h-10 rounded-full bg-(--panel-2) flex items-center justify-center overflow-hidden relative">
                             {tokenData.icon && (
                               <img
                                 src={tokenData.icon}
@@ -118,7 +116,7 @@ function PaidTrendingPage() {
                               />
                             )}
                             {!tokenData.icon && (
-                              <span className="text-primary font-bold">{tokenData.symbol[0]}</span>
+                              <span className="text-(--gold) font-bold">{tokenData.symbol[0]}</span>
                             )}
                           </div>
                           <div className="flex-1">
@@ -127,14 +125,14 @@ function PaidTrendingPage() {
                                 href={dexScreenerUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-foreground font-medium hover:text-primary transition-colors"
+                                className="text-foreground font-medium hover:text-(--gold) transition-colors"
                               >
                                 {tokenData.symbol}
                               </a>
-                              <span className="text-muted-foreground text-xs bg-white/10 px-2 py-0.5 rounded-full">{tokenData.chain}</span>
+                              <span className="text-muted-foreground text-xs bg-(--panel-2) px-2 py-0.5 rounded-full">{tokenData.chain}</span>
                             </div>
                             <p className="text-muted-foreground text-xs">{tokenData.name}</p>
-                            <p className="text-[10px] bg-white/5 px-2 py-1 rounded-full font-mono truncate max-w-[200px] mt-1">
+                            <p className="text-[10px] bg-(--panel-2) px-2 py-1 rounded-full font-mono truncate max-w-[200px] mt-1">
                               CA: {tokenData.tokenAddress.slice(0, 8)}...{tokenData.tokenAddress.slice(-6)}
                             </p>
                           </div>
@@ -144,50 +142,44 @@ function PaidTrendingPage() {
                             <p className="text-foreground font-mono">
                               ${tokenData.price.toFixed(tokenData.price < 0.0001 ? 8 : 4)}
                             </p>
-                            <p className={`text-xs font-mono ${(tokenData.change24h || 0) >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                            <p className={`text-xs font-mono ${(tokenData.change24h || 0) >= 0 ? 'text-(--up)' : 'text-(--down)'}`}>
                               {(tokenData.change24h || 0) >= 0 ? '+' : ''}{(tokenData.change24h || 0).toFixed(1)}%
                             </p>
                             <p className="text-muted-foreground text-xs mt-1">
                               Vol: {formatVolume(tokenData.volume24h as number)}
                             </p>
                             {(tokenData.boostAmount || tokenData.boostTier) && (
-                              <p className="text-primary text-xs font-bold mt-1">
+                              <p className="text-(--gold) text-xs font-bold mt-1">
                                 {tokenData.boostAmount ? `Boost: ${tokenData.boostAmount}` : tokenData.boostTier}
                               </p>
                             )}
                           </div>
                           <div className="flex gap-1">
                             <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 copyToClipboard(tokenData.tokenAddress);
                               }}
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                               title="Copy CA"
                             >
                               <Copy className="size-3.5" />
                             </motion.button>
                             <motion.a
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               href={padreUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-green-400 transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                               title="Trade on Padre"
                             >
                               <ExternalLink className="size-3.5" />
                             </motion.a>
                             <motion.a
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               href={dexScreenerUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                               title="View on DexScreener"
                             >
                               <ArrowUpRight className="size-3.5" />
@@ -216,8 +208,7 @@ function PaidTrendingPage() {
               href="https://www.dextools.io/"
               target="_blank"
               rel="noreferrer"
-              whileHover={{ x: 5 }}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium"
+              className="flex items-center gap-2 text-(--gold) hover:text-(--gold)/80 text-sm font-medium"
             >
               <ExternalLink className="size-4" />
               Open DexTools in new tab

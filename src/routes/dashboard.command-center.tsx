@@ -15,7 +15,7 @@ function CommandCenterPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Command Center</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Command Center</h1>
         <p className="text-muted-foreground">04 / COMMAND CENTER - Inside The Vault</p>
       </motion.div>
 

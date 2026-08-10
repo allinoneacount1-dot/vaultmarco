@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -11,15 +11,13 @@ import {
   Settings,
   Menu,
   X,
-  Plus,
   Activity,
-  LogOut,
   HelpCircle,
   DollarSign,
   Users,
+  ArrowLeft,
 } from "lucide-react";
 import { Logo } from "./Logo";
-import { GasTracker } from "./GasTracker";
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
@@ -34,157 +32,116 @@ const sidebarLinks = [
   { label: "Tools", href: "/dashboard/tools", icon: Settings },
 ];
 
-function DashboardSidebarComponent({ 
-    collapsed, 
-    setCollapsed 
-  }: { 
-    collapsed: boolean; 
-    setCollapsed: (collapsed: boolean) => void; 
-  }) {
+function DashboardSidebarComponent({
+  collapsed,
+  setCollapsed,
+}: {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  const isActive = (href: string) => {
-    return location.pathname === href || 
-           (href === '/dashboard' && location.pathname.startsWith('/dashboard/'));
-  };
+  const isActive = (href: string) =>
+    href === "/dashboard"
+      ? location.pathname === "/dashboard" || location.pathname === "/dashboard/"
+      : location.pathname.startsWith(href);
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <motion.button
+      {/* mobile trigger */}
+      <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg glass-strong border border-white/10"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
+        className="hairline fixed left-4 top-4 z-[55] grid size-10 place-items-center bg-(--graphite) lg:hidden"
+        aria-label={mobileOpen ? "Close menu" : "Open menu"}
       >
-        {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-      </motion.button>
+        {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+      </button>
 
-      {/* Sidebar */}
-      <motion.aside
-        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-background to-background/95 border-r border-white/10 z-40 ${
+      {/* scrim under mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && isMobile && (
+          <motion.button
+            aria-label="Close menu"
+            className="fixed inset-0 z-[45] bg-black/60 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <aside
+        className={`hairline-r fixed left-0 top-0 z-[50] flex h-screen flex-col bg-(--graphite) transition-[width,transform] duration-500 ${
           collapsed ? "w-20" : "w-64"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        initial={{ x: -300, opacity: 0 }}
-        animate={{ x: mobileOpen || !isMobile ? 0 : -300, opacity: 1 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 260, 
-          damping: 20,
-          duration: 0.5 
-        }}
+        style={{ transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
       >
-        {/* Sidebar Header */}
-        <motion.div 
-          className="p-6 border-b border-white/5 flex items-center justify-between"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-        >
-          {!collapsed && (
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <Logo />
-            </Link>
-          )}
-          {collapsed && <Logo />}
-          <motion.button
+        {/* header */}
+        <div className="hairline-b flex h-[72px] items-center justify-between px-5">
+          <Link to="/dashboard" aria-label="Dashboard home" className={collapsed ? "mx-auto" : ""}>
+            {collapsed ? (
+              <img src="/favicon.png" alt="" className="size-7" />
+            ) : (
+              <Logo sub={false} size={28} />
+            )}
+          </Link>
+          <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:block p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground"
-            whileHover={{ scale: 1.1, rotate: 10 }}
-            whileTap={{ scale: 0.9 }}
+            className="hidden p-1.5 text-(--faint) transition-colors hover:text-(--bone) lg:block"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <Menu className="size-4" />
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
 
-        {/* Quick Actions */}
-        <motion.div 
-          className="p-4 border-b border-white/5"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
-            <GasTracker />
-          </div>
-        </motion.div>
-
-        {/* Navigation Links */}
-      <motion.nav 
-        className="p-4 space-y-2 flex-1 overflow-y-auto"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-      >
-        {sidebarLinks.map((link, index) => {
-          const Icon = link.icon;
-          return (
-            <motion.div
-              key={link.href}
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + index * 0.07, duration: 0.5 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+        {/* nav */}
+        <nav className="flex-1 overflow-y-auto py-4" aria-label="Dashboard">
+          {sidebarLinks.map((l) => {
+            const active = isActive(l.href);
+            return (
               <Link
-                to={link.href}
+                key={l.href}
+                to={l.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive(link.href)
-                    ? "bg-primary/20 text-primary border border-primary/30 glow-cyan"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent"
-                }`}
+                className={`relative flex items-center gap-3.5 px-5 py-3 transition-colors duration-300 ${
+                  active ? "text-(--bone)" : "text-(--faint) hover:text-(--muted-2)"
+                } ${collapsed ? "justify-center px-0" : ""}`}
               >
-                <motion.div
-                  animate={isActive(link.href) ? { 
-                    rotate: [0, 5, -5, 0],
-                    scale: [1, 1.1, 1] 
-                  } : {}}
-                  transition={{ 
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatDelay: 3
-                  }}
-                >
-                  <Icon className="size-5" />
-                </motion.div>
+                <span
+                  className={`absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 bg-(--gold) transition-opacity duration-300 ${
+                    active ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+                <l.icon className="size-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} />
                 {!collapsed && (
-                  <span className="text-[13px] font-medium tracking-wide">{link.label}</span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.12em]">
+                    {l.label}
+                  </span>
                 )}
               </Link>
-            </motion.div>
-          );
-        })}
-      </motion.nav>
+            );
+          })}
+        </nav>
 
-      {/* Exit Dashboard Link */}
-      <motion.div 
-        className="p-4 border-t border-white/10"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.5 }}
-      >
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        {/* footer: quiet return to landing */}
+        <div className="hairline-t px-5 py-5">
           <Link
             to="/"
             onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 border border-transparent"
+            className={`flex items-center gap-3 text-(--faint) transition-colors duration-300 hover:text-(--bone) ${
+              collapsed ? "justify-center" : ""
+            }`}
           >
-            <LogOut className="size-5" />
+            <ArrowLeft className="size-4" />
             {!collapsed && (
-              <span className="text-[13px] font-medium tracking-wide">Exit Dashboard</span>
+              <span className="font-mono text-[10px] tracking-[0.22em]">MARCOVAULT</span>
             )}
           </Link>
-        </motion.div>
-      </motion.div>
-
-      </motion.aside>
+        </div>
+      </aside>
     </>
   );
 }

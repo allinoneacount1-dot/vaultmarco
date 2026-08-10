@@ -33,7 +33,7 @@ const DashboardIndex = memo(function DashboardIndex() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-2xl lg:text-3xl font-bold text-gradient mb-2">Dashboard</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Dashboard</h1>
         <p className="text-muted-foreground text-sm lg:text-base">Overview of your crypto intelligence platform</p>
       </motion.div>
 
@@ -48,8 +48,8 @@ const DashboardIndex = memo(function DashboardIndex() {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
         {/* Boost Feed */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Panel title="BOOST FEED · LIVE" icon={Zap}>
@@ -57,11 +57,10 @@ const DashboardIndex = memo(function DashboardIndex() {
               {(boostsLoading ? Array.from<BoostToken | undefined>({ length: 3 }) : (Array.isArray(boosts) ? boosts : []).slice(0, 3)).map((token, i) => (
                 <motion.div 
                   key={token?.id || i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  whileHover={{ scale: 1.02, x: 5 }}
-                  className="flex items-center justify-between rounded-xl border border-white/10 p-2 lg:p-3 hover:bg-white/5 transition-all"
+                  className="flex items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 hover:bg-(--panel-2) transition-all"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -70,7 +69,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                           <span className={`px-1.5 py-0.5 rounded-full text-[9px] lg:text-[10px] font-mono border ${getTierColor(token.boostTier || "Low Boost")}`}>
                             {token.boostTier || "Low Boost"}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] lg:text-[10px] font-mono">
+                          <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[9px] lg:text-[10px] font-mono">
                             {(token.chain || "eth").toUpperCase()}
                           </span>
                         </>
@@ -86,7 +85,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                   {token && (
                     <div className="text-right flex-shrink-0">
                       <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{formatPrice2(token.price || 0)}</div>
-                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-accent" : "text-red-400"}`}>
+                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-(--up)" : "text-(--down)"}`}>
                         {(token.change24h || 0) >= 0 ? "+" : ""}{(token.change24h || 0).toFixed(1)}%
                       </div>
                     </div>
@@ -99,8 +98,8 @@ const DashboardIndex = memo(function DashboardIndex() {
 
         {/* Ads Feed */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <Panel title="ADS FEED · LIVE" icon={TrendingUp}>
@@ -108,18 +107,17 @@ const DashboardIndex = memo(function DashboardIndex() {
               {(adsLoading ? Array.from<AdToken | undefined>({ length: 3 }) : (Array.isArray(ads) ? ads : []).slice(0, 3)).map((token, i) => (
                 <motion.div 
                   key={token?.id || i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  whileHover={{ scale: 1.02, x: 5 }}
-                  className="flex items-center justify-between rounded-xl border border-white/10 p-2 lg:p-3 hover:bg-white/5 transition-all"
+                  className="flex items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 hover:bg-(--panel-2) transition-all"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {token && (
                         <>
                           <span className="text-[11px] lg:text-[12px]">{getAdTypeIcon(token.type || "Ad")}</span>
-                          <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[9px] lg:text-[10px] font-mono border border-violet-500/30">
+                          <span className="px-1.5 py-0.5 rounded-full bg-transparent text-(--champagne) text-[9px] lg:text-[10px] font-mono border border-(--hairline-strong)">
                             {(token.type || "Ad").toUpperCase()}
                           </span>
                         </>
@@ -135,7 +133,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                   {token && (
                     <div className="text-right flex-shrink-0">
                       <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{formatPrice2(token.price || 0)}</div>
-                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-accent" : "text-red-400"}`}>
+                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-(--up)" : "text-(--down)"}`}>
                         {(token.change24h || 0) >= 0 ? "+" : ""}{(token.change24h || 0).toFixed(1)}%
                       </div>
                     </div>
@@ -148,24 +146,24 @@ const DashboardIndex = memo(function DashboardIndex() {
 
         {/* Quick Stats */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <Panel title="QUICK STATS" icon={Activity}>
             <div className="space-y-2">
               {[
-                { label: "Solana Gas", value: "45 Gwei", color: "text-green-400" },
-                { label: "Ethereum Gas", value: "32 Gwei", color: "text-yellow-400" },
-                { label: "BTC Dominance", value: "52.4%", color: "text-accent" },
-                { label: "Fear & Greed", value: "72 (Greed)", color: "text-orange-400" },
+                { label: "Solana Gas", value: "45 Gwei", color: "text-(--up)" },
+                { label: "Ethereum Gas", value: "32 Gwei", color: "text-(--gold)" },
+                { label: "BTC Dominance", value: "52.4%", color: "text-(--up)" },
+                { label: "Fear & Greed", value: "72 (Greed)", color: "text-(--gold)" },
               ].map((stat, i) => (
                 <motion.div 
                   key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
-                  className="flex items-center justify-between py-1.5 lg:py-2 border-b border-white/5 last:border-0"
+                  className="flex items-center justify-between py-1.5 lg:py-2 border-b border-(--hairline) last:border-0"
                 >
                   <span className="text-[11px] lg:text-[12px] font-mono text-muted-foreground">{stat.label}</span>
                   <span className={`text-[11px] lg:text-[12px] font-mono ${stat.color}`}>{stat.value}</span>

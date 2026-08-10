@@ -17,7 +17,7 @@ export function WatchlistQuickView() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center size-9 rounded-full glass border border-white/10 hover:bg-white/5 transition-all"
+        className="flex items-center justify-center size-9 rounded-full hairline bg-(--panel) border border-(--hairline) hover:bg-(--panel-2) transition-all"
         aria-label="Quick Watchlist View"
       >
         <Star className="size-4 text-muted-foreground hover:text-foreground" />
@@ -27,9 +27,9 @@ export function WatchlistQuickView() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-72 glass-strong border-glow rounded-2xl p-4 z-50 animate-fade-in">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
-            <span className="text-[11px] font-mono tracking-wider text-primary">WATCHLIST</span>
+        <div className="absolute right-0 top-full mt-2 w-72 hairline bg-(--panel) rounded-lg p-4 z-50 animate-fade-in">
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-(--hairline)">
+            <span className="text-[11px] font-mono tracking-wider text-(--gold)">WATCHLIST</span>
             <button
               onClick={() => setIsOpen(false)}
               className="text-muted-foreground hover:text-foreground"
@@ -48,7 +48,7 @@ export function WatchlistQuickView() {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors"
+                    className="flex items-center justify-between p-2 rounded-md hover:bg-(--panel-2) transition-colors"
                   >
                     <div>
                       <span className="text-[12px] font-bold text-foreground">{item.sym}</span>
@@ -62,7 +62,7 @@ export function WatchlistQuickView() {
                           {formatPrice(coinData.px)}
                         </div>
                         <div
-                          className={`text-[11px] font-mono ${coinData.ch >= 0 ? "text-accent" : "text-red-400"}`}
+                          className={`text-[11px] font-mono ${coinData.ch >= 0 ? "text-(--up)" : "text-(--down)"}`}
                         >
                           {coinData.ch >= 0 ? "+" : ""}
                           {coinData.ch.toFixed(2)}%

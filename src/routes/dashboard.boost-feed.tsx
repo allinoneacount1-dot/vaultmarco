@@ -40,8 +40,8 @@ function BoostFeedPage() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-6 right-6 bg-primary text-background px-4 py-2 rounded-lg shadow-lg z-50 font-mono text-sm"
           >
@@ -56,7 +56,7 @@ function BoostFeedPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Boost Feed</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Boost Feed</h1>
         <p className="text-muted-foreground">Real-time token boosts and promotions</p>
       </motion.div>
 
@@ -71,15 +71,13 @@ function BoostFeedPage() {
           <motion.button
             key={tier}
             onClick={() => setSelectedTier(tier)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.05 }}
             className={`px-4 py-2 rounded-full text-[12px] font-mono transition-all border ${
               selectedTier === tier
-                ? "bg-primary/20 text-primary border-primary/30"
-                : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                ? "border border-(--hairline-strong) text-(--gold) border-(--hairline-strong)"
+                : "border-(--hairline) text-muted-foreground hover:text-foreground hover:border-white/20"
             }`}
           >
             {tier}
@@ -96,15 +94,15 @@ function BoostFeedPage() {
       >
         <Panel title="Active Boosts" icon={Zap} className="h-full">
           <div className="text-2xl font-mono text-foreground">{(boosts || []).length}</div>
-          <div className="text-accent text-xs font-mono mt-1">Live now</div>
+          <div className="text-(--up) text-xs font-mono mt-1">Live now</div>
         </Panel>
         <Panel title="Total Boost Amount" icon={TrendingUp} className="h-full">
           <div className="text-2xl font-mono text-foreground">{formatNumber((boosts || []).reduce((sum, b) => sum + (b.boostAmount || 0), 0))}</div>
-          <div className="text-accent text-xs font-mono mt-1">Total</div>
+          <div className="text-(--up) text-xs font-mono mt-1">Total</div>
         </Panel>
         <Panel title="Top Boost Tier" icon={Zap} className="h-full">
           <div className="text-2xl font-mono text-foreground">{(boosts || []).length > 0 ? (boosts || []).sort((a, b) => (b.boostAmount || 0) - (a.boostAmount || 0))[0].boostTier : "-"}</div>
-          <div className="text-purple-400 text-xs font-mono mt-1">Best boost</div>
+          <div className="text-(--champagne) text-xs font-mono mt-1">Best boost</div>
         </Panel>
         <Panel title="Avg Boost Price" icon={TrendingUp} className="h-full">
           <div className="text-2xl font-mono text-foreground">{(boosts || []).length > 0 ? formatNumber((boosts || []).reduce((sum, b) => sum + (b.boostAmount || 0), 0) / (boosts || []).length) : "-"}</div>
@@ -128,12 +126,11 @@ function BoostFeedPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.08 }}
-                whileHover={{ scale: 1.01, x: 5 }}
-                className="rounded-xl border border-white/10 p-5 hover:bg-white/5 transition-all"
+                className="rounded-md border border-(--hairline) p-5 hover:bg-(--panel-2) transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                    <div className="w-12 h-12 rounded-full bg-(--panel-2) flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                           <img
                             src={getTokenIcon(boost)}
                             alt={boost.symbol}
@@ -143,14 +140,14 @@ function BoostFeedPage() {
                               img.style.display = 'none';
                             }}
                           />
-                          <span className="text-primary font-bold">{boost.symbol[0]}</span>
+                          <span className="text-(--gold) font-bold">{boost.symbol[0]}</span>
                         </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-2">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${getTierColor(boost.boostTier)}`}>
                           {boost.boostTier}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                        <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
                           {boost.chain}
                         </span>
                         <span className="text-foreground font-medium">{boost.symbol}</span>
@@ -159,7 +156,7 @@ function BoostFeedPage() {
 
                       <div className="text-xs text-muted-foreground mb-3 flex items-center gap-4 flex-wrap">
                         <span>DEX: {boost.dex}</span>
-                        <span className="bg-white/5 px-2 py-1 rounded-full font-mono truncate max-w-[200px]">
+                        <span className="bg-(--panel-2) px-2 py-1 rounded-full font-mono truncate max-w-[200px]">
                           CA: {boost.tokenAddress.slice(0, 8)}...{boost.tokenAddress.slice(-6)}
                         </span>
                       </div>
@@ -173,7 +170,7 @@ function BoostFeedPage() {
                         </div>
                         <div>
                           <span className="text-muted-foreground text-xs">24h Change</span>
-                          <div className={`font-mono ${boost.change24h >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                          <div className={`font-mono ${boost.change24h >= 0 ? 'text-(--up)' : 'text-(--down)'}`}>
                             {boost.change24h >= 0 ? '+' : ''}{boost.change24h.toFixed(1)}%
                           </div>
                         </div>
@@ -183,7 +180,7 @@ function BoostFeedPage() {
                         </div>
                         <div>
                           <span className="text-muted-foreground text-xs">Boost Amount</span>
-                          <div className="text-primary font-mono font-bold">{formatNumber(boost.boostAmount)}</div>
+                          <div className="text-(--gold) font-mono font-bold">{formatNumber(boost.boostAmount)}</div>
                         </div>
                       </div>
                     </div>
@@ -191,32 +188,26 @@ function BoostFeedPage() {
 
                   <div className="flex gap-1">
                     <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
                       onClick={() => copyToClipboard(boost.tokenAddress)}
-                      className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-all"
+                      className="p-2 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                       title="Copy CA"
                     >
                       <Copy className="size-4" />
                     </motion.button>
                     <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
                       href={padreUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-green-400 transition-all"
+                      className="p-2 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                       title="Trade on Padre"
                     >
                       <ExternalLink className="size-4" />
                     </motion.a>
                     <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
                       href={`https://dexscreener.com/${boost.chain.toLowerCase()}/${boost.tokenAddress}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-all"
+                      className="p-2 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                       title="View on DexScreener"
                     >
                       <ArrowUpRight className="size-4" />

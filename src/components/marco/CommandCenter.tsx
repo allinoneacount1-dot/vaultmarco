@@ -94,12 +94,10 @@ export function CommandCenter() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.05 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] font-mono transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground glow-cyan"
-                  : "glass text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground "
+                  : "hairline bg-(--panel) text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.label}
@@ -120,10 +118,10 @@ export function CommandCenter() {
                         key={i}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-xl border border-white/10 p-2"
+                        className="rounded-md border border-(--hairline) p-2"
                       >
-                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse mb-1" />
-                        <div className="h-2 w-48 bg-white/5 rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-(--panel-2) rounded animate-pulse mb-1" />
+                        <div className="h-2 w-48 bg-(--panel-2) rounded animate-pulse" />
                       </motion.div>
                     ))
                   ) : (
@@ -133,20 +131,19 @@ export function CommandCenter() {
                       return (
                         <motion.a
                           key={token.id || i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          whileHover={{ x: 5, boxShadow: "0 0 20px rgba(145,231,255,0.15)" }}
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center justify-between rounded-lg border border-white/10 p-2 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                          className="flex items-center justify-between rounded-lg border border-(--hairline) p-2 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
                         >
                           <div className="flex items-center gap-2">
                             <img 
                               src={getTokenIcon(token)} 
                               alt={token.symbol}
-                              className="w-7 h-7 rounded-full bg-white/10"
+                              className="w-7 h-7 rounded-full bg-(--panel-2)"
                               onError={(e) => {
                                 // Fallback if image fails
                                 (e.target as HTMLImageElement).style.display = 'none';
@@ -157,7 +154,7 @@ export function CommandCenter() {
                                 <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-mono border ${getTierColor(token.boostTier)}`}>
                                   {token.boostTier}
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[8px] font-mono">
+                                <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[8px] font-mono">
                                   {token.chain.toUpperCase()}
                                 </span>
                                 <span className="text-[10px] font-mono text-foreground">
@@ -175,7 +172,7 @@ export function CommandCenter() {
                             </div>
                             <div
                               className={`text-[9px] font-mono ${
-                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                                token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                               }`}
                             >
                               {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
@@ -196,10 +193,10 @@ export function CommandCenter() {
                         key={i}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-xl border border-white/10 p-2"
+                        className="rounded-md border border-(--hairline) p-2"
                       >
-                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse mb-1" />
-                        <div className="h-2 w-48 bg-white/5 rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-(--panel-2) rounded animate-pulse mb-1" />
+                        <div className="h-2 w-48 bg-(--panel-2) rounded animate-pulse" />
                       </motion.div>
                     ))
                   ) : (
@@ -209,20 +206,19 @@ export function CommandCenter() {
                       return (
                         <motion.a
                           key={token.id || i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          whileHover={{ x: 5, boxShadow: "0 0 20px rgba(139,92,246,0.15)" }}
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center justify-between rounded-lg border border-white/10 p-2 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                          className="flex items-center justify-between rounded-lg border border-(--hairline) p-2 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
                         >
                           <div className="flex items-center gap-2">
                             <img 
                               src={getTokenIcon(token)} 
                               alt={token.symbol}
-                              className="w-7 h-7 rounded-full bg-white/10"
+                              className="w-7 h-7 rounded-full bg-(--panel-2)"
                               onError={(e) => {
                                 // Fallback if image fails
                                 (e.target as HTMLImageElement).style.display = 'none';
@@ -231,7 +227,7 @@ export function CommandCenter() {
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-[10px]">{getAdTypeIcon(token.type)}</span>
-                                <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[8px] font-mono border border-violet-500/30">
+                                <span className="px-1.5 py-0.5 rounded-full bg-transparent text-(--champagne) text-[8px] font-mono border border-(--hairline-strong)">
                                   {token.type.toUpperCase()}
                                 </span>
                                 <span className="text-[10px] font-mono text-foreground">
@@ -249,7 +245,7 @@ export function CommandCenter() {
                             </div>
                             <div
                               className={`text-[9px] font-mono ${
-                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                                token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                               }`}
                             >
                               {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
@@ -270,10 +266,10 @@ export function CommandCenter() {
                         key={i}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-xl border border-white/10 p-2"
+                        className="rounded-md border border-(--hairline) p-2"
                       >
-                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse mb-1" />
-                        <div className="h-2 w-48 bg-white/5 rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-(--panel-2) rounded animate-pulse mb-1" />
+                        <div className="h-2 w-48 bg-(--panel-2) rounded animate-pulse" />
                       </motion.div>
                     ))
                   ) : (
@@ -283,20 +279,19 @@ export function CommandCenter() {
                       return (
                         <motion.a
                           key={token.id || i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          whileHover={{ x: 5, boxShadow: "0 0 20px rgba(167,139,250,0.15)" }}
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center justify-between rounded-lg border border-white/10 p-2 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                          className="flex items-center justify-between rounded-lg border border-(--hairline) p-2 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
                         >
                           <div className="flex items-center gap-2">
                             <img 
                               src={getTokenIcon(token)} 
                               alt={token.symbol}
-                              className="w-7 h-7 rounded-full bg-white/10"
+                              className="w-7 h-7 rounded-full bg-(--panel-2)"
                               onError={(e) => {
                                 // Fallback if image fails
                                 (e.target as HTMLImageElement).style.display = 'none';
@@ -304,10 +299,10 @@ export function CommandCenter() {
                             />
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[8px] font-mono border border-violet-500/30">
+                                <span className="px-1.5 py-0.5 rounded-full bg-transparent text-(--champagne) text-[8px] font-mono border border-(--hairline-strong)">
                                   TAKEOVER
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[8px] font-mono">
+                                <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[8px] font-mono">
                                   {token.chain.toUpperCase()}
                                 </span>
                                 <span className="text-[10px] font-mono text-foreground">
@@ -325,7 +320,7 @@ export function CommandCenter() {
                             </div>
                             <div
                               className={`text-[9px] font-mono ${
-                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                                token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                               }`}
                             >
                               {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
@@ -408,7 +403,7 @@ export function CommandCenter() {
                     transition={{ duration: 0.4, delay: i * 0.1 }}
                     className="text-[11px] font-mono text-muted-foreground flex gap-2"
                   >
-                    <span className="text-violet-300">›</span>
+                    <span className="text-(--champagne)">›</span>
                     <span>{s}</span>
                   </motion.div>
                 ))}
@@ -437,7 +432,7 @@ export function CommandCenter() {
                           <span className="text-[11px] font-mono w-12 text-foreground">
                             {v.sym}
                           </span>
-                          <div className="flex-1 h-3 bg-white/5 rounded-sm overflow-hidden">
+                          <div className="flex-1 h-3 bg-(--panel-2) rounded-sm overflow-hidden">
                             <motion.div
                               className="h-full rounded-sm"
                               style={{ background: v.color }}
@@ -477,15 +472,13 @@ export function CommandCenter() {
                   <motion.button
                     key={chain.id}
                     onClick={() => setSelectedChain(chain.id)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all border ${
                       selectedChain === chain.id
-                        ? "bg-primary/20 text-primary border-primary/50"
-                        : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                        ? "border border-(--hairline-strong) text-(--gold) border-primary/50"
+                        : "border-(--hairline) text-muted-foreground hover:text-foreground hover:border-white/20"
                     }`}
                   >
                     {chain.label}
@@ -502,10 +495,10 @@ export function CommandCenter() {
                           key={i}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-xl border border-white/10 p-3"
+                          className="rounded-md border border-(--hairline) p-3"
                         >
-                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
-                          <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                          <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
+                          <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
                         </motion.div>
                       ))
                     ) : filteredBoosts.length > 0 ? (
@@ -521,14 +514,13 @@ export function CommandCenter() {
                             href={url}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-primary/30 transition-all group"
-                            whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(145,231,255,0.1)" }}
-                          >
+                            className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
+                            >
                             <div className="flex items-center gap-3 flex-1">
                               <img 
                                 src={getTokenIcon(token)} 
                                 alt={token.symbol}
-                                className="w-9 h-9 rounded-full bg-white/10 flex-shrink-0"
+                                className="w-9 h-9 rounded-full bg-(--panel-2) flex-shrink-0"
                                 onError={(e) => {
                                   // Fallback if image fails
                                   (e.target as HTMLImageElement).style.display = 'none';
@@ -539,7 +531,7 @@ export function CommandCenter() {
                                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${getTierColor(token.boostTier)}`}>
                                     {token.boostTier}
                                   </span>
-                                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                                  <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
                                     {token.chain.toUpperCase()}
                                   </span>
                                   <span className="text-[12px] font-mono text-foreground">
@@ -560,13 +552,13 @@ export function CommandCenter() {
                                 </div>
                                 <div
                                   className={`text-[11px] font-mono mt-1 ${
-                                    token.change24h > 0 ? "text-accent" : "text-red-400"
+                                    token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                                   }`}
                                 >
                                   {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
                                 </div>
                               </div>
-                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
+                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-(--gold) transition-all opacity-0 group-hover:opacity-100" />
                             </div>
                           </motion.a>
                         );
@@ -591,10 +583,10 @@ export function CommandCenter() {
                           key={i}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-xl border border-white/10 p-3"
+                          className="rounded-md border border-(--hairline) p-3"
                         >
-                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
-                          <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                          <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
+                          <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
                         </motion.div>
                       ))
                     ) : filteredAds.length > 0 ? (
@@ -610,14 +602,13 @@ export function CommandCenter() {
                             href={url}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
-                            whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(139,92,246,0.1)" }}
-                          >
+                            className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
+                            >
                             <div className="flex items-center gap-3 flex-1">
                               <img 
                                 src={getTokenIcon(token)} 
                                 alt={token.symbol}
-                                className="w-9 h-9 rounded-full bg-white/10 flex-shrink-0"
+                                className="w-9 h-9 rounded-full bg-(--panel-2) flex-shrink-0"
                                 onError={(e) => {
                                   // Fallback if image fails
                                   (e.target as HTMLImageElement).style.display = 'none';
@@ -626,10 +617,10 @@ export function CommandCenter() {
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="text-[12px]">{getAdTypeIcon(token.type)}</span>
-                                  <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-mono border border-violet-500/30">
+                                  <span className="px-2 py-0.5 rounded-full bg-transparent text-(--champagne) text-[10px] font-mono border border-(--hairline-strong)">
                                     {token.type.toUpperCase()}
                                   </span>
-                                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                                  <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
                                     {token.chain.toUpperCase()}
                                   </span>
                                   <span className="text-[12px] font-mono text-foreground">
@@ -650,13 +641,13 @@ export function CommandCenter() {
                                 </div>
                                 <div
                                   className={`text-[11px] font-mono mt-1 ${
-                                    token.change24h > 0 ? "text-accent" : "text-red-400"
+                                    token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                                   }`}
                                 >
                                   {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
                                 </div>
                               </div>
-                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-violet-400 transition-all opacity-0 group-hover:opacity-100" />
+                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-(--champagne) transition-all opacity-0 group-hover:opacity-100" />
                             </div>
                           </motion.a>
                         );
@@ -691,15 +682,13 @@ export function CommandCenter() {
                   <motion.button
                     key={chain.id}
                     onClick={() => setSelectedChain(chain.id)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all border ${
                       selectedChain === chain.id
-                        ? "bg-primary/20 text-primary border-primary/50"
-                        : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                        ? "border border-(--hairline-strong) text-(--gold) border-primary/50"
+                        : "border-(--hairline) text-muted-foreground hover:text-foreground hover:border-white/20"
                     }`}
                   >
                     {chain.label}
@@ -717,10 +706,10 @@ export function CommandCenter() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="rounded-xl border border-white/10 p-3"
+                          className="rounded-md border border-(--hairline) p-3"
                         >
-                          <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
-                          <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                          <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
+                          <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
                         </motion.div>
                       ))
                     ) : filteredTakeovers.length > 0 ? (
@@ -736,24 +725,23 @@ export function CommandCenter() {
                             href={url}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
-                            whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(167,139,250,0.15)" }}
-                          >
+                            className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
+                            >
                             <div className="flex items-center gap-3 flex-1">
                               <img 
                                 src={getTokenIcon(token)} 
                                 alt={token.symbol}
-                                className="w-9 h-9 rounded-full bg-violet-500/20 flex-shrink-0"
+                                className="w-9 h-9 rounded-full bg-transparent flex-shrink-0"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = 'none';
                                 }}
                               />
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-mono border border-violet-500/30">
+                                  <span className="px-2 py-0.5 rounded-full bg-transparent text-(--champagne) text-[10px] font-mono border border-(--hairline-strong)">
                                     TAKEOVER
                                   </span>
-                                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                                  <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
                                     {token.chain.toUpperCase()}
                                   </span>
                                   <span className="text-[12px] font-mono text-foreground">
@@ -774,13 +762,13 @@ export function CommandCenter() {
                                 </div>
                                 <div
                                   className={`text-[11px] font-mono mt-1 ${
-                                    token.change24h > 0 ? "text-accent" : "text-red-400"
+                                    token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                                   }`}
                                 >
                                   {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
                                 </div>
                               </div>
-                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-violet-400 transition-all opacity-0 group-hover:opacity-100" />
+                              <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-(--champagne) transition-all opacity-0 group-hover:opacity-100" />
                             </div>
                           </motion.a>
                         );
@@ -852,19 +840,19 @@ function LiveMarketPanel({
 
   return (
     <>
-      <div className="glass-strong border-glow rounded-2xl p-4 sm:p-5 scanline md:col-span-2 lg:col-span-1 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 pointer-events-none" />
+      <div className="hairline bg-(--panel) rounded-lg p-4 sm:p-5 md:col-span-2 lg:col-span-1 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
-            <span className="text-[10px] font-mono tracking-[0.3em] text-accent flex items-center gap-2">
-              <span className="size-1.5 rounded-full bg-accent animate-pulse-glow" />
+          <div className="flex items-center justify-between mb-3 pb-3 border-b border-(--hairline)">
+            <span className="text-[10px] font-mono tracking-[0.3em] text-(--up) flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-accent" />
               LIVE MARKET · COINGECKO
             </span>
-            <Activity className="size-3.5 text-accent" />
+            <Activity className="size-3.5 text-(--up)" />
           </div>
           <div className="space-y-2">
             {isError && (
-              <div className="text-[11px] font-mono text-red-400">
+              <div className="text-[11px] font-mono text-(--down)">
                 Market feed offline — retrying…
               </div>
             )}
@@ -877,17 +865,17 @@ function LiveMarketPanel({
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ duration: 0.3, delay: i * 0.05 }}
-                  className="flex items-center justify-between text-[11px] font-mono hover:bg-white/5 rounded-lg px-2 py-1 transition-colors"
+                  className="flex items-center justify-between text-[11px] font-mono hover:bg-(--panel-2) rounded-lg px-2 py-1 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-foreground w-12">{c.sym}</span>
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[9px] font-mono ${
                         aiScore > 80
-                          ? "bg-accent/20 text-accent"
+                          ? "bg-accent/20 text-(--up)"
                           : aiScore > 60
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : "bg-red-500/20 text-red-400"
+                            ? "bg-transparent text-(--gold)"
+                            : "bg-transparent text-(--down)"
                       }`}
                     >
                       {aiScore}
@@ -897,7 +885,7 @@ function LiveMarketPanel({
                     {formatPrice(c.px)}
                   </span>
                   <span
-                    className={`tabular-nums w-16 text-right ${c.ch < 0 ? "text-red-400" : "text-accent"}`}
+                    className={`tabular-nums w-16 text-right ${c.ch < 0 ? "text-(--down)" : "text-(--up)"}`}
                   >
                     {c.ch >= 0 ? "+" : ""}
                     {c.ch.toFixed(2)}%
@@ -908,9 +896,7 @@ function LiveMarketPanel({
                         setScanningToken({ sym: c.sym, name: c.name });
                         setIsModalOpen(true);
                       }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="p-1 rounded-full text-muted-foreground hover:text-accent hover:bg-white/5 transition-all"
+                      className="p-1 rounded-full text-muted-foreground hover:text-(--up) hover:bg-(--panel-2) transition-all"
                       aria-label={`Scan ${c.sym} for rug`}
                       title="Scan Rug"
                     >
@@ -918,12 +904,10 @@ function LiveMarketPanel({
                     </motion.button>
                     <motion.button
                       onClick={() => addToWatchlist({ id: c.id, sym: c.sym, name: c.name })}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
                       className={`p-1 rounded-full transition-colors ${
                         isInWatchlist(c.id)
-                          ? "text-accent bg-accent/10"
-                          : "text-muted-foreground hover:text-accent"
+                          ? "text-(--up) bg-accent/10"
+                          : "text-muted-foreground hover:text-(--up)"
                       }`}
                       aria-label={`Add ${c.sym} to watchlist`}
                       title="Add to watchlist"

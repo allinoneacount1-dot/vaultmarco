@@ -10,28 +10,28 @@ export const CHAIN_MAP: Record<string, string> = {
 export const getTierColor = (tier: BoostTier) => {
   switch (tier) {
     case "Whale Boost":
-      return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      return "border-(--gold) text-(--gold)";
     case "High Boost":
-      return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+      return "border-(--hairline-strong) text-(--champagne)";
     case "Mid Boost":
-      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      return "border-(--hairline-strong) text-(--muted-2)";
     case "Low Boost":
     default:
-      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      return "border-(--hairline) text-(--faint)";
   }
 };
 
 export const getAdTypeIcon = (type: AdType) => {
   switch (type) {
     case "Profile":
-      return "🪪";
+      return "◈";
     case "Ad":
-      return "📣";
+      return "▲";
     case "Trending":
-      return "📊";
+      return "◉";
     case "Takeover":
     default:
-      return "❓";
+      return "■";
   }
 };
 

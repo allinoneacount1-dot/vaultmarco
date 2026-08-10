@@ -68,7 +68,7 @@ function LiveMarketPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Live Market</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Live Market</h1>
         <p className="text-muted-foreground">Real-time cryptocurrency market data</p>
       </motion.div>
 
@@ -83,12 +83,10 @@ function LiveMarketPage() {
           <motion.button
             key={chain}
             onClick={() => setSelectedChain(chain)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             className={`px-4 py-2 rounded-full text-[12px] font-mono transition-all border ${
               selectedChain === chain
-                ? "bg-primary/20 text-primary border-primary/30"
-                : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                ? "border border-(--hairline-strong) text-(--gold) border-(--hairline-strong)"
+                : "border-(--hairline) text-muted-foreground hover:text-foreground hover:border-white/20"
             }`}
           >
             {chain}
@@ -105,13 +103,13 @@ function LiveMarketPage() {
       >
         <Panel title="Total Volume" icon={DollarSign} className="h-full">
           <div className="text-2xl font-mono text-foreground">{formatVolume(totalVolume)}</div>
-          <div className="text-accent text-xs font-mono mt-1">From top 20 coins</div>
+          <div className="text-(--up) text-xs font-mono mt-1">From top 20 coins</div>
         </Panel>
         <Panel title="Top Gainer" icon={TrendingUp} className="h-full">
           {topGainer ? (
             <>
               <div className="text-2xl font-mono text-foreground">{topGainer.sym}</div>
-              <div className="text-accent text-xs font-mono mt-1">+{topGainer.ch.toFixed(1)}%</div>
+              <div className="text-(--up) text-xs font-mono mt-1">+{topGainer.ch.toFixed(1)}%</div>
             </>
           ) : (
             <div className="text-muted-foreground">—</div>
@@ -121,7 +119,7 @@ function LiveMarketPage() {
           {topLoser ? (
             <>
               <div className="text-2xl font-mono text-foreground">{topLoser.sym}</div>
-              <div className="text-red-400 text-xs font-mono mt-1">{topLoser.ch.toFixed(1)}%</div>
+              <div className="text-(--down) text-xs font-mono mt-1">{topLoser.ch.toFixed(1)}%</div>
             </>
           ) : (
             <div className="text-muted-foreground">—</div>
@@ -144,7 +142,7 @@ function LiveMarketPage() {
           <Panel title="Market Overview" icon={BarChart3}>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="animate-spin text-primary" />
+                <Loader2 className="animate-spin text-(--gold)" />
               </div>
             ) : (
               <div className="space-y-3">
@@ -154,22 +152,21 @@ function LiveMarketPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.01, x: 5 }}
-                    className="flex items-center justify-between rounded-xl border border-white/10 p-4 hover:bg-white/5 transition-all"
+                    className="flex items-center justify-between rounded-md border border-(--hairline) p-4 hover:bg-(--panel-2) transition-all"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-muted-foreground text-xs font-mono w-4">{index + 1}</span>
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-(--panel-2) flex items-center justify-center overflow-hidden">
                         {coin.image ? (
                           <img src={coin.image} alt={coin.sym} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-primary font-bold text-sm">{coin.sym[0]}</span>
+                          <span className="text-(--gold) font-bold text-sm">{coin.sym[0]}</span>
                         )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-foreground font-medium">{coin.sym}</span>
-                          <span className="text-muted-foreground text-xs bg-white/10 px-2 py-0.5 rounded-full">
+                          <span className="text-muted-foreground text-xs bg-(--panel-2) px-2 py-0.5 rounded-full">
                             {SYM_TO_CHAIN[coin.sym] || "—"}
                           </span>
                         </div>
@@ -180,7 +177,7 @@ function LiveMarketPage() {
                       <div className="text-foreground font-mono text-sm">
                         {formatPrice(coin.px)}
                       </div>
-                      <div className={`text-xs font-mono ${coin.ch >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                      <div className={`text-xs font-mono ${coin.ch >= 0 ? 'text-(--up)' : 'text-(--down)'}`}>
                         {coin.ch >= 0 ? '+' : ''}{coin.ch.toFixed(1)}%
                       </div>
                       <div className="text-muted-foreground text-[10px]">Vol: {formatVolume(coin.volume)}</div>
@@ -203,25 +200,24 @@ function LiveMarketPage() {
           <Panel title="Trending Now" icon={TrendingUp}>
             {isLoadingTrending ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="animate-spin text-primary" />
+                <Loader2 className="animate-spin text-(--gold)" />
               </div>
             ) : (
               <div className="space-y-3">
                 {(trendingTokens || []).slice(0, 4).map((token, index) => (
                   <motion.div
                     key={token.id || index}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02, x: 5 }}
-                    className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 transition-all"
+                    className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) transition-all"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center overflow-hidden">
                         {token.icon ? (
                           <img src={token.icon} alt={token.symbol} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-accent font-bold text-xs">{token.symbol[0]}</span>
+                          <span className="text-(--up) font-bold text-xs">{token.symbol[0]}</span>
                         )}
                       </div>
                       <div>
@@ -230,7 +226,7 @@ function LiveMarketPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-mono ${(token.change24h || 0) >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                      <div className={`text-xs font-mono ${(token.change24h || 0) >= 0 ? 'text-(--up)' : 'text-(--down)'}`}>
                         {(token.change24h || 0) >= 0 ? '+' : ''}{(token.change24h || 0).toFixed(1)}%
                       </div>
                       <div className="text-muted-foreground text-[10px]">
@@ -247,23 +243,17 @@ function LiveMarketPage() {
           <Panel title="Quick Actions" icon={Activity}>
             <div className="space-y-2">
               <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all text-sm font-medium"
+                className="w-full px-4 py-3 rounded-md bg-(--panel-2) text-(--gold) hover:bg-(--panel-2) transition-all text-sm font-medium"
               >
                 View Market Heatmap
               </motion.button>
               <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 text-foreground hover:bg-white/10 transition-all text-sm font-medium"
+                className="w-full px-4 py-3 rounded-md bg-(--panel-2) text-foreground hover:bg-(--panel-2) transition-all text-sm font-medium"
               >
                 Recent Swaps
               </motion.button>
               <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 text-foreground hover:bg-white/10 transition-all text-sm font-medium"
+                className="w-full px-4 py-3 rounded-md bg-(--panel-2) text-foreground hover:bg-(--panel-2) transition-all text-sm font-medium"
               >
                 Top Liquidity Pools
               </motion.button>

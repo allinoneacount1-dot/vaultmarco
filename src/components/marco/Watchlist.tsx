@@ -20,11 +20,11 @@ export function Watchlist() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <div className="inline-flex items-center gap-2 text-[10px] font-mono tracking-[0.35em] text-primary mb-4">
-            <span className="size-1 rounded-full bg-primary animate-pulse-glow" />
+          <div className="inline-flex items-center gap-2 text-[10px] font-mono tracking-[0.35em] text-(--gold) mb-4">
+            <span className="size-1 rounded-full bg-primary" />
             08 / WATCHLIST
           </div>
-          <h2 className="text-chrome font-display text-3xl sm:text-5xl font-semibold">
+          <h2 className="chrome-text font-display text-3xl sm:text-5xl font-semibold">
             Your Watchlist
           </h2>
           <p className="mt-4 text-muted-foreground text-base sm:text-lg max-w-2xl">
@@ -34,7 +34,7 @@ export function Watchlist() {
         </motion.div>
 
         <motion.div
-          className="mt-10 glass-strong border-glow rounded-2xl p-6"
+          className="mt-10 hairline bg-(--panel) rounded-lg p-6"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -54,10 +54,10 @@ export function Watchlist() {
                 return (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="flex items-center justify-between p-4 bg-white/5 rounded-xl"
+                    className="flex items-center justify-between p-4 bg-(--panel-2) rounded-md"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-foreground font-bold">{item.sym}</span>
@@ -72,7 +72,7 @@ export function Watchlist() {
                             {formatPrice(coinData.px)}
                           </div>
                           <div
-                            className={`text-xs font-mono ${coinData.ch >= 0 ? "text-accent" : "text-red-400"}`}
+                            className={`text-xs font-mono ${coinData.ch >= 0 ? "text-(--up)" : "text-(--down)"}`}
                           >
                             {coinData.ch >= 0 ? "+" : ""}
                             {coinData.ch.toFixed(2)}%
@@ -81,7 +81,7 @@ export function Watchlist() {
                       )}
                       <button
                         onClick={() => removeFromWatchlist(item.id)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 hover:bg-(--panel-2) rounded-full transition-colors"
                         aria-label={`Remove ${item.sym} from watchlist`}
                       >
                         <X className="size-4 text-muted-foreground" />

@@ -72,8 +72,8 @@ function AuthPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <Navbar />
-      <div className="absolute inset-0 grid-bg [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
-      <div className="absolute left-1/2 top-1/3 -translate-x-1/2 size-[600px] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
+      <div className="absolute left-1/2 top-1/3 -translate-x-1/2 size-[600px] rounded-full bg-(--panel-2) blur-[120px] pointer-events-none" />
 
       <section className="relative pt-32 pb-20 px-4">
         <div className="mx-auto max-w-md">
@@ -88,16 +88,16 @@ function AuthPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="glass-strong border-glow rounded-3xl p-8 sm:p-10"
+            className="hairline bg-(--panel) rounded-lg p-8 sm:p-10"
           >
             <div className="flex items-center gap-2 mb-6">
-              <span className="size-2 rounded-full bg-accent animate-pulse-glow" />
+              <span className="size-2 rounded-full bg-accent" />
               <span className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground">
                 OPERATOR ACCESS
               </span>
             </div>
 
-            <h1 className="text-chrome font-display text-3xl sm:text-4xl font-semibold leading-tight">
+            <h1 className="chrome-text font-display text-3xl sm:text-4xl font-semibold leading-tight">
               {mode === "login" ? "Re-enter the vault." : "Request operator access."}
             </h1>
             <p className="mt-3 text-sm text-muted-foreground">
@@ -106,7 +106,7 @@ function AuthPage() {
                 : "Create your operator profile to track wallets, save signals and unlock multi-chain tools."}
             </p>
 
-            <div className="mt-6 grid grid-cols-2 gap-1 p-1 glass rounded-xl">
+            <div className="mt-6 grid grid-cols-2 gap-1 p-1 hairline bg-(--panel) rounded-md">
               {(["login", "signup"] as const).map((m) => (
                 <button
                   key={m}
@@ -155,13 +155,13 @@ function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.22em] glow-cyan hover:scale-[1.01] transition-transform disabled:opacity-60"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.22em] hover:scale-[1.01] transition-transform disabled:opacity-60"
               >
                 {loading ? "Authenticating…" : mode === "login" ? "Enter Vault" : "Request Access"}
               </button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-white/5 text-center">
+            <div className="mt-6 pt-6 border-t border-(--hairline) text-center">
               <p className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground">
                 SECURE · ENCRYPTED · MULTI-CHAIN READY
               </p>
@@ -194,10 +194,10 @@ function AuthField({
         {label}
       </span>
       <div
-        className={`flex items-center gap-2 bg-white/[0.03] border rounded-xl px-3.5 transition-all focus-within:ring-1 ${
+        className={`flex items-center gap-2 bg-(--panel-2) border rounded-md px-3.5 transition-all focus-within:ring-1 ${
           error
-            ? "border-red-500/50 focus-within:border-red-500 focus-within:ring-red-500/40"
-            : "border-white/8 focus-within:border-primary/60 focus-within:ring-primary/40"
+            ? "border-(--down) focus-within:border-(--down) focus-within:ring-red-500/40"
+            : "border-(--hairline) focus-within:border-primary/60 focus-within:ring-primary/40"
         }`}
       >
         {icon && <span className="text-muted-foreground">{icon}</span>}
@@ -208,7 +208,7 @@ function AuthField({
           className="w-full bg-transparent py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
         />
       </div>
-      {error && <span className="mt-1.5 block text-[11px] text-red-400 font-mono">{error}</span>}
+      {error && <span className="mt-1.5 block text-[11px] text-(--down) font-mono">{error}</span>}
     </label>
   );
 }

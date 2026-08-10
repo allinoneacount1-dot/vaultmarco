@@ -32,7 +32,7 @@ export function SectionHeader({ kicker, title, sub }: { kicker: string; title: s
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <div className="inline-flex items-center gap-2 text-[10px] font-mono tracking-[0.35em] text-primary mb-4">
+        <div className="inline-flex items-center gap-2 text-[10px] font-mono tracking-[0.35em] text-(--gold) mb-4">
           <motion.span
             className="size-1 rounded-full bg-primary"
             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
@@ -42,7 +42,7 @@ export function SectionHeader({ kicker, title, sub }: { kicker: string; title: s
         </div>
       </motion.div>
       <motion.h2
-        className="text-chrome font-display text-3xl sm:text-5xl font-semibold leading-tight"
+        className="chrome-text font-display text-3xl sm:text-5xl font-semibold leading-tight"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}

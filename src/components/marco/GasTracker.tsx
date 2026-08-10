@@ -24,11 +24,11 @@ export function GasTracker() {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-full glass border border-white/10 px-3 py-1.5">
-      <Activity className="size-3 text-primary" />
+    <div className="hairline flex items-center gap-2 px-3 py-1.5">
+      <Activity className="size-3 text-(--gold)" strokeWidth={1.8} />
       <div className="flex items-baseline gap-1">
-        <span className="text-xs font-mono text-foreground">{data?.average}</span>
-        <span className="text-[10px] font-mono text-muted-foreground">gwei</span>
+        <span className="mono-data text-xs text-(--bone)">{data?.average}</span>
+        <span className="mono-data text-[10px] text-(--faint)">gwei</span>
       </div>
     </div>
   );

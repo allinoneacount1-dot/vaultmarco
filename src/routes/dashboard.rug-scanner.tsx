@@ -16,7 +16,7 @@ function RugScannerPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Rug Scanner</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Rug Scanner</h1>
         <p className="text-muted-foreground">Token safety scanner powered by RugCheck</p>
       </motion.div>
 
@@ -32,13 +32,12 @@ function RugScannerPage() {
               href="https://rugcheck.xyz/"
               target="_blank"
               rel="noreferrer"
-              whileHover={{ x: 5 }}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium"
+              className="flex items-center gap-2 text-(--gold) hover:text-(--gold)/80 text-sm font-medium"
             >
               <ExternalLink className="size-4" />
               Open RugCheck in new tab
             </motion.a>
-            <div className="rounded-xl overflow-hidden border border-white/10">
+            <div className="rounded-md overflow-hidden border border-(--hairline)">
               <iframe
                 src="https://rugcheck.xyz/"
                 title="RugCheck Token Scanner"
@@ -47,7 +46,7 @@ function RugScannerPage() {
                 referrerPolicy="strict-origin-when-cross-origin"
                 loading="lazy"
               />
-              <div className="p-4 border-t border-white/10">
+              <div className="p-4 border-t border-(--hairline)">
                 <p className="text-xs text-muted-foreground">
                   Note: For full security features, it's recommended to use the "Open RugCheck in new tab" link above.
                 </p>

@@ -32,32 +32,32 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "rec
 // Simple logo component using Lucide icons
 const PartnerLogo = ({ name }: { name: string }) => {
   const config: Record<string, { bg: string; icon: React.ReactNode }> = {
-    solana: { bg: "#9945ff", icon: <Hexagon className="size-3" /> },
-    ethereum: { bg: "#627eea", icon: <Layers className="size-3" /> },
-    bnb: { bg: "#f0b90b", icon: <Coins className="size-3" /> },
-    base: { bg: "#22c55e", icon: <Globe className="size-3" /> },
-    uniswap: { bg: "#ff007a", icon: <TrendingUp className="size-3" /> },
-    jupiter: { bg: "#9945ff", icon: <Zap className="size-3" /> },
-    pumpfun: { bg: "#06b6d4", icon: <Rocket className="size-3" /> },
-    "1inch": { bg: "#10b981", icon: <LineChartIcon className="size-3" /> },
-    telegram: { bg: "#0ea5e9", icon: <RadioTower className="size-3" /> },
-    discord: { bg: "#6366f1", icon: <RadioTower className="size-3" /> },
-    nvidia: { bg: "#76b900", icon: <Cpu className="size-3" /> },
-    openai: { bg: "#10a37f", icon: <Bot className="size-3" /> },
-    coingecko: { bg: "#fca311", icon: <Sparkles className="size-3" /> },
-    coinmarketcap: { bg: "#60a5fa", icon: <Coins className="size-3" /> },
-    messari: { bg: "#a855f4", icon: <Sparkles className="size-3" /> },
-    defillama: { bg: "#f59e0b", icon: <BarChart3 className="size-3" /> },
-    coinlist: { bg: "#38bdf8", icon: <Terminal className="size-3" /> },
-    daomaker: { bg: "#818cf8", icon: <ShieldCheck className="size-3" /> },
-    trustswap: { bg: "#fca311", icon: <Layers className="size-3" /> },
-    starter: { bg: "#22d3ee", icon: <Rocket className="size-3" /> },
+    solana: { bg: "#17181B", icon: <Hexagon className="size-3" /> },
+    ethereum: { bg: "#17181B", icon: <Layers className="size-3" /> },
+    bnb: { bg: "#17181B", icon: <Coins className="size-3" /> },
+    base: { bg: "#17181B", icon: <Globe className="size-3" /> },
+    uniswap: { bg: "#17181B", icon: <TrendingUp className="size-3" /> },
+    jupiter: { bg: "#17181B", icon: <Zap className="size-3" /> },
+    pumpfun: { bg: "#17181B", icon: <Rocket className="size-3" /> },
+    "1inch": { bg: "#17181B", icon: <LineChartIcon className="size-3" /> },
+    telegram: { bg: "#17181B", icon: <RadioTower className="size-3" /> },
+    discord: { bg: "#17181B", icon: <RadioTower className="size-3" /> },
+    nvidia: { bg: "#17181B", icon: <Cpu className="size-3" /> },
+    openai: { bg: "#17181B", icon: <Bot className="size-3" /> },
+    coingecko: { bg: "#17181B", icon: <Sparkles className="size-3" /> },
+    coinmarketcap: { bg: "#17181B", icon: <Coins className="size-3" /> },
+    messari: { bg: "#17181B", icon: <Sparkles className="size-3" /> },
+    defillama: { bg: "#17181B", icon: <BarChart3 className="size-3" /> },
+    coinlist: { bg: "#17181B", icon: <Terminal className="size-3" /> },
+    daomaker: { bg: "#17181B", icon: <ShieldCheck className="size-3" /> },
+    trustswap: { bg: "#17181B", icon: <Layers className="size-3" /> },
+    starter: { bg: "#17181B", icon: <Rocket className="size-3" /> },
   };
-  const c = config[name.toLowerCase()] || { bg: "#64748b", icon: <Hexagon className="size-3" /> };
+  const c = config[name.toLowerCase()] || { bg: "#17181B", icon: <Hexagon className="size-3" /> };
 
   return (
     <div
-      className="size-6 rounded-full border border-white/10 flex items-center justify-center"
+      className="size-6 rounded-full border border-(--hairline) flex items-center justify-center"
       style={{ backgroundColor: c.bg }}
     >
       {c.icon}
@@ -159,18 +159,18 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
 
   return (
     <Dialog open={!!partnerName} onOpenChange={() => onClose()}>
-      <DialogContent className="glass-strong border-glow sm:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+      <DialogContent className="hairline bg-(--panel) sm:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
         <DialogHeader>
           <div className="flex items-center justify-between mb-2">
             <div>
-              <div className="text-[10px] font-mono tracking-[0.25em] text-primary uppercase mb-1">
+              <div className="text-[10px] font-mono tracking-[0.25em] text-(--gold) uppercase mb-1">
                 {data.tag}
               </div>
-              <DialogTitle className="font-display text-2xl text-chrome">{partnerName}</DialogTitle>
+              <DialogTitle className="font-display text-2xl chrome-text">{partnerName}</DialogTitle>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full hover:bg-(--panel-2) transition-colors"
             >
               <X className="size-5 text-muted-foreground" />
             </button>
@@ -185,7 +185,7 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
           {data.stats.map((stat, i) => (
             <div
               key={i}
-              className="p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
+              className="p-4 rounded-md border border-(--hairline) hover:bg-(--panel-2) transition-colors"
             >
               <div className="text-[11px] text-muted-foreground font-mono mb-1">{stat.label}</div>
               <div className="text-xl font-display text-foreground">{stat.value}</div>
@@ -195,10 +195,10 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
 
         {/* Growth Chart */}
         <div className="mt-5">
-          <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2 flex items-center gap-1.5">
+          <div className="text-[11px] font-mono tracking-[0.25em] text-(--gold) uppercase mb-2 flex items-center gap-1.5">
             <TrendingUp className="size-3" /> Growth Trend
           </div>
-          <div className="h-48 rounded-xl border border-white/10 p-2">
+          <div className="h-48 rounded-md border border-(--hairline) p-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={growthData}>
                 <XAxis
@@ -239,13 +239,13 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
 
         {/* Features */}
         <div className="mt-5">
-          <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
+          <div className="text-[11px] font-mono tracking-[0.25em] text-(--gold) uppercase mb-2">
             Features
           </div>
           <div className="grid grid-cols-2 gap-2">
             {data.features.map((feat, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-foreground">
-                <CheckCircle2 className="size-3.5 text-accent" />
+                <CheckCircle2 className="size-3.5 text-(--up)" />
                 <span>{feat}</span>
               </div>
             ))}
@@ -254,14 +254,14 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
 
         {/* Network Partners with Logos */}
         <div className="mt-5">
-          <div className="text-[11px] font-mono tracking-[0.25em] text-primary uppercase mb-2">
+          <div className="text-[11px] font-mono tracking-[0.25em] text-(--gold) uppercase mb-2">
             Network Members
           </div>
           <div className="flex flex-wrap gap-2">
             {data.partners.map((p, i) => (
               <div
                 key={i}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-(--panel-2) border border-(--hairline)"
               >
                 <PartnerLogo name={p.key} />
                 <span className="text-[11px] text-muted-foreground">{p.name}</span>
@@ -274,7 +274,7 @@ export function PartnerDashboardModal({ partnerName, onClose }: PartnerDashboard
           <a
             href="#contact"
             onClick={onClose}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.01] transition-transform"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-[12px] font-medium uppercase tracking-[0.18em] hover:scale-[1.01] transition-transform"
           >
             Partner With Us <ArrowUpRight className="size-4" />
           </a>

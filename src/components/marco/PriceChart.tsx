@@ -51,7 +51,7 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
             key={s}
             onClick={() => setActiveSymbol(s)}
             className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all whitespace-nowrap ${
-              activeSymbol === s ? "bg-primary text-primary-foreground glow-cyan" : "glass text-muted-foreground hover:text-foreground"
+              activeSymbol === s ? "bg-primary text-primary-foreground " : "hairline bg-(--panel) text-muted-foreground hover:text-foreground"
             }`}
           >
             {s}/USD
@@ -61,7 +61,7 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
 
       <motion.div
         ref={chartContainerRef}
-        className="w-full rounded-xl border border-white/10 overflow-hidden"
+        className="w-full rounded-md border border-(--hairline) overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
@@ -69,13 +69,13 @@ export function PriceChart({ symbol = "BTC" }: { symbol?: string }) {
         <svg viewBox="0 0 800 300" className="w-full h-80">
           <defs>
             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#91E7FF" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#91E7FF" stopOpacity="0" />
+              <stop offset="0%" stopColor="#CECCC1" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#CECCC1" stopOpacity="0" />
             </linearGradient>
           </defs>
           
           <path d={area} fill="url(#chartGradient)" />
-          <path d={path} fill="none" stroke="#91E7FF" strokeWidth="2" />
+          <path d={path} fill="none" stroke="#CECCC1" strokeWidth="2" />
           
           {/* Grid lines */}
           <line x1="0" y1="150" x2="800" y2="150" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />

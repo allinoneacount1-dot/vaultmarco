@@ -10,12 +10,13 @@ export function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="glass-strong border-glow rounded-2xl p-5 scanline">
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
-        <span className="text-[10px] font-mono tracking-[0.3em] text-muted-foreground">
+    <div className="hairline bg-(--panel) p-5">
+      <div className="hairline-b mb-3 flex items-center justify-between pb-3">
+        <span className="mono-label flex items-center gap-2.5">
+          <span className="size-1 rounded-full bg-(--gold)" />
           {title}
         </span>
-        <Icon className="size-3.5 text-primary" />
+        <Icon className="size-3.5 text-(--faint)" strokeWidth={1.8} />
       </div>
       <div className="space-y-2">{children}</div>
     </div>
@@ -34,12 +35,10 @@ export function Row({
   ok?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between text-[11px] font-mono">
-      <span className="text-foreground">{label}</span>
-      <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground">
-        {mid}
-      </span>
-      <span className={ok === false ? "text-red-400" : "text-accent"}>{value}</span>
+    <div className="mono-data flex items-center justify-between text-[11px]">
+      <span className="text-(--bone)">{label}</span>
+      <span className="hairline px-1.5 py-0.5 text-[9px] text-(--faint)">{mid}</span>
+      <span className={ok === false ? "text-(--down)" : "text-(--up)"}>{value}</span>
     </div>
   );
 }

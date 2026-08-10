@@ -53,8 +53,8 @@ function DexTrending() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-6 right-6 bg-primary text-background px-4 py-2 rounded-lg shadow-lg z-50 font-mono text-sm"
           >
@@ -69,7 +69,7 @@ function DexTrending() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">DEX Trending</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">DEX Trending</h1>
         <p className="text-muted-foreground">Real-time intelligence for trending tokens, boosted promotions, and ads</p>
       </motion.div>
 
@@ -91,15 +91,13 @@ function DexTrending() {
           <motion.button
             key={chain.id}
             onClick={() => setSelectedChain(chain.id)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.05 }}
             className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all border ${
                 selectedChain === chain.id
-                  ? "bg-primary/20 text-primary border-primary/30"
-                  : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+                  ? "border border-(--hairline-strong) text-(--gold) border-(--hairline-strong)"
+                  : "border-(--hairline) text-muted-foreground hover:text-foreground hover:border-white/20"
               }`}
           >
             {chain.label}
@@ -123,10 +121,10 @@ function DexTrending() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.05 }}
-                    className="rounded-xl border border-white/10 p-3"
+                    className="rounded-md border border-(--hairline) p-3"
                   >
-                    <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
-                    <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
+                    <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
                   </motion.div>
                 ))
               ) : (
@@ -140,15 +138,14 @@ function DexTrending() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + i * 0.05 }}
-                      whileHover={{ scale: 1.01, x: 5 }}
-                      className="rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                      className="rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1">
                           <img 
                             src={getTokenIcon(token)} 
                             alt={token.symbol}
-                            className="w-10 h-10 rounded-full bg-white/10 flex-shrink-0"
+                            className="w-10 h-10 rounded-full bg-(--panel-2) flex-shrink-0"
                             onError={(e) => {
                               // Fallback if image fails
                               (e.target as HTMLImageElement).style.display = 'none';
@@ -159,14 +156,14 @@ function DexTrending() {
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${getTierColor(token.boostTier)}`}>
                                 {token.boostTier}
                               </span>
-                              <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                              <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
                                 {token.chain.toUpperCase()}
                               </span>
                               <a
                                 href={url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[12px] font-mono text-foreground hover:text-primary transition-colors"
+                                className="text-[12px] font-mono text-foreground hover:text-(--gold) transition-colors"
                               >
                                 {token.symbol} · {token.name}
                               </a>
@@ -175,7 +172,7 @@ function DexTrending() {
                               <span>DEX: {token.dex}</span>
                               <span>Vol: {formatNumber(token.volume24h)}</span>
                               <span>Boost: {formatNumber(token.boostAmount)}</span>
-                              <span className="text-[10px] bg-white/5 px-2 py-1 rounded-full font-mono truncate max-w-[150px]">
+                              <span className="text-[10px] bg-(--panel-2) px-2 py-1 rounded-full font-mono truncate max-w-[150px]">
                                 CA: {token.tokenAddress.slice(0, 8)}...{token.tokenAddress.slice(-6)}
                               </span>
                             </div>
@@ -187,7 +184,7 @@ function DexTrending() {
                               {formatPrice2(token.price)}
                             </div>
                             <div className={`text-[11px] font-mono mt-1 ${
-                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                                token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                               }`}
                             >
                               {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
@@ -195,36 +192,30 @@ function DexTrending() {
                           </div>
                           <div className="flex gap-1">
                             <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 copyToClipboard(token.tokenAddress);
                               }}
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                               title="Copy CA"
                             >
                               <Copy className="size-3.5" />
                             </motion.button>
                             <motion.a
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               href={padreUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-green-400 transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                               title="Trade on Padre"
                             >
                               <ExternalLink className="size-3.5" />
                             </motion.a>
                             <motion.a
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               href={url}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--gold) transition-all"
                               title="View on DexScreener"
                             >
                               <ArrowUpRight className="size-3.5" />
@@ -255,10 +246,10 @@ function DexTrending() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + i * 0.05 }}
-                    className="rounded-xl border border-white/10 p-3"
+                    className="rounded-md border border-(--hairline) p-3"
                   >
-                    <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
-                    <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
+                    <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
                   </motion.div>
                 ))
               ) : (
@@ -272,15 +263,14 @@ function DexTrending() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + i * 0.05 }}
-                      whileHover={{ scale: 1.01, x: 5 }}
-                      className="rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-violet-500/30 transition-all group"
+                      className="rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1">
                           <img 
                             src={getTokenIcon(token)} 
                             alt={token.symbol}
-                            className="w-10 h-10 rounded-full bg-white/10 flex-shrink-0"
+                            className="w-10 h-10 rounded-full bg-(--panel-2) flex-shrink-0"
                             onError={(e) => {
                               // Fallback if image fails
                               (e.target as HTMLImageElement).style.display = 'none';
@@ -289,17 +279,17 @@ function DexTrending() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-[12px]">{getAdTypeIcon(token.type)}</span>
-                              <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-mono border border-violet-500/30">
+                              <span className="px-2 py-0.5 rounded-full bg-transparent text-(--champagne) text-[10px] font-mono border border-(--hairline-strong)">
                                 {token.type.toUpperCase()}
                               </span>
-                              <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono">
+                              <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
                                 {token.chain.toUpperCase()}
                               </span>
                               <a
                                 href={url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[12px] font-mono text-foreground hover:text-violet-400 transition-colors"
+                                className="text-[12px] font-mono text-foreground hover:text-(--champagne) transition-colors"
                               >
                                 {token.symbol} · {token.name}
                               </a>
@@ -308,7 +298,7 @@ function DexTrending() {
                               <span>Liq: {formatNumber(token.liquidity)}</span>
                               <span>Vol: {formatNumber(token.volume)}</span>
                               <span>{formatTimestamp(token.timestamp)}</span>
-                              <span className="text-[10px] bg-white/5 px-2 py-1 rounded-full font-mono truncate max-w-[150px]">
+                              <span className="text-[10px] bg-(--panel-2) px-2 py-1 rounded-full font-mono truncate max-w-[150px]">
                                 CA: {token.tokenAddress.slice(0, 8)}...{token.tokenAddress.slice(-6)}
                               </span>
                             </div>
@@ -320,7 +310,7 @@ function DexTrending() {
                               {formatPrice2(token.price)}
                             </div>
                             <div className={`text-[11px] font-mono mt-1 ${
-                                token.change24h > 0 ? "text-accent" : "text-red-400"
+                                token.change24h > 0 ? "text-(--up)" : "text-(--down)"
                               }`}
                             >
                               {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(1)}%
@@ -328,36 +318,30 @@ function DexTrending() {
                           </div>
                           <div className="flex gap-1">
                             <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 copyToClipboard(token.tokenAddress);
                               }}
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-violet-400 transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--champagne) transition-all"
                               title="Copy CA"
                             >
                               <Copy className="size-3.5" />
                             </motion.button>
                             <motion.a
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               href={padreUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-green-400 transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--up) transition-all"
                               title="Trade on Padre"
                             >
                               <ExternalLink className="size-3.5" />
                             </motion.a>
                             <motion.a
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
                               href={url}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-violet-400 transition-all"
+                              className="p-1.5 rounded-lg hover:bg-(--panel-2) text-muted-foreground hover:text-(--champagne) transition-all"
                               title="View on DexScreener"
                             >
                               <ArrowUpRight className="size-3.5" />

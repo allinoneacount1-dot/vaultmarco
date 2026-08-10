@@ -42,7 +42,7 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
         {/* Toggle Form Button */}
         <button
           onClick={() => setShowForm(!showForm)}
-          className="w-full text-left text-[10px] font-mono tracking-[0.2em] text-primary hover:text-accent transition-colors uppercase"
+          className="w-full text-left text-[10px] font-mono tracking-[0.2em] text-(--gold) hover:text-(--up) transition-colors uppercase"
         >
           {showForm ? "Cancel" : "+ Set New Alert"}
         </button>
@@ -54,12 +54,12 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             onSubmit={handleSubmit}
-            className="space-y-2 pt-2 border-t border-white/5"
+            className="space-y-2 pt-2 border-t border-(--hairline)"
           >
             <select
               value={selectedCoin}
               onChange={(e) => setSelectedCoin(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
+              className="w-full bg-(--panel-2) border border-(--hairline) rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
             >
               <option value="">Select Coin</option>
               {(marketData ?? []).map((c) => (
@@ -73,7 +73,7 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
               <select
                 value={direction}
                 onChange={(e) => setDirection(e.target.value as "above" | "below")}
-                className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
+                className="flex-1 bg-(--panel-2) border border-(--hairline) rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
               >
                 <option value="above">Above</option>
                 <option value="below">Below</option>
@@ -85,7 +85,7 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
                 placeholder="Target Price"
                 value={targetPrice}
                 onChange={(e) => setTargetPrice(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
+                className="flex-1 bg-(--panel-2) border border-(--hairline) rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground outline-none focus:border-primary"
               />
             </div>
 
@@ -122,12 +122,12 @@ export function PriceAlertsPanel({ marketData }: PriceAlertsPanelProps) {
                     {alert.direction} ${alert.targetPrice}
                   </span>
                   {alert.triggered && (
-                    <span className="text-xs text-accent uppercase tracking-wider">Triggered</span>
+                    <span className="text-xs text-(--up) uppercase tracking-wider">Triggered</span>
                   )}
                 </div>
                 <button
                   onClick={() => removeAlert(alert.id)}
-                  className="text-muted-foreground hover:text-red-400 transition-colors"
+                  className="text-muted-foreground hover:text-(--down) transition-colors"
                 >
                   <X className="size-3" />
                 </button>

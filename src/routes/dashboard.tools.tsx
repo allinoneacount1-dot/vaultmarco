@@ -50,8 +50,8 @@ function ToolsPage() {
       <AnimatePresence>
         {toast && (
           <motion.div 
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-6 right-6 bg-primary text-background px-4 py-2 rounded-lg shadow-lg z-50 font-mono text-sm"
           >
@@ -66,15 +66,15 @@ function ToolsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Tools</h1>
+        <h1 className="mb-2 font-display text-[22px] font-semibold uppercase tracking-[0.04em] text-(--bone)">Tools</h1>
         <p className="text-muted-foreground">Useful utilities for crypto trading</p>
       </motion.div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* SAT to SOL Converter */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <Panel title="SAT to SOL Converter" icon={Zap}>
@@ -86,7 +86,7 @@ function ToolsPage() {
                   value={satAmount}
                   onChange={(e) => setSatAmount(e.target.value)}
                   placeholder="100000000"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
               <div>
@@ -96,20 +96,18 @@ function ToolsPage() {
                   value={solPrice}
                   onChange={(e) => setSolPrice(e.target.value)}
                   placeholder="178.50"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
-              <div className="pt-4 border-t border-white/10 space-y-2">
+              <div className="pt-4 border-t border-(--hairline) space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">SOL:</span>
                   <div className="flex items-center gap-2">
                     <span className="text-foreground font-mono">{solFromSat || "0"}</span>
                     {solFromSat && (
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={() => copyToClipboard(solFromSat)}
-                        className="p-1 hover:bg-white/10 rounded transition-all"
+                        className="p-1 hover:bg-(--panel-2) rounded transition-all"
                       >
                         <Copy className="size-3 text-muted-foreground" />
                       </motion.button>
@@ -119,13 +117,11 @@ function ToolsPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">USD:</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-accent font-mono">${usdFromSol || "0"}</span>
+                    <span className="text-(--up) font-mono">${usdFromSol || "0"}</span>
                     {usdFromSol && (
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={() => copyToClipboard(usdFromSol)}
-                        className="p-1 hover:bg-white/10 rounded transition-all"
+                        className="p-1 hover:bg-(--panel-2) rounded transition-all"
                       >
                         <Copy className="size-3 text-muted-foreground" />
                       </motion.button>
@@ -139,8 +135,8 @@ function ToolsPage() {
 
         {/* Gas Calculator */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Panel title="Gas Calculator" icon={Calculator}>
@@ -152,7 +148,7 @@ function ToolsPage() {
                   value={gasLimit}
                   onChange={(e) => setGasLimit(e.target.value)}
                   placeholder="21000"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
               <div>
@@ -162,7 +158,7 @@ function ToolsPage() {
                   value={gasPriceGwei}
                   onChange={(e) => setGasPriceGwei(e.target.value)}
                   placeholder="32"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
               <div>
@@ -172,20 +168,18 @@ function ToolsPage() {
                   value={ethPrice}
                   onChange={(e) => setEthPrice(e.target.value)}
                   placeholder="3650"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
-              <div className="pt-4 border-t border-white/10 space-y-2">
+              <div className="pt-4 border-t border-(--hairline) space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">ETH:</span>
                   <div className="flex items-center gap-2">
                     <span className="text-foreground font-mono">{ethFromGas || "0"}</span>
                     {ethFromGas && (
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={() => copyToClipboard(ethFromGas)}
-                        className="p-1 hover:bg-white/10 rounded transition-all"
+                        className="p-1 hover:bg-(--panel-2) rounded transition-all"
                       >
                         <Copy className="size-3 text-muted-foreground" />
                       </motion.button>
@@ -195,13 +189,11 @@ function ToolsPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">USD:</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-accent font-mono">${usdFromGas || "0"}</span>
+                    <span className="text-(--up) font-mono">${usdFromGas || "0"}</span>
                     {usdFromGas && (
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={() => copyToClipboard(usdFromGas)}
-                        className="p-1 hover:bg-white/10 rounded transition-all"
+                        className="p-1 hover:bg-(--panel-2) rounded transition-all"
                       >
                         <Copy className="size-3 text-muted-foreground" />
                       </motion.button>
@@ -215,8 +207,8 @@ function ToolsPage() {
 
         {/* Token Decimal Converter */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <Panel title="Token Decimal Converter" icon={Settings}>
@@ -228,7 +220,7 @@ function ToolsPage() {
                   value={tokenAmount}
                   onChange={(e) => setTokenAmount(e.target.value)}
                   placeholder="1000000000"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
               <div>
@@ -240,20 +232,18 @@ function ToolsPage() {
                   placeholder="9"
                   min="0"
                   max="18"
-                  className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary/50 transition-all"
+                  className="w-full px-4 py-3 bg-background border border-(--hairline) rounded-md text-foreground focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
-              <div className="pt-4 border-t border-white/10">
+              <div className="pt-4 border-t border-(--hairline)">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Formatted Amount:</span>
                   <div className="flex items-center gap-2">
                     <span className="text-foreground font-mono">{tokenFromRaw || "0"}</span>
                     {tokenFromRaw && (
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={() => copyToClipboard(tokenFromRaw)}
-                        className="p-1 hover:bg-white/10 rounded transition-all"
+                        className="p-1 hover:bg-(--panel-2) rounded transition-all"
                       >
                         <Copy className="size-3 text-muted-foreground" />
                       </motion.button>
@@ -267,8 +257,8 @@ function ToolsPage() {
 
         {/* Quick Links */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20,  }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <Panel title="Quick Links" icon={ExternalLink}>
@@ -286,11 +276,10 @@ function ToolsPage() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                  whileHover={{ scale: 1.02, x: 5 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all"
+                  className="flex items-center gap-3 p-3 rounded-md border border-(--hairline) hover:bg-(--panel-2) transition-all"
                 >
                   <div className={`w-10 h-10 rounded-full bg-${link.color}-500/20 flex items-center justify-center`}>
                     <span className={`text-${link.color}-400 font-bold text-xs`}>{link.initial}</span>
@@ -321,9 +310,7 @@ function ToolsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-left"
+                className="p-4 rounded-md border border-(--hairline) hover:bg-(--panel-2) transition-all text-left"
               >
                 <div className="text-foreground font-medium mb-1">{tool}</div>
                 <div className="text-muted-foreground text-sm">Coming soon</div>

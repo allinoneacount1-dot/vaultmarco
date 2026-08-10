@@ -80,7 +80,7 @@ export function DexRealtimeTab() {
         <button
           onClick={() => setDexSource("screener")}
           className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
-            dexSource === "screener" ? "bg-primary text-primary-foreground glow-cyan" : "glass text-muted-foreground hover:text-foreground"
+            dexSource === "screener" ? "chrome-fill" : "hairline text-muted-foreground hover:text-foreground"
           }`}
         >
           DEXSCREENER
@@ -88,7 +88,7 @@ export function DexRealtimeTab() {
         <button
           onClick={() => setDexSource("dextools")}
           className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
-            dexSource === "dextools" ? "bg-violet-500 text-violet-50 shadow-[0_0_20px_rgba(139,92,246,0.4)]" : "glass text-muted-foreground hover:text-foreground"
+            dexSource === "dextools" ? "chrome-fill" : "hairline text-muted-foreground hover:text-foreground"
           }`}
         >
           DEXTOOLS
@@ -103,10 +103,10 @@ export function DexRealtimeTab() {
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl border border-white/10 p-3"
+                  className="rounded-md border border-(--hairline) p-3"
                 >
-                  <div className="h-4 w-24 bg-white/10 rounded animate-pulse mb-2" />
-                  <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                  <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
+                  <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
                 </motion.div>
               ))
             : (
@@ -126,12 +126,11 @@ export function DexRealtimeTab() {
                       href={p.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-between rounded-xl border border-white/10 p-3 hover:bg-white/5 hover:border-primary/30 transition-all group"
-                      whileHover={{ y: -3, boxShadow: "0 10px 30px rgba(145,231,255,0.1)" }}
-                    >
+                      className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
+                      >
                       <div>
                         <div className="flex items-center gap-2 text-[12px] font-mono text-foreground">
-                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                          <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold)">
                             {p.chainId?.toUpperCase()}
                           </span>
                           {p.baseToken?.symbol}/{p.quoteToken?.symbol}
@@ -159,14 +158,14 @@ export function DexRealtimeTab() {
                           </div>
                           <div
                             className={`text-[11px] font-mono mt-1 ${
-                              p.priceChange?.h24 && p.priceChange.h24 > 0 ? "text-accent" : "text-red-400"
+                              p.priceChange?.h24 && p.priceChange.h24 > 0 ? "text-(--up)" : "text-(--down)"
                             }`}
                           >
                             {p.priceChange?.h24 && p.priceChange.h24 >= 0 ? "+" : ""}
                             {p.priceChange?.h24?.toFixed(1) || "0.0"}%
                           </div>
                         </div>
-                        <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-primary transition-all opacity-0 group-hover:opacity-100" />
+                        <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-(--gold) transition-all opacity-0 group-hover:opacity-100" />
                       </div>
                     </motion.a>
                   );
