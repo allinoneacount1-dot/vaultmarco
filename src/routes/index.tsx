@@ -2,12 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/marco/Navbar";
 import { Hero } from "@/components/marco/Hero";
 import {
-  About,
+  Manifesto,
   Ecosystem,
   Features,
+  Statement,
   Partnerships,
-  SocialProof,
   Contact,
+  Faq,
   Footer,
 } from "@/components/marco/Sections";
 
@@ -97,12 +98,13 @@ function Index() {
     <main className="relative overflow-x-clip">
       <Navbar />
       <Hero />
-      <About />
+      <Manifesto />
       <Ecosystem />
       <Features />
+      <Statement />
       <Partnerships />
-      <SocialProof />
       <Contact />
+      <Faq />
       <Footer />
     </main>
   );

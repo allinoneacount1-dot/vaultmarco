@@ -6,15 +6,16 @@ export function LiveTicker() {
 
   return (
     <div
-      className="mt-10 glass rounded-xl overflow-hidden"
+      className="hairline-t relative z-[20] overflow-hidden bg-(--void)"
       role="marquee"
-      aria-label="Live market prices from CoinGecko"
+      aria-label="Live market prices"
     >
-      <div className="flex whitespace-nowrap animate-ticker font-mono text-[11px] py-2.5">
+      <div className="animate-ticker mono-data flex whitespace-nowrap py-3.5 text-[11px]">
         {Array.from({ length: 2 }).map((_, k) => (
-          <div key={k} className="flex items-center gap-8 px-4">
-            <span className="text-[9px] tracking-[0.3em] text-primary/70 uppercase">
-              {isError ? "Offline" : isLoading ? "Sync" : "Live"}
+          <div key={k} className="flex items-center gap-10 px-5">
+            <span className="flex items-center gap-2 text-[9px] tracking-[0.3em] text-(--gold)">
+              <span className="inline-block size-1 rounded-full bg-(--gold)" />
+              {isError ? "OFFLINE" : isLoading ? "SYNC" : "LIVE"}
             </span>
             {(coins.length
               ? coins
@@ -24,15 +25,16 @@ export function LiveTicker() {
                   { sym: "BTC", px: 0, ch: 0 },
                 ]
             ).map((c) => (
-              <span key={c.sym + k} className="flex items-center gap-2">
-                <span className="text-muted-foreground">{c.sym}</span>
-                {c.px > 0 && <span className="text-foreground/70">{formatPrice(c.px)}</span>}
-                <span className={c.ch < 0 ? "text-red-400" : "text-accent"}>
+              <span key={c.sym + k} className="flex items-center gap-2.5">
+                <span className="text-(--faint)">{c.sym}</span>
+                {c.px > 0 && <span className="text-(--bone)">{formatPrice(c.px)}</span>}
+                <span className={c.ch < 0 ? "text-(--down)" : "text-(--up)"}>
                   {c.ch >= 0 ? "+" : ""}
                   {c.ch.toFixed(2)}%
                 </span>
               </span>
             ))}
+            <span className="text-[9px] tracking-[0.3em] text-(--faint)">MARCOVAULT</span>
           </div>
         ))}
       </div>

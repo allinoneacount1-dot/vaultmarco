@@ -1,8 +1,8 @@
-export { About } from "./About";
+export { Manifesto } from "./Manifesto";
 export { Ecosystem } from "./Ecosystem";
 export { Features } from "./Features";
-export { CommandCenter } from "./CommandCenter";
+export { Statement } from "./Statement";
 export { Partnerships } from "./Partnerships";
-export { SocialProof } from "./SocialProof";
 export { Contact } from "./Contact";
+export { Faq } from "./Faq";
 export { Footer } from "./Footer";

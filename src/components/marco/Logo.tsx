@@ -12,11 +12,11 @@ export function Logo({ size = 34, sub = true }: { size?: number; sub?: boolean }
         style={{ width: size, height: size, objectFit: "contain" }}
       />
       <span className="leading-none">
-        <span className="block font-display text-[12px] font-semibold tracking-[0.26em] text-[--bone]">
+        <span className="block font-display text-[12px] font-semibold tracking-[0.26em] text-(--bone)">
           MARCOVAULT
         </span>
         {sub && (
-          <span className="mono-label mt-1.5 block !text-[8px] !tracking-[0.34em]">
+          <span className="mono-label mt-1.5 block text-[8px]! tracking-[0.34em]!">
             MULTI-CHAIN INTELLIGENCE
           </span>
         )}

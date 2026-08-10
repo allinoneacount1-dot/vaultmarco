@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { SectionHeading } from "./shell/SectionHeading";
+import { FadeIn, EASE_VAULT } from "./shell/Reveal";
 
 const faqItems = [
   {
@@ -31,61 +32,57 @@ const faqItems = [
 ];
 
 export function Faq() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative py-24 sm:py-32">
-      <div className="relative mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 text-[10px] font-mono tracking-[0.35em] text-primary mb-4">
-            <span className="size-1 rounded-full bg-primary animate-pulse-glow" />
-            07 / FAQ
-          </div>
-          <h2 className="text-chrome font-display text-3xl sm:text-5xl font-semibold">
-            Frequently Asked Questions
-          </h2>
-        </div>
+    <section id="faq" className="relative bg-(--graphite)">
+      <div className="u-container max-w-[880px] py-28 md:py-36">
+        <SectionHeading index="06" sub="QUESTIONS" title="Asked & Answered" />
 
-        <div className="space-y-4">
-          {faqItems.map((item, index) => (
-            <motion.div
-              key={index}
-              className="glass border-glow rounded-2xl overflow-hidden"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <button
-                onClick={() => toggleFaq(index)}
-                className="w-full flex items-center justify-between p-6 text-left focus:outline-none"
-              >
-                <span className="text-lg font-display text-foreground">{item.question}</span>
-                {openIndex === index ? (
-                  <ChevronUp className="size-5 text-primary" />
-                ) : (
-                  <ChevronDown className="size-5 text-muted-foreground" />
-                )}
-              </button>
-              <AnimatePresence>
-                {openIndex === index && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
+        <div className="hairline-t">
+          {faqItems.map((item, index) => {
+            const open = openIndex === index;
+            return (
+              <FadeIn key={index} delay={index * 0.04}>
+                <div className="hairline-b">
+                  <button
+                    onClick={() => setOpenIndex(open ? null : index)}
+                    className="group flex w-full items-baseline gap-6 py-6 text-left focus:outline-none"
+                    aria-expanded={open}
                   >
-                    <div className="px-6 pb-6 text-muted-foreground">{item.answer}</div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
+                    <span className="mono-data text-[11px] text-(--gold)">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1 font-display text-[15.5px] font-medium tracking-[0.02em] text-(--bone) transition-colors duration-300 group-hover:text-(--champagne)">
+                      {item.question}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="mono-data select-none text-[15px] text-(--faint) transition-transform duration-500"
+                      style={{ transform: open ? "rotate(45deg)" : "none" }}
+                    >
+                      +
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.55, ease: EASE_VAULT }}
+                        className="overflow-hidden"
+                      >
+                        <p className="max-w-[62ch] pb-7 pl-[42px] text-[14px] leading-relaxed text-(--muted-2)">
+                          {item.answer}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </FadeIn>
+            );
+          })}
         </div>
       </div>
     </section>

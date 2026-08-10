@@ -1,149 +1,80 @@
-import { motion } from "framer-motion";
-import { ArrowUpRight, MessageSquare, Terminal, Zap } from "lucide-react";
-import { SectionHeader, fadeUp } from "./SectionHeader";
+import { SectionHeading } from "./shell/SectionHeading";
+import { FadeIn } from "./shell/Reveal";
+import { ContactForm } from "./ContactForm";
 
+const CHANNELS = [
+  {
+    n: "01",
+    name: "Community Group",
+    desc: "Live discussions, setups and alpha among operators.",
+    meta: "T.ME/DXMZONE",
+    href: "https://t.me/DxmZone",
+  },
+  {
+    n: "02",
+    name: "Alpha Channel",
+    desc: "Broadcast-only updates, curated narratives and high-signal intel.",
+    meta: "T.ME/DEXMULTICHAIN",
+    href: "https://t.me/DexMultichain",
+  },
+  {
+    n: "03",
+    name: "X / Twitter",
+    desc: "Announcements and public signal from the vault.",
+    meta: "@VAULTMARCO",
+    href: "https://x.com/vaultmarco",
+  },
+];
+
+/** SCENE 07 — access: three doors and one desk. */
 export function Contact() {
   return (
-    <section id="contact" className="relative py-24 sm:py-32 overflow-hidden">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
-        <SectionHeader
-          kicker="06 / CONTACT"
-          title="Join the Operation."
-          sub="Direct link to the Vault's command center."
+    <section id="access" className="relative bg-(--void)">
+      <div className="u-container py-28 md:py-36">
+        <SectionHeading
+          index="05"
+          sub="ACCESS"
+          title="Join the Operation"
+          right={<span className="mono-label">DIRECT LINE · NO GATEKEEPERS</span>}
         />
 
-        <motion.div
-          {...fadeUp}
-          transition={{ ...fadeUp.transition, delay: 0.1 }}
-          className="mt-14 grid lg:grid-cols-2 gap-6"
-        >
-          <motion.div
-            className="glass-strong rounded-3xl p-8 sm:p-10 border-glow relative overflow-hidden group"
-            whileHover={{ scale: 1.01, boxShadow: "0 20px 50px rgba(145,231,255,0.15)" }}
-          >
-            <motion.div
-              className="absolute -top-32 -left-32 size-64 rounded-full bg-primary/20 blur-3xl"
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            <motion.div
-              className="absolute -bottom-32 -right-32 size-64 rounded-full bg-violet-500/20 blur-3xl"
-              animate={{
-                scale: [1, 1.4, 1],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.5,
-              }}
-            />
-            <div className="relative z-10">
-              <motion.div
-                className="size-12 grid place-items-center rounded-2xl bg-primary/10 text-primary mb-5"
-                whileHover={{
-                  scale: 1.15,
-                  rotate: 10,
-                  boxShadow: "0 0 30px rgba(145,231,255,0.4)",
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                <MessageSquare className="size-5" />
-              </motion.div>
-              <motion.h3
-                className="text-chrome font-display text-2xl sm:text-3xl"
-                whileHover={{ scale: 1.02 }}
-              >
-                Community Group
-              </motion.h3>
-              <p className="text-muted-foreground mt-2 mb-7 text-sm sm:text-base">
-                Live discussions, setups and alpha among operators.
-              </p>
-              <motion.a
-                href="https://t.me/DxmZone"
+        <div className="hairline-t">
+          {CHANNELS.map((c, i) => (
+            <FadeIn key={c.n} delay={i * 0.05}>
+              <a
+                href={c.href}
                 target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-[11px] font-medium uppercase tracking-[0.2em] glow-cyan hover:scale-[1.03] transition-transform"
-                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(145,231,255,0.5)" }}
-                whileTap={{ scale: 0.98 }}
+                rel="noopener noreferrer"
+                className="group hairline-b grid grid-cols-[44px_1fr_auto] items-center gap-4 py-7 transition-colors duration-500 hover:bg-(--graphite) md:grid-cols-[72px_minmax(200px,0.8fr)_1.2fr_180px_40px] md:gap-6"
               >
-                Enter Telegram
-                <motion.div
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                <span className="mono-data pl-1 text-[12px] text-(--gold)">{c.n}</span>
+                <span className="font-display text-[17px] font-medium tracking-[0.02em] text-(--bone)">
+                  <span className="group-hover:chrome-text">{c.name}</span>
+                </span>
+                <span className="col-start-2 row-start-2 text-[13px] leading-relaxed text-(--faint) md:col-start-3 md:row-start-1 md:pr-8">
+                  {c.desc}
+                </span>
+                <span className="mono-label hidden justify-self-end text-[9px]! md:block">{c.meta}</span>
+                <span
+                  aria-hidden
+                  className="justify-self-end pr-1 text-(--faint) transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-(--gold)"
                 >
-                  <ArrowUpRight className="size-4" />
-                </motion.div>
-              </motion.a>
-            </div>
-          </motion.div>
+                  ↗
+                </span>
+              </a>
+            </FadeIn>
+          ))}
+        </div>
 
-          <motion.div
-            className="glass-strong rounded-3xl p-8 sm:p-10 border-glow relative overflow-hidden group"
-            whileHover={{ scale: 1.01, boxShadow: "0 20px 50px rgba(145,231,255,0.15)" }}
-          >
-            <motion.div
-              className="absolute -top-32 -right-32 size-64 rounded-full bg-[#BE96FF]/20 blur-3xl"
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.2,
-              }}
-            />
-            <div className="relative z-10">
-              <motion.div
-                className="size-12 grid place-items-center rounded-2xl bg-primary/10 text-primary mb-5"
-                whileHover={{
-                  scale: 1.15,
-                  rotate: -10,
-                  boxShadow: "0 0 30px rgba(190,150,255,0.4)",
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                <Terminal className="size-5" />
-              </motion.div>
-              <motion.h3
-                className="text-chrome font-display text-2xl sm:text-3xl"
-                whileHover={{ scale: 1.02 }}
-              >
-                Alpha Channel
-              </motion.h3>
-              <p className="text-muted-foreground mt-2 mb-7 text-sm sm:text-base">
-                Broadcast-only updates, curated narratives and high-signal intel.
-              </p>
-              <motion.a
-                href="https://t.me/DexMultichain"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-white/5 text-foreground px-6 py-3 text-[11px] font-medium uppercase tracking-[0.2em] border border-white/10 hover:bg-white/10 transition-colors"
-                whileHover={{ scale: 1.05, borderColor: "rgba(145,231,255,0.3)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Open Channel
-                <motion.div
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                >
-                  <Zap className="size-4" />
-                </motion.div>
-              </motion.a>
-            </div>
-          </motion.div>
-        </motion.div>
+        <FadeIn delay={0.15} className="mt-16 md:mt-20">
+          <div className="mb-8 flex items-baseline justify-between gap-6">
+            <h3 className="font-display text-[clamp(18px,2vw,24px)] font-medium text-(--bone)">
+              Or write to the desk
+            </h3>
+            <span className="mono-label hidden sm:block">PARTNERSHIPS · COLLABS · PRESS</span>
+          </div>
+          <ContactForm />
+        </FadeIn>
       </div>
     </section>
   );

@@ -17,13 +17,13 @@ export function SectionHeading({
     <div className="mb-12 md:mb-16">
       <div className="flex items-baseline justify-between gap-6">
         <div>
-          <div className="mono-label flex items-center gap-4 !text-[--gold]">
+          <div className="mono-label flex items-center gap-4 text-(--gold)!">
             <span>{index}</span>
-            <span className="inline-block h-px w-10 bg-[--gold] align-middle" />
-            <span className="!text-[--faint]">{sub}</span>
+            <span className="inline-block h-px w-10 bg-(--gold) align-middle" />
+            <span className="text-(--faint)!">{sub}</span>
           </div>
           <Reveal className="mt-4">
-            <h2 className="font-display text-[clamp(26px,3.4vw,44px)] font-semibold uppercase tracking-[0.04em] text-[--bone]">
+            <h2 className="font-display text-[clamp(26px,3.4vw,44px)] font-semibold uppercase tracking-[0.04em] text-(--bone)">
               {title}
             </h2>
           </Reveal>

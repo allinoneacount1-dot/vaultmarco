@@ -26,7 +26,7 @@ const CONNECT = [
 
 export function Footer() {
   return (
-    <footer className="hairline-t relative overflow-hidden bg-[--void]">
+    <footer className="hairline-t relative overflow-hidden bg-(--void)">
       {/* engraved ghost monogram */}
       <img
         src={logoDark}
@@ -40,14 +40,14 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Logo size={40} />
-            <p className="mt-6 max-w-[36ch] text-[13.5px] leading-relaxed text-[--muted-2]">
+            <p className="mt-6 max-w-[36ch] text-[13.5px] leading-relaxed text-(--muted-2)">
               Multi-chain alpha, curated research, and execution infrastructure — behind machined
               steel.
             </p>
           </div>
 
           <div>
-            <div className="mono-label mb-6 !text-[--gold]">NAVIGATE</div>
+            <div className="mono-label mb-6 text-(--gold)!">NAVIGATE</div>
             <ul className="space-y-3.5">
               {NAVIGATE.map((n) => (
                 <li key={n.id}>
@@ -60,7 +60,7 @@ export function Footer() {
                         scrollToId(n.id);
                       }
                     }}
-                    className="text-[13.5px] text-[--muted-2] transition-colors duration-300 hover:text-[--bone]"
+                    className="text-[13.5px] text-(--muted-2) transition-colors duration-300 hover:text-(--bone)"
                   >
                     {n.label}
                   </Link>
@@ -69,7 +69,7 @@ export function Footer() {
               <li>
                 <Link
                   to="/dashboard"
-                  className="text-[13.5px] text-[--muted-2] transition-colors duration-300 hover:text-[--bone]"
+                  className="text-[13.5px] text-(--muted-2) transition-colors duration-300 hover:text-(--bone)"
                 >
                   Dashboard
                 </Link>
@@ -78,7 +78,7 @@ export function Footer() {
           </div>
 
           <div>
-            <div className="mono-label mb-6 !text-[--gold]">ECOSYSTEM</div>
+            <div className="mono-label mb-6 text-(--gold)!">ECOSYSTEM</div>
             <ul className="space-y-3.5">
               {ECOSYSTEM.map((n) => (
                 <li key={n.label}>
@@ -86,7 +86,7 @@ export function Footer() {
                     href={n.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group text-[13.5px] text-[--muted-2] transition-colors duration-300 hover:text-[--bone]"
+                    className="group text-[13.5px] text-(--muted-2) transition-colors duration-300 hover:text-(--bone)"
                   >
                     {n.label}
                     <span className="ml-1.5 inline-block transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
@@ -99,7 +99,7 @@ export function Footer() {
           </div>
 
           <div>
-            <div className="mono-label mb-6 !text-[--gold]">CONNECT</div>
+            <div className="mono-label mb-6 text-(--gold)!">CONNECT</div>
             <ul className="space-y-3.5">
               {CONNECT.map((n) => (
                 <li key={n.label}>
@@ -107,7 +107,7 @@ export function Footer() {
                     href={n.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group text-[13.5px] text-[--muted-2] transition-colors duration-300 hover:text-[--bone]"
+                    className="group text-[13.5px] text-(--muted-2) transition-colors duration-300 hover:text-(--bone)"
                   >
                     {n.label}
                     <span className="ml-1.5 inline-block transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
@@ -121,15 +121,15 @@ export function Footer() {
         </div>
 
         <div className="hairline-t mt-16 flex flex-col items-start justify-between gap-4 pt-8 sm:flex-row sm:items-center">
-          <div className="mono-label !tracking-[0.24em]">
+          <div className="mono-label tracking-[0.24em]!">
             © {new Date().getFullYear()} MARCOVAULT — ALPHA, KEPT BEHIND STEEL
           </div>
           <div className="mono-label flex items-center gap-6">
             <span>EST. 2024</span>
-            <span className="text-[--gold]">·</span>
+            <span className="text-(--gold)">·</span>
             <button
               onClick={() => scrollToId("hero")}
-              className="transition-colors duration-300 hover:text-[--bone]"
+              className="transition-colors duration-300 hover:text-(--bone)"
             >
               BACK TO TOP ↑
             </button>

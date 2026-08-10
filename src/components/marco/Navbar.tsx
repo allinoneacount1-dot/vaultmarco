@@ -63,10 +63,10 @@ export function Navbar() {
                 to="/"
                 hash={a.id}
                 onClick={anchorClick(a.id)}
-                className="group relative font-mono text-[11px] tracking-[0.22em] text-[--muted-2] transition-colors duration-300 hover:text-[--bone]"
+                className="group relative font-mono text-[11px] tracking-[0.22em] text-(--muted-2) transition-colors duration-300 hover:text-(--bone)"
               >
                 {a.label}
-                <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-[--gold] transition-all duration-500 group-hover:w-full" />
+                <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-(--gold) transition-all duration-500 group-hover:w-full" />
               </Link>
             ))}
             <Link
@@ -86,11 +86,11 @@ export function Navbar() {
             aria-expanded={open}
           >
             <span
-              className="absolute h-px w-6 bg-[--bone] transition-transform duration-500"
+              className="absolute h-px w-6 bg-(--bone) transition-transform duration-500"
               style={{ transform: open ? "rotate(45deg)" : "translateY(-4px)" }}
             />
             <span
-              className="absolute h-px w-6 bg-[--bone] transition-transform duration-500"
+              className="absolute h-px w-6 bg-(--bone) transition-transform duration-500"
               style={{ transform: open ? "rotate(-45deg)" : "translateY(4px)" }}
             />
           </button>
@@ -101,7 +101,7 @@ export function Navbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[60] flex flex-col bg-[--void] md:hidden"
+            className="fixed inset-0 z-[60] flex flex-col bg-(--void) md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -114,8 +114,8 @@ export function Navbar() {
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
               >
-                <span className="absolute h-px w-6 rotate-45 bg-[--bone]" />
-                <span className="absolute h-px w-6 -rotate-45 bg-[--bone]" />
+                <span className="absolute h-px w-6 rotate-45 bg-(--bone)" />
+                <span className="absolute h-px w-6 -rotate-45 bg-(--bone)" />
               </button>
             </div>
             <nav className="u-container mt-10 flex flex-1 flex-col" aria-label="Mobile">
@@ -133,8 +133,8 @@ export function Navbar() {
                     onClick={anchorClick(a.id)}
                     className="flex items-baseline gap-5 py-5"
                   >
-                    <span className="mono-data text-[11px] text-[--gold]">{String(i + 1).padStart(2, "0")}</span>
-                    <span className="font-display text-[22px] font-medium tracking-[0.06em] text-[--bone]">
+                    <span className="mono-data text-[11px] text-(--gold)">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="font-display text-[22px] font-medium tracking-[0.06em] text-(--bone)">
                       {a.label}
                     </span>
                   </Link>
@@ -160,7 +160,7 @@ export function Navbar() {
                   href="https://t.me/DxmZone"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mono-label !text-[--muted-2]"
+                  className="mono-label text-(--muted-2)!"
                 >
                   TELEGRAM ↗
                 </a>
@@ -168,7 +168,7 @@ export function Navbar() {
                   href="https://x.com/vaultmarco"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mono-label !text-[--muted-2]"
+                  className="mono-label text-(--muted-2)!"
                 >
                   X / TWITTER ↗
                 </a>

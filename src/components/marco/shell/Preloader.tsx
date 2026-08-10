@@ -58,13 +58,13 @@ export function Preloader() {
     <div className="fixed inset-0 z-[120] flex" aria-hidden>
       {/* vault doors */}
       <motion.div
-        className="h-full w-1/2 bg-[--void]"
+        className="h-full w-1/2 bg-(--void)"
         style={{ borderRight: "1px solid rgba(194,168,120,0.35)" }}
         animate={{ x: exiting ? "-100%" : 0 }}
         transition={{ duration: DOORS_MS / 1000, ease: EASE_VAULT }}
       />
       <motion.div
-        className="h-full w-1/2 bg-[--void]"
+        className="h-full w-1/2 bg-(--void)"
         animate={{ x: exiting ? "100%" : 0 }}
         transition={{ duration: DOORS_MS / 1000, ease: EASE_VAULT }}
       />
@@ -98,8 +98,8 @@ export function Preloader() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.1, ease: EASE_VAULT }}
           />
-          <div className="mono-data mt-16 text-[11px] tracking-[0.3em] text-[--faint]">
-            {String(count).padStart(3, "0")} <span className="text-[--gold]">/</span> 100
+          <div className="mono-data mt-16 text-[11px] tracking-[0.3em] text-(--faint)">
+            {String(count).padStart(3, "0")} <span className="text-(--gold)">/</span> 100
           </div>
         </div>
       </motion.div>

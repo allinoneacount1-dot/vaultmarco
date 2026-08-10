@@ -1,9 +1,12 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import type { ReactNode } from "react";
 
 export const EASE_VAULT = [0.16, 1, 0.3, 1] as const;
 
-/** Line-mask reveal: content rises out of its own baseline. Fires once (spec §7). */
+/** Line-mask reveal: content rises out of its own baseline. Fires once (spec §7).
+ *  NOTE: the clipped child is invisible to IntersectionObserver (overflow-hidden
+ *  zeroes its intersect rect), so we observe the WRAPPER and drive the child. */
 export function Reveal({
   children,
   delay = 0,
@@ -15,13 +18,14 @@ export function Reveal({
   y?: string | number;
   className?: string;
 }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-8% 0px -8% 0px" });
   return (
-    <span className={`block overflow-hidden ${className ?? ""}`}>
+    <span ref={ref} className={`block overflow-hidden ${className ?? ""}`}>
       <motion.span
         className="block will-change-transform"
         initial={{ y }}
-        whileInView={{ y: 0 }}
-        viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+        animate={inView ? { y: "0%" } : undefined}
         transition={{ duration: 0.9, delay, ease: EASE_VAULT }}
       >
         {children}
@@ -53,17 +57,15 @@ export function FadeIn({
   );
 }
 
-/** Hairline that draws itself in. */
+/** Hairline that draws itself in (scaleX keeps it unclipped — plain element). */
 export function DrawnLine({ delay = 0, className }: { delay?: number; className?: string }) {
   return (
-    <span className={`block overflow-hidden ${className ?? ""}`}>
-      <motion.span
-        className="block h-px w-full origin-left bg-[--hairline-strong]"
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        viewport={{ once: true, margin: "-10%" }}
-        transition={{ duration: 1.1, delay, ease: EASE_VAULT }}
-      />
-    </span>
+    <motion.span
+      className={`block h-px w-full origin-left bg-(--hairline-strong) ${className ?? ""}`}
+      initial={{ scaleX: 0 }}
+      whileInView={{ scaleX: 1 }}
+      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+      transition={{ duration: 1.1, delay, ease: EASE_VAULT }}
+    />
   );
 }

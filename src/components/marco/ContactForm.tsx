@@ -59,7 +59,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="mt-14 glass-strong border-glow rounded-3xl p-6 sm:p-10 grid sm:grid-cols-2 gap-4"
+      className="hairline grid gap-x-8 gap-y-7 bg-(--graphite) p-7 sm:grid-cols-2 md:p-10"
       noValidate
     >
       <Field label="Name" name="name" placeholder="Your name" error={errors.name} />
@@ -75,7 +75,7 @@ export function ContactForm() {
       <div className="block sm:col-span-2">
         <label
           htmlFor="field-topic"
-          className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase"
+          className="mono-label mb-2 block"
         >
           Topic
         </label>
@@ -83,7 +83,7 @@ export function ContactForm() {
           id="field-topic"
           name="topic"
           defaultValue="partnership"
-          className="w-full bg-white/[0.03] border border-white/8 rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40"
+          className="hairline-b w-full border-0 bg-transparent px-0 py-3 text-sm text-(--bone) focus:border-(--gold) focus:outline-none [&>option]:bg-(--graphite)"
         >
           <option value="partnership">Partnership</option>
           <option value="collab">Collaboration</option>
@@ -100,13 +100,13 @@ export function ContactForm() {
         error={errors.message}
       />
       <div className="sm:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
-        <span className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground">
-          SECURE · ENCRYPTED · DIRECT
+        <span className="mono-label">
+          DELIVERED VIA TELEGRAM · NO SERVERS
         </span>
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-[12px] font-medium uppercase tracking-[0.18em] glow-cyan hover:scale-[1.03] transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
+          className="chrome-fill inline-flex items-center gap-2 px-7 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] transition-[filter] duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? "Transmitting…" : "Transmit"} <ArrowUpRight className="size-4" />
         </button>
@@ -133,16 +133,16 @@ function Field({
   error?: string;
 }) {
   const base =
-    "w-full bg-white/[0.03] border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 transition-all";
-  const ok = "border-white/8 focus:border-primary/60 focus:ring-primary/40";
-  const bad = "border-red-500/50 focus:border-red-500 focus:ring-red-500/40";
+    "w-full border-0 border-b bg-transparent px-0 py-3 text-sm text-(--bone) placeholder:text-(--faint) focus:outline-none transition-colors duration-300";
+  const ok = "border-(--hairline-strong) focus:border-(--gold)";
+  const bad = "border-(--down) focus:border-(--down)";
   const cls = `${base} ${error ? bad : ok}`;
   const fieldId = `field-${name}`;
   return (
     <div className={`block ${className}`}>
       <label
         htmlFor={fieldId}
-        className="block text-[10px] font-mono tracking-[0.25em] text-muted-foreground mb-2 uppercase"
+        className="mono-label mb-2 block"
       >
         {label}
       </label>
@@ -168,7 +168,7 @@ function Field({
         />
       )}
       {error && (
-        <span id={`${fieldId}-error`} className="mt-1.5 block text-[11px] text-red-400 font-mono">
+        <span id={`${fieldId}-error`} className="mono-data mt-1.5 block text-[11px] text-(--down)">
           {error}
         </span>
       )}

@@ -20,8 +20,6 @@ import {
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { GasTracker } from "./GasTracker";
-import { WhaleAlertIcon } from "./WhaleAlertIcon";
-import { ThemeToggle } from "./ThemeToggle";
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
@@ -113,8 +111,6 @@ function DashboardSidebarComponent({
         >
           <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
             <GasTracker />
-            <WhaleAlertIcon />
-            <ThemeToggle />
           </div>
         </motion.div>
 
