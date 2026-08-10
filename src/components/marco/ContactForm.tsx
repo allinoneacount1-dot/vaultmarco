@@ -32,36 +32,28 @@ export function ContactForm() {
     }
     setSubmitting(true);
 
+    // Static-safe delivery (no backend): compose the inquiry, copy it, hand off to Telegram.
+    const d = parsed.data;
+    const composed = [
+      `INQUIRY · ${d.topic.toUpperCase()}`,
+      `Name: ${d.name}`,
+      d.telegram ? `Telegram: ${d.telegram}` : null,
+      `Email: ${d.email}`,
+      "—",
+      d.message,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     try {
-      // Send to our backend API first
-      const apiResponse = await fetch("/api/partnership/inquiry", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: parsed.data.name,
-          email: parsed.data.email,
-          organization: parsed.data.telegram,
-          partnershipType: parsed.data.topic,
-          message: parsed.data.message,
-        }),
-      });
-
-      const result = await apiResponse.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to send inquiry");
-      }
-
-      setSubmitting(false);
-      (e.target as HTMLFormElement).reset();
-      toast.success("Inquiry submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting inquiry:", error);
-      setSubmitting(false);
-      toast.error("Failed to send inquiry, please try again.");
+      await navigator.clipboard.writeText(composed);
+      toast.success("Inquiry copied — paste it in the Telegram chat that just opened.");
+    } catch {
+      toast.info("Opening Telegram — paste your inquiry there.");
     }
+    window.open("https://t.me/DxmZone", "_blank", "noopener,noreferrer");
+    setSubmitting(false);
+    (e.target as HTMLFormElement).reset();
   }
 
   return (

@@ -132,7 +132,9 @@ interface DexScreenerTrendingResponse {
 // API Helpers
 // ------------------------------
 
-const API_BASE = "/api/dex";
+// Direct public API (CORS-enabled). The old "/api/dex" proxy never existed in the
+// static Vercel deploy, so every feed silently fell back to mocks in production.
+const API_BASE = "https://api.dexscreener.com";
 
 // Map from DexScreener chain IDs to our internal chain names
 const CHAIN_ID_MAP: Record<string, string> = {
