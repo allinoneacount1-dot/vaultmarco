@@ -3,8 +3,8 @@ import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/r
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster } from "@/components/ui/sonner";
-import { Particles } from "@/components/marco/Particles";
-import { ScrollProgress } from "@/components/marco/ScrollProgress";
+import { SmoothScroll } from "@/components/marco/shell/SmoothScroll";
+import { Preloader } from "@/components/marco/shell/Preloader";
 
 function NotFoundComponent() {
   return (
@@ -74,14 +74,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ScrollProgress />
-      <Particles />
-      <div className="min-h-screen bg-background text-foreground">
-        <Outlet />
-        <Toaster />
-        <Analytics />
-        <SpeedInsights />
-      </div>
+      <SmoothScroll>
+        <Preloader />
+        <div className="grain-overlay" aria-hidden />
+        <div className="min-h-screen bg-background text-foreground">
+          <Outlet />
+          <Toaster />
+          <Analytics />
+          <SpeedInsights />
+        </div>
+      </SmoothScroll>
     </QueryClientProvider>
   );
 }

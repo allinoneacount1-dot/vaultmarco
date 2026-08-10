@@ -1,26 +1,26 @@
-import logoUrl from "@/assets/marcovault-logo.png";
+import logoDark from "@/assets/marcovault-logo-dark.png";
 
-export function Logo({ size = 36 }: { size?: number }) {
+export function Logo({ size = 34, sub = true }: { size?: number; sub?: boolean }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="relative grid place-items-center" style={{ width: size, height: size }}>
-        <img
-          src={logoUrl}
-          alt="MARCOVAULT - Multi-Chain Alpha & Web3 Intelligence Logo"
-          width={size}
-          height={size}
-          className="relative z-10 drop-shadow-[0_0_8px_rgba(0,240,255,0.35)]"
-          style={{ width: size, height: size, objectFit: "contain" }}
-        />
-      </div>
-      <div className="leading-none">
-        <div className="text-chrome font-display font-semibold tracking-[0.2em] text-[13px]">
+      <img
+        src={logoDark}
+        alt="MARCOVAULT monogram"
+        width={size}
+        height={size}
+        className="select-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]"
+        style={{ width: size, height: size, objectFit: "contain" }}
+      />
+      <span className="leading-none">
+        <span className="block font-display text-[12px] font-semibold tracking-[0.26em] text-[--bone]">
           MARCOVAULT
-        </div>
-        <div className="text-[9px] tracking-[0.35em] text-muted-foreground mt-1">
-          MULTI-CHAIN · ALPHA
-        </div>
-      </div>
+        </span>
+        {sub && (
+          <span className="mono-label mt-1.5 block !text-[8px] !tracking-[0.34em]">
+            MULTI-CHAIN INTELLIGENCE
+          </span>
+        )}
+      </span>
     </div>
   );
 }
