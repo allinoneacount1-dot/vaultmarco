@@ -6,7 +6,7 @@ import {
   LineChart,
   RadioTower,
   ShieldCheck,
-  Wallet,
+  Bell,
   Zap,
 } from "lucide-react";
 import { SectionHeader, fadeUp, staggerContainer } from "./SectionHeader";
@@ -18,7 +18,7 @@ const features = [
   { icon: Bell, t: "Whale Watch", d: "Track smart money movements across chains." },
   { icon: LineChart, t: "Live Charting", d: "Professional price charts for technical analysis." },
   { icon: RadioTower, t: "News Feed", d: "Curated crypto news integrated into your workflow." },
-  { icon: Wallet, t: "Wallet Connection", d: "RainbowKit-powered wallet support." },
+  { icon: Bell, t: "Watchlist & Alerts", d: "Track pairs and get price alerts in real time." },
 ];
 
 export function Features() {

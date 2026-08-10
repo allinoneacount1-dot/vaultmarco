@@ -22,7 +22,6 @@ import { Logo } from "./Logo";
 import { GasTracker } from "./GasTracker";
 import { WhaleAlertIcon } from "./WhaleAlertIcon";
 import { ThemeToggle } from "./ThemeToggle";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
@@ -189,38 +188,6 @@ function DashboardSidebarComponent({
         </motion.div>
       </motion.div>
 
-      {/* Connect Wallet Button */}
-      <motion.div 
-        className="p-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-      >
-          <ConnectButton.Custom>
-            {({ account, openConnectModal, mounted }) => {
-              if (!mounted) return null;
-
-              if (!account) {
-                return (
-                  <motion.button
-                    onClick={openConnectModal}
-                    className="w-full group relative inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-medium text-primary-foreground tracking-wider uppercase transition-all hover:scale-[1.02] glow-cyan overflow-hidden"
-                    whileHover={{ 
-                      scale: 1.05,
-                      boxShadow: "0 0 20px rgba(145, 231, 255, 0.5)"
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {!collapsed && <span>Connect Wallet</span>}
-                    {collapsed && <Plus className="size-5" />}
-                  </motion.button>
-                );
-              }
-
-              return <ConnectButton />;
-            }}
-          </ConnectButton.Custom>
-        </motion.div>
       </motion.aside>
     </>
   );

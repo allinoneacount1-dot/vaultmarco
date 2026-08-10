@@ -1,14 +1,26 @@
+/* ————————————————————————————————————————————————————————————————
+   MARCOVAULT — "MONOLITH" design system
+   Machined chrome · graphite void · champagne hairlines
+   Spec: docs/superpowers/specs/2026-08-10-vaultmarco-redesign-design.md
+   ———————————————————————————————————————————————————————————————— */
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
+/* Self-hosted brand fonts (Fontsource — zero external requests) */
+@import "@fontsource-variable/unbounded";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/spline-sans-mono";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -28,254 +40,244 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-cyan: var(--cyan);
-  --color-mint: var(--mint);
-  --color-violet: var(--violet);
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-sidebar: var(--panel);
+  --color-sidebar-foreground: var(--foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-accent: var(--secondary);
+  --color-sidebar-accent-foreground: var(--foreground);
+  --color-sidebar-primary: var(--gold);
+  --color-sidebar-primary-foreground: var(--background);
+  --color-sidebar-ring: var(--ring);
+
+  /* Brand semantic colors */
+  --color-void: var(--void);
+  --color-graphite: var(--graphite);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-bone: var(--bone);
+  --color-faint: var(--faint);
+  --color-gold: var(--gold);
+  --color-champagne: var(--champagne);
+  --color-up: var(--up);
+  --color-down: var(--down);
+
+  --font-display: "Unbounded Variable", "Instrument Sans Variable", sans-serif;
+  --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-mono: "Spline Sans Mono Variable", ui-monospace, monospace;
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.13 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.16 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.16 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.85 0.18 200);
-  --primary-foreground: oklch(0.13 0 0);
-  --secondary: oklch(0.2 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.85 0.2 170);
-  --accent-foreground: oklch(0.13 0 0);
-  --destructive: oklch(0.6 0.24 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.85 0.18 200);
-  --cyan: oklch(0.88 0.18 210);
-  --mint: oklch(0.88 0.2 165);
-  --violet: oklch(0.68 0.22 295);
+  --radius: 4px;
 
-  --grid-color: oklch(1 0 0 / 4%);
-  --glow-cyan: 0 0 40px oklch(0.85 0.18 200 / 0.4);
-  --glow-mint: 0 0 40px oklch(0.88 0.2 165 / 0.4);
+  /* — Core palette (spec §2.1, chrome ramp sampled from logo §2.4) — */
+  --void: #050506;
+  --graphite: #0b0c0e;
+  --panel: #101114;
+  --panel-2: #17181b;
+  --bone: #e8e6e1;
+  --muted-2: #8a8d93;
+  --faint: #63666c;
+  --gold: #c2a878;
+  --champagne: #ceccc1;
+  --up: #7fa588;
+  --down: #b4726a;
+  --hairline: rgba(232, 230, 225, 0.08);
+  --hairline-strong: rgba(232, 230, 225, 0.14);
+
+  /* Chrome ramp — sampled from marcovault-logo.png, do not invent stops */
+  --chrome-1: #ffffff;
+  --chrome-2: #f8f6f0;
+  --chrome-3: #a3a29e;
+  --chrome-4: #757471;
+  --chrome-5: #383737;
+  --chrome-6: #0f0f0e;
+
+  /* Motion */
+  --ease-vault: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Z-scale (spec §7) */
+  --z-ticker: 20;
+  --z-nav: 50;
+  --z-menu: 60;
+  --z-modal: 100;
+  --z-toast: 110;
+  --z-veil: 120;
+
+  /* — shadcn/ui mapping (dashboard auto-restyle) — */
+  --background: var(--void);
+  --foreground: var(--bone);
+  --card: var(--panel);
+  --card-foreground: var(--bone);
+  --popover: var(--panel);
+  --popover-foreground: var(--bone);
+  --primary: var(--bone);
+  --primary-foreground: var(--void);
+  --secondary: var(--panel-2);
+  --secondary-foreground: var(--bone);
+  --muted: var(--panel-2);
+  --muted-foreground: var(--muted-2);
+  --accent: var(--gold);
+  --accent-foreground: var(--void);
+  --destructive: var(--down);
+  --destructive-foreground: var(--bone);
+  --border: var(--hairline);
+  --input: var(--hairline-strong);
+  --ring: var(--gold);
+
+  --chart-1: var(--bone);
+  --chart-2: var(--gold);
+  --chart-3: var(--up);
+  --chart-4: var(--down);
+  --chart-5: var(--muted-2);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
+  html {
+    background-color: var(--void);
+  }
   html,
   body {
-    background-color: #050505;
-    color: var(--color-foreground);
+    color: var(--bone);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   body {
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.85 0.18 200 / 0.12), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.68 0.22 295 / 0.1), transparent);
-    background-attachment: fixed;
+    background-color: var(--void);
+    overflow-x: clip;
   }
   h1,
   h2,
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0.005em;
+  }
+  ::selection {
+    background: var(--gold);
+    color: var(--void);
+  }
+  /* Anchored sections never hide under fixed nav (spec §7) */
+  section[id],
+  [data-anchor] {
+    scroll-margin-top: 96px;
+  }
+  /* Machined scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--void);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--panel-2);
+    border: 2px solid var(--void);
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--faint);
+  }
+  :focus-visible {
+    outline: 1px solid var(--gold);
+    outline-offset: 2px;
   }
 }
 
 @layer utilities {
-  .grid-bg {
-    background-image:
-      linear-gradient(var(--grid-color) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-    background-size: 56px 56px;
+  /* — Type voices — */
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--faint);
   }
-  .glass {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  .mono-data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
-  .glass-strong {
-    background: rgba(14, 14, 16, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  .text-gradient {
-    background: linear-gradient(135deg, oklch(0.98 0 0), oklch(0.85 0.18 200), oklch(0.88 0.2 165));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .text-chrome {
-    background: linear-gradient(180deg, #fff 0%, #c8d4dc 45%, #6f7a83 55%, #e8eef2 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 
-      0 0 20px rgba(145,231,255,0.4), 
-      0 0 40px rgba(145,231,255,0.2), 
-      0 0 60px rgba(145,231,255,0.1);
-  }
-  .glow-cyan {
-    box-shadow: var(--glow-cyan);
-  }
-  .glow-mint {
-    box-shadow: var(--glow-mint);
-  }
-  .border-glow {
-    position: relative;
-  }
-  .border-glow::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 1px;
+
+  /* — Metal (stops from sampled ramp only) — */
+  .chrome-text {
     background: linear-gradient(
-      135deg,
-      oklch(0.85 0.18 200 / 0.6),
-      transparent 40%,
-      oklch(0.68 0.22 295 / 0.5)
+      177deg,
+      var(--chrome-1) 0%,
+      var(--chrome-2) 22%,
+      var(--chrome-3) 40%,
+      var(--chrome-4) 52%,
+      var(--chrome-2) 64%,
+      var(--chrome-3) 82%,
+      var(--chrome-4) 100%
     );
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background-size: 100% 200%;
+    background-position: 50% var(--sweep, 20%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .chrome-fill {
+    background: linear-gradient(180deg, var(--chrome-2) 0%, var(--chrome-3) 55%, var(--chrome-2) 100%);
+    color: var(--void);
+  }
+  .gold-hairline-b {
+    border-bottom: 1px solid var(--gold);
+  }
+
+  /* — Surfaces — */
+  .hairline {
+    border: 1px solid var(--hairline);
+  }
+  .hairline-b {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .hairline-t {
+    border-top: 1px solid var(--hairline);
+  }
+  .hairline-r {
+    border-right: 1px solid var(--hairline);
+  }
+  .u-container {
+    margin-inline: auto;
+    max-width: 1280px;
+    padding-inline: clamp(20px, 4vw, 48px);
+  }
+
+  /* — Film grain (single sanctioned texture) — */
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
     pointer-events: none;
+    z-index: 5;
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
   }
-  .scanline {
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 2px,
-      rgba(255, 255, 255, 0.02) 3px
-    );
-  }
-  @keyframes float-y {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-8px);
-    }
-  }
-  @keyframes pulse-glow {
-    0%,
-    100% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
-  }
-  @keyframes ticker {
-    0% {
+
+  /* — Sanctioned perpetual motions (spec §2.3) — */
+  @keyframes mv-ticker {
+    from {
       transform: translateX(0);
     }
-    100% {
+    to {
       transform: translateX(-50%);
     }
   }
-  @keyframes sweep {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(200%);
-    }
-  }
-  @keyframes blink {
-    0%,
-    49% {
-      opacity: 1;
-    }
-    50%,
-    100% {
-      opacity: 0;
-    }
-  }
-  @keyframes gradient-border {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-  .animate-float-y {
-    animation: float-y 5s ease-in-out infinite;
-  }
-  .animate-pulse-glow {
-    animation: pulse-glow 2.4s ease-in-out infinite;
-  }
   .animate-ticker {
-    animation: ticker 40s linear infinite;
+    animation: mv-ticker 46s linear infinite;
   }
   .animate-ticker:hover {
     animation-play-state: paused;
   }
-  .animate-sweep {
-    animation: sweep 3s ease-in-out infinite;
-  }
-  .animate-blink {
-    animation: blink 1s steps(1) infinite;
-  }
-  .animated-gradient-border {
-    position: relative;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    overflow: hidden;
-  }
-  .animated-gradient-border::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background: linear-gradient(
-      45deg,
-      oklch(0.85 0.18 200),
-      oklch(0.88 0.2 165),
-      oklch(0.68 0.22 295),
-      oklch(0.85 0.18 200)
-    );
-    background-size: 400% 400%;
-    animation: gradient-border 4s ease infinite;
-    z-index: -1;
-  }
-  .animated-gradient-border::after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    border-radius: inherit;
-    background: rgba(14, 14, 16, 0.7);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    z-index: -1;
-  }
 
   @media (prefers-reduced-motion: reduce) {
-    .animate-float-y,
-    .animate-pulse-glow,
-    .animate-ticker,
-    .animate-sweep,
-    .animate-blink {
+    .animate-ticker {
       animation: none !important;
+    }
+    html {
+      scroll-behavior: auto !important;
     }
   }
 }
