@@ -6,7 +6,6 @@ import {
   LineChart,
   RadioTower,
   ShieldCheck,
-  Bell,
   Zap,
 } from "lucide-react";
 import { SectionHeader, fadeUp, staggerContainer } from "./SectionHeader";
