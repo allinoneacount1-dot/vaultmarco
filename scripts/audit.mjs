@@ -3,20 +3,7 @@
 import { chromium } from "/tmp/node_modules/playwright/index.mjs";
 
 const BASE = process.env.AUDIT_BASE || "http://127.0.0.1:3000";
-const ROUTES = [
-  "/",
-  "/dashboard",
-  "/dashboard/command-center",
-  "/dashboard/dex-trending",
-  "/dashboard/paid-trending",
-  "/dashboard/live-market",
-  "/dashboard/boost-feed",
-  "/dashboard/community-takeovers",
-  "/dashboard/rug-scanner",
-  "/dashboard/faq",
-  "/dashboard/tools",
-  "/auth",
-];
+const ROUTES = ["/", "/dashboard", "/dashboard/rug-scanner", "/auth"];
 const KNOWN_INTERNAL = new Set(ROUTES);
 // network errors expected inside the sandbox (no external egress)
 const NET_NOISE = /net::ERR|Failed to fetch|Load failed|ERR_TUNNEL|CoinGecko|dexscreener|TypeError: Failed/i;

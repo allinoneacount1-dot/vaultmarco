@@ -2,34 +2,12 @@ import { useState, memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Home,
-  TrendingUp,
-  BarChart3,
-  Zap,
-  ShieldAlert,
-  Settings,
-  Menu,
-  X,
-  Activity,
-  HelpCircle,
-  DollarSign,
-  Users,
-  ArrowLeft,
-} from "lucide-react";
+import { Home, ShieldAlert, Menu, X, ArrowLeft } from "lucide-react";
 import { Logo } from "./Logo";
 
 const sidebarLinks = [
-  { label: "Dashboard", href: "/dashboard", icon: Home },
-  { label: "Command Center", href: "/dashboard/command-center", icon: Activity },
-  { label: "DEX Trending", href: "/dashboard/dex-trending", icon: TrendingUp },
-  { label: "Paid Trending", href: "/dashboard/paid-trending", icon: DollarSign },
-  { label: "Live Market", href: "/dashboard/live-market", icon: BarChart3 },
-  { label: "Boost Feed", href: "/dashboard/boost-feed", icon: Zap },
-  { label: "Community Takeovers", href: "/dashboard/community-takeovers", icon: Users },
+  { label: "Overview", href: "/dashboard", icon: Home },
   { label: "Rug Scanner", href: "/dashboard/rug-scanner", icon: ShieldAlert },
-  { label: "FAQ", href: "/dashboard/faq", icon: HelpCircle },
-  { label: "Tools", href: "/dashboard/tools", icon: Settings },
 ];
 
 function DashboardSidebarComponent({

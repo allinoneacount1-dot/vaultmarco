@@ -200,3 +200,11 @@ README updated to reflect the new stack/design.
    and `/dashboard`.
 6. Reduced-motion pass: with `prefers-reduced-motion`, hero renders static fallback, no
    preloader, page fully usable.
+
+## Addendum — 2026-08-10 (owner scope change)
+
+Owner removed the dashboard sub-pages Command Center, DEX Trending, Paid Trending,
+Live Market, Boost Feed, Community Takeovers, FAQ and Tools ("kita tidak gunakan itu
+lagi"). The dashboard now ships two surfaces: **Overview** (KPIs, boost/ads feeds,
+quick stats, DEX realtime) and **Rug Scanner**. Orphaned components/hooks deleted;
+sidebar, landing module list and audit routes updated accordingly.

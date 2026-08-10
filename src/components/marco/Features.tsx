@@ -4,12 +4,10 @@ import { SectionHeading } from "./shell/SectionHeading";
 import { FadeIn } from "./shell/Reveal";
 
 const MODULES = [
-  { n: "01", t: "Command Center", d: "Every feed on one screen." },
-  { n: "02", t: "DEX Trending", d: "What moves, as it moves." },
-  { n: "03", t: "Boost & Paid Feeds", d: "Promoted flow, unmasked." },
+  { n: "01", t: "Overview Desk", d: "KPIs and every live feed, one screen." },
+  { n: "02", t: "Boost & Ads Feeds", d: "Promoted flow, unmasked." },
+  { n: "03", t: "DEX Realtime", d: "The multi-chain tape as it prints." },
   { n: "04", t: "Rug Scanner", d: "Safety checks before entry." },
-  { n: "05", t: "Watchlist & Alerts", d: "Your pairs, your triggers." },
-  { n: "06", t: "Live Market", d: "Real-time multi-chain tape." },
 ];
 
 const PREVIEW_ROWS = [
