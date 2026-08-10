@@ -11,6 +11,9 @@ export function createChromeMaterial(): THREE.MeshStandardMaterial {
     metalness: 1,
     roughness: 0.16,
     envMapIntensity: 1.35,
+    // machined facets: uniform normals per face — kills the smoothing seams
+    // that showed on the big letter faces, and reads more like the logo's bevels
+    flatShading: true,
   });
 }
 

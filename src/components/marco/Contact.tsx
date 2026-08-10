@@ -1,6 +1,5 @@
 import { SectionHeading } from "./shell/SectionHeading";
 import { FadeIn } from "./shell/Reveal";
-import { ContactForm } from "./ContactForm";
 
 const CHANNELS = [
   {
@@ -29,7 +28,7 @@ const CHANNELS = [
 /** SCENE 07 — access: three doors and one desk. */
 export function Contact() {
   return (
-    <section id="access" className="relative bg-(--void)">
+    <section id="access" className="relative bg-[rgba(5,5,6,0.78)]">
       <div className="u-container py-28 md:py-36">
         <SectionHeading
           index="05"
@@ -66,15 +65,6 @@ export function Contact() {
           ))}
         </div>
 
-        <FadeIn delay={0.15} className="mt-16 md:mt-20">
-          <div className="mb-8 flex items-baseline justify-between gap-6">
-            <h3 className="font-display text-[clamp(18px,2vw,24px)] font-medium text-(--bone)">
-              Or write to the desk
-            </h3>
-            <span className="mono-label hidden sm:block">PARTNERSHIPS · COLLABS · PRESS</span>
-          </div>
-          <ContactForm />
-        </FadeIn>
       </div>
     </section>
   );

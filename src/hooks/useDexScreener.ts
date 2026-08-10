@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { FALLBACK_BOOSTS, FALLBACK_ADS } from "@/components/marco/shared/mockData";
-import type { BoostToken, AdToken, BoostTier } from "@/components/marco/shared/types";
+import type { BoostToken, AdToken, AdType, BoostTier } from "@/components/marco/shared/types";
 
 // ------------------------------
 // Type Definitions
@@ -216,7 +216,7 @@ async function fetchAds(): Promise<AdToken[]> {
     
     return (data.ads || []).map((item, index) => ({
       id: `ad-${index}`,
-      type: item.type || "AD",
+      type: (item.type || "Ad") as AdType,
       symbol: item.token?.symbol || "UNKNOWN",
       name: item.token?.name || "Unknown Token",
       price: item.token?.priceUsd || 0,
@@ -294,7 +294,12 @@ async function fetchTokenProfileUpdates(): Promise<TokenProfileUpdate[]> {
     if (!res.ok) throw new Error(`Token Profile Updates ${res.status}`);
     const data = await res.json();
     
-    return (data?.updates || []).map((item, index) => ({
+    const updates = (data?.updates || []) as Array<{
+      token?: DexScreenerToken;
+      updateType?: string;
+      timestamp?: number;
+    }>;
+    return updates.map((item, index) => ({
       id: `profile-update-${index}`,
       tokenAddress: item?.token?.address || "",
       chain: normalizeChain(item?.token?.chainId || "eth"),
@@ -317,7 +322,15 @@ async function fetchOrders(chainId: string, tokenAddress: string): Promise<Order
     if (!res.ok) throw new Error(`Orders ${res.status}`);
     const data = await res.json();
     
-    return (data?.orders || []).map((item, index) => ({
+    const orders = (data?.orders || []) as Array<{
+      pairAddress?: string;
+      side?: string;
+      price?: number;
+      amount?: number;
+      total?: number;
+      timestamp?: number;
+    }>;
+    return orders.map((item, index) => ({
       id: `order-${index}`,
       pairAddress: item?.pairAddress || "",
       side: item?.side === "sell" ? "sell" : "buy",

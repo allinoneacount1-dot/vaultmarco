@@ -5,6 +5,8 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster } from "@/components/ui/sonner";
 import { SmoothScroll } from "@/components/marco/shell/SmoothScroll";
 import { Preloader } from "@/components/marco/shell/Preloader";
+import { Cursor } from "@/components/marco/shell/Cursor";
+import { RouteVeil } from "@/components/marco/shell/RouteVeil";
 
 function NotFoundComponent() {
   return (
@@ -76,6 +78,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <SmoothScroll>
         <Preloader />
+        <RouteVeil />
+        <Cursor />
         <div className="grain-overlay" aria-hidden />
         <div className="min-h-screen bg-background text-foreground">
           <Outlet />

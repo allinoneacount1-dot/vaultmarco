@@ -2,14 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, Zap } from "lucide-react";
 import { Skeleton } from "./Skeleton";
 
-// Fetch gas price from Etherscan (free API)
+// Real ETH gas via beaconcha.in gasnow (free, keyless). Returns gwei.
 const fetchGasPrice = async () => {
-  // Mock data for now, bisa diganti dengan real API nanti
-  return {
-    low: 25,
-    average: 32,
-    high: 45,
-  };
+  const res = await fetch("https://beaconcha.in/api/v1/execution/gasnow");
+  if (!res.ok) throw new Error(`gasnow ${res.status}`);
+  const json = (await res.json()) as { data?: { standard?: number } };
+  const wei = json.data?.standard;
+  if (!wei) throw new Error("gasnow empty");
+  return { average: Math.max(1, Math.round(wei / 1e9)) };
 };
 
 export function GasTracker() {
@@ -22,6 +22,7 @@ export function GasTracker() {
   if (isLoading) {
     return <Skeleton className="h-9 w-24" />;
   }
+  if (!data) return null; // free API unavailable — hide rather than fake it
 
   return (
     <div className="hairline flex items-center gap-2 px-3 py-1.5">

@@ -2,13 +2,10 @@ import { useState, memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Home, ShieldAlert, Menu, X, ArrowLeft } from "lucide-react";
+import { Home, Menu, X, ArrowLeft } from "lucide-react";
 import { Logo } from "./Logo";
 
-const sidebarLinks = [
-  { label: "Overview", href: "/dashboard", icon: Home },
-  { label: "Rug Scanner", href: "/dashboard/rug-scanner", icon: ShieldAlert },
-];
+const sidebarLinks = [{ label: "Overview", href: "/dashboard", icon: Home }];
 
 function DashboardSidebarComponent({
   collapsed,

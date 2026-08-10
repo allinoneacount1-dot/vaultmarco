@@ -38,7 +38,7 @@ export function Manifesto() {
   const words = SENTENCE.split(" ");
 
   return (
-    <section id="manifesto" className="relative bg-(--graphite)">
+    <section id="manifesto" className="relative bg-[rgba(11,12,14,0.9)]">
       <div className="u-container py-28 md:py-40">
         <div className="mono-label mb-10 flex items-center gap-4 text-(--gold)!">
           <span>01</span>

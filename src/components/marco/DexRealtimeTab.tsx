@@ -43,19 +43,29 @@ export function DexRealtimeTab() {
     queryKey: ["dexRealtime", dexSource],
     queryFn: async () => {
       if (dexSource === "screener") {
+        // Real-time pairs from DexScreener's free public search endpoint:
+        // top pair (by liquidity) for each flagship market.
         try {
-          const res = await fetch("https://api.dexscreener.com/latest/dex/tokens/SOL,ETH,BASE,HYPE");
-          const json = await res.json();
-          if (json.pairs) {
-            return (json.pairs.slice(0, 8) as PairData[]).map(p => ({
-              ...p,
-              url: `https://dexscreener.com/${p.chainId}/${p.baseToken?.symbol?.toLowerCase()}-${p.quoteToken?.symbol?.toLowerCase()}`
-            }));
-          }
-          return FALLBACK_PAIRS.map(p => ({
-            ...p,
-            url: `https://dexscreener.com/${p.chainId}/${p.baseToken?.symbol?.toLowerCase()}-${p.quoteToken?.symbol?.toLowerCase()}`
-          }));
+          const QUERIES = ["SOL/USDC", "WETH/USDT", "HYPE/USDC", "AERO/USDC"] as const;
+          const results = await Promise.allSettled(
+            QUERIES.map(async (q) => {
+              const res = await fetch(
+                `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`,
+              );
+              if (!res.ok) throw new Error(`search ${q} ${res.status}`);
+              const json = (await res.json()) as { pairs?: (PairData & { url?: string })[] };
+              const best = (json.pairs ?? [])
+                .filter((pr) => pr.baseToken?.symbol && pr.priceUsd)
+                .sort((a, b) => Number(b.liquidity?.usd ?? 0) - Number(a.liquidity?.usd ?? 0))[0];
+              if (!best) throw new Error(`no pair for ${q}`);
+              return best;
+            }),
+          );
+          const pairs = results
+            .filter((r): r is PromiseFulfilledResult<PairData & { url?: string }> => r.status === "fulfilled")
+            .map((r) => r.value);
+          if (pairs.length === 0) throw new Error("all searches failed");
+          return pairs;
         } catch (err) {
           console.warn("DexScreener API failed, using fallback:", err);
           return FALLBACK_PAIRS.map(p => ({
@@ -138,7 +148,7 @@ export function DexRealtimeTab() {
                         <div className="text-[11px] text-muted-foreground mt-1">
                           Vol:{" "}
                           {Number(p.volume?.h24)
-                            ? `$${(Number(p.volume.h24) / 1000000).toFixed(1)}M`
+                            ? `$${(Number(p.volume?.h24) / 1000000).toFixed(1)}M`
                             : "N/A"}
                           • Liq:{" "}
                           {p.liquidity?.usd

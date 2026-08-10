@@ -7,7 +7,7 @@ const MODULES = [
   { n: "01", t: "Overview Desk", d: "KPIs and every live feed, one screen." },
   { n: "02", t: "Boost & Ads Feeds", d: "Promoted flow, unmasked." },
   { n: "03", t: "DEX Realtime", d: "The multi-chain tape as it prints." },
-  { n: "04", t: "Rug Scanner", d: "Safety checks before entry." },
+  { n: "04", t: "Live Ticker", d: "Top-20 tape, refreshed every 30s." },
 ];
 
 const PREVIEW_ROWS = [
@@ -20,7 +20,7 @@ const PREVIEW_ROWS = [
 /** SCENE 04 — the intelligence desk: a quiet look through the dashboard glass. */
 export function Features() {
   return (
-    <section id="intelligence" className="relative bg-(--graphite)">
+    <section id="intelligence" className="relative bg-[rgba(11,12,14,0.9)]">
       <div className="u-container py-28 md:py-36">
         <SectionHeading
           index="03"
@@ -72,7 +72,7 @@ export function Features() {
               </div>
               {/* caption bar */}
               <div className="hairline-t flex items-center justify-between px-5 py-3">
-                <span className="mono-label text-[9px]!">BOOST FEED · ADS FEED · TAKEOVERS · SCANNER</span>
+                <span className="mono-label text-[9px]!">BOOST FEED · ADS FEED · DEX REALTIME</span>
                 <span className="mono-label text-[9px]! text-(--muted-2)!">14+ CHAINS</span>
               </div>
             </div>
@@ -83,7 +83,7 @@ export function Features() {
             <FadeIn>
               <p className="max-w-[46ch] text-[14.5px] leading-relaxed text-(--muted-2)">
                 The dashboard is the vault's reading room: live DexScreener flow, boosts, paid
-                placements, community takeovers and safety tooling — filtered into one calm,
+                placements and the realtime multi-chain tape — filtered into one calm,
                 machined surface.
               </p>
             </FadeIn>

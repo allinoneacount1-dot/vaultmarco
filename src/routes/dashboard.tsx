@@ -6,6 +6,7 @@ import { Panel } from "@/components/marco/Panel";
 import { Activity, TrendingUp, Zap, Eye } from "lucide-react";
 import { DexRealtimeTab } from "@/components/marco/DexRealtimeTab";
 import { useTokenBoosts, useAds } from "@/hooks/useDexScreener";
+import { useGlobalStats } from "@/hooks/useGlobalStats";
 import { getTierColor, getAdTypeIcon, formatNumber, formatPrice2 } from "@/components/marco/shared/helpers";
 import type { BoostToken, AdToken } from "@/components/marco/shared/types";
 
@@ -24,6 +25,32 @@ export const Route = createFileRoute("/dashboard")({
 const DashboardIndex = memo(function DashboardIndex() {
   const { data: boosts, isLoading: boostsLoading } = useTokenBoosts();
   const { data: ads, isLoading: adsLoading } = useAds();
+  const { data: gs } = useGlobalStats();
+
+  const fmtT = (n: number | null | undefined) =>
+    n == null ? "…" : n >= 1e12 ? `$${(n / 1e12).toFixed(2)}T` : `$${(n / 1e9).toFixed(0)}B`;
+  const quickStats = [
+    {
+      label: "BTC Dominance",
+      value: gs?.btcDominance != null ? `${gs.btcDominance.toFixed(1)}%` : "…",
+      color: "text-(--bone)",
+    },
+    {
+      label: "Total Market Cap",
+      value: fmtT(gs?.totalMcap),
+      color: "text-(--bone)",
+    },
+    {
+      label: "Market Cap 24h",
+      value: gs?.mcapChange24h != null ? `${gs.mcapChange24h >= 0 ? "+" : ""}${gs.mcapChange24h.toFixed(2)}%` : "…",
+      color: (gs?.mcapChange24h ?? 0) >= 0 ? "text-(--up)" : "text-(--down)",
+    },
+    {
+      label: "Fear & Greed",
+      value: gs?.fearGreed != null ? `${gs.fearGreed} (${gs.fearGreedLabel ?? ""})` : "…",
+      color: "text-(--gold)",
+    },
+  ];
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -152,12 +179,7 @@ const DashboardIndex = memo(function DashboardIndex() {
         >
           <Panel title="QUICK STATS" icon={Activity}>
             <div className="space-y-2">
-              {[
-                { label: "Solana Gas", value: "45 Gwei", color: "text-(--up)" },
-                { label: "Ethereum Gas", value: "32 Gwei", color: "text-(--gold)" },
-                { label: "BTC Dominance", value: "52.4%", color: "text-(--up)" },
-                { label: "Fear & Greed", value: "72 (Greed)", color: "text-(--gold)" },
-              ].map((stat, i) => (
+              {quickStats.map((stat, i) => (
                 <motion.div 
                   key={i}
                   initial={{ opacity: 0, y: 10 }}

@@ -14,7 +14,6 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
-import { Route as DashboardRugScannerRouteImport } from './routes/dashboard.rug-scanner'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -41,25 +40,18 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardRugScannerRoute = DashboardRugScannerRouteImport.update({
-  id: '/rug-scanner',
-  path: '/rug-scanner',
-  getParentRoute: () => DashboardRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/dashboard/rug-scanner': typeof DashboardRugScannerRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/dashboard/rug-scanner': typeof DashboardRugScannerRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -68,28 +60,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/dashboard/rug-scanner': typeof DashboardRugScannerRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/auth'
-    | '/dashboard'
-    | '/sitemap.xml'
-    | '/dashboard/rug-scanner'
-    | '/dashboard/'
+  fullPaths: '/' | '/auth' | '/dashboard' | '/sitemap.xml' | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/sitemap.xml' | '/dashboard/rug-scanner' | '/dashboard'
-  id:
-    | '__root__'
-    | '/'
-    | '/auth'
-    | '/dashboard'
-    | '/sitemap.xml'
-    | '/dashboard/rug-scanner'
-    | '/dashboard/'
+  to: '/' | '/auth' | '/sitemap.xml' | '/dashboard'
+  id: '__root__' | '/' | '/auth' | '/dashboard' | '/sitemap.xml' | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,23 +114,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/rug-scanner': {
-      id: '/dashboard/rug-scanner'
-      path: '/rug-scanner'
-      fullPath: '/dashboard/rug-scanner'
-      preLoaderRoute: typeof DashboardRugScannerRouteImport
-      parentRoute: typeof DashboardRoute
-    }
   }
 }
 
 interface DashboardRouteChildren {
-  DashboardRugScannerRoute: typeof DashboardRugScannerRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardRugScannerRoute: DashboardRugScannerRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 

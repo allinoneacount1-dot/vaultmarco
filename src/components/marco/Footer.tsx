@@ -26,7 +26,7 @@ const CONNECT = [
 
 export function Footer() {
   return (
-    <footer className="hairline-t relative overflow-hidden bg-(--void)">
+    <footer className="hairline-t relative overflow-hidden bg-[rgba(5,5,6,0.94)]">
       {/* engraved ghost monogram */}
       <img
         src={logoDark}

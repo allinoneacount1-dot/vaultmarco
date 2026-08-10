@@ -17,7 +17,7 @@ const PARTNERS = [
 export function Partnerships() {
   const [openPartner, setOpenPartner] = useState<PartnerName | null>(null);
   return (
-    <section id="partnerships" className="relative bg-(--void)">
+    <section id="partnerships" className="relative bg-[rgba(5,5,6,0.78)]">
       <div className="u-container py-28 md:py-36">
         <SectionHeading
           index="04"

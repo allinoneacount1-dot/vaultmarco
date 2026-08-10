@@ -35,7 +35,7 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative bg-(--graphite)">
+    <section id="faq" className="relative bg-[rgba(11,12,14,0.9)]">
       <div className="u-container max-w-[880px] py-28 md:py-36">
         <SectionHeading index="06" sub="QUESTIONS" title="Asked & Answered" />
 
