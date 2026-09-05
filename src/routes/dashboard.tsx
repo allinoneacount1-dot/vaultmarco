@@ -1,11 +1,16 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { motion, memo } from "framer-motion";
+// `memo` MUST come from React. framer-motion also exports a `memo`, but it is a
+// one-shot value cache (`if (result === undefined) result = callback()`), which
+// freezes this component on its first render and makes every feed below stick
+// on its loading placeholder forever.
+import { memo } from "react";
+import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/marco/DashboardLayout";
 import { KPICards } from "@/components/marco/KPICards";
 import { Panel } from "@/components/marco/Panel";
 import { Activity, TrendingUp, Zap, Eye } from "lucide-react";
 import { DexRealtimeTab } from "@/components/marco/DexRealtimeTab";
-import { useTokenBoosts, useAds } from "@/hooks/useDexScreener";
+import { useTokenBoosts, useAds, type FeedStatus } from "@/hooks/useDexScreener";
 import { useGlobalStats } from "@/hooks/useGlobalStats";
 import { getTierColor, getAdTypeIcon, formatNumber, formatPrice2 } from "@/components/marco/shared/helpers";
 import type { BoostToken, AdToken } from "@/components/marco/shared/types";
@@ -22,10 +27,36 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardComponent,
 });
 
+/** Renders an unknown numeric as an em dash rather than a fabricated zero. */
+const money = (n: number | null | undefined) => (n == null ? "—" : formatNumber(n));
+const price = (n: number | null | undefined) => (n == null ? "—" : formatPrice2(n));
+const pct = (n: number | null | undefined) =>
+  n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
+
+/** One line explaining why a feed panel is empty. Never shown while loading. */
+function FeedNotice({ status }: { status: FeedStatus }) {
+  const message =
+    status === "offline"
+      ? "Feed unavailable — DexScreener could not be reached."
+      : status === "stale"
+        ? "Showing last known data — DexScreener is not responding."
+        : "No records reported.";
+  return <div className="text-[11px] lg:text-[12px] text-muted-foreground">{message}</div>;
+}
+
 const DashboardIndex = memo(function DashboardIndex() {
-  const { data: boosts, isLoading: boostsLoading } = useTokenBoosts();
-  const { data: ads, isLoading: adsLoading } = useAds();
+  const { data: boosts, providerStatus: boostsStatus } = useTokenBoosts();
+  const { data: ads, providerStatus: adsStatus } = useAds();
   const { data: gs } = useGlobalStats();
+
+  const boostsLoading = boostsStatus === "loading";
+  const adsLoading = adsStatus === "loading";
+  const boostRows = boostsLoading
+    ? Array.from<BoostToken | undefined>({ length: 3 })
+    : (boosts ?? []).slice(0, 3);
+  const adRows = adsLoading
+    ? Array.from<AdToken | undefined>({ length: 3 })
+    : (ads ?? []).slice(0, 3);
 
   const fmtT = (n: number | null | undefined) =>
     n == null ? "…" : n >= 1e12 ? `$${(n / 1e12).toFixed(2)}T` : `$${(n / 1e9).toFixed(0)}B`;
@@ -81,7 +112,8 @@ const DashboardIndex = memo(function DashboardIndex() {
         >
           <Panel title="BOOST FEED · LIVE" icon={Zap}>
             <div className="space-y-2 lg:space-y-3">
-              {(boostsLoading ? Array.from<BoostToken | undefined>({ length: 3 }) : (Array.isArray(boosts) ? boosts : []).slice(0, 3)).map((token, i) => (
+              {!boostsLoading && boostRows.length === 0 && <FeedNotice status={boostsStatus} />}
+              {boostRows.map((token, i) => (
                 <motion.div 
                   key={token?.id || i}
                   initial={{ opacity: 0, y: 10 }}
@@ -105,15 +137,15 @@ const DashboardIndex = memo(function DashboardIndex() {
                     </div>
                     {token && (
                       <div className="text-[10px] lg:text-[11px] text-muted-foreground mt-1">
-                        Vol: {formatNumber(token.volume24h || 0)} • Boost: {formatNumber(token.boostAmount || 0)}
+                        Vol: {money(token.volume24h)} • Boost: {money(token.boostAmount)}
                       </div>
                     )}
                   </div>
                   {token && (
                     <div className="text-right flex-shrink-0">
-                      <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{formatPrice2(token.price || 0)}</div>
-                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-(--up)" : "text-(--down)"}`}>
-                        {(token.change24h || 0) >= 0 ? "+" : ""}{(token.change24h || 0).toFixed(1)}%
+                      <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{price(token.price)}</div>
+                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h ?? 0) >= 0 ? "text-(--up)" : "text-(--down)"}`}>
+                        {pct(token.change24h)}
                       </div>
                     </div>
                   )}
@@ -131,7 +163,8 @@ const DashboardIndex = memo(function DashboardIndex() {
         >
           <Panel title="ADS FEED · LIVE" icon={TrendingUp}>
             <div className="space-y-2 lg:space-y-3">
-              {(adsLoading ? Array.from<AdToken | undefined>({ length: 3 }) : (Array.isArray(ads) ? ads : []).slice(0, 3)).map((token, i) => (
+              {!adsLoading && adRows.length === 0 && <FeedNotice status={adsStatus} />}
+              {adRows.map((token, i) => (
                 <motion.div 
                   key={token?.id || i}
                   initial={{ opacity: 0, y: 10 }}
@@ -153,15 +186,15 @@ const DashboardIndex = memo(function DashboardIndex() {
                     </div>
                     {token && (
                       <div className="text-[10px] lg:text-[11px] text-muted-foreground mt-1">
-                        Liq: {formatNumber(token.liquidity || 0)} • Vol: {formatNumber(token.volume || 0)}
+                        Liq: {money(token.liquidity)} • Vol: {money(token.volume)}
                       </div>
                     )}
                   </div>
                   {token && (
                     <div className="text-right flex-shrink-0">
-                      <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{formatPrice2(token.price || 0)}</div>
-                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h || 0) > 0 ? "text-(--up)" : "text-(--down)"}`}>
-                        {(token.change24h || 0) >= 0 ? "+" : ""}{(token.change24h || 0).toFixed(1)}%
+                      <div className="text-[11px] lg:text-[12px] font-mono text-foreground">{price(token.price)}</div>
+                      <div className={`text-[10px] lg:text-[11px] font-mono mt-1 ${(token.change24h ?? 0) >= 0 ? "text-(--up)" : "text-(--down)"}`}>
+                        {pct(token.change24h)}
                       </div>
                     </div>
                   )}

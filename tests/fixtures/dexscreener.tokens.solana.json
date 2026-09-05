@@ -1,0 +1,157 @@
+[
+  {
+    "chainId": "solana",
+    "dexId": "pumpswap",
+    "url": "https://dexscreener.com/solana/2pa3zgysbwdsemmpp62vvfxtjwchpeg5yumtvxk2wkv9",
+    "pairAddress": "2pa3zgySbWDSeMmpp62VVfxtjWchpEg5yUmTVXK2wKv9",
+    "baseToken": {
+      "address": "46vV3ZpFNLZn1CDRYnAvqPsdW5ejEYn9GK9kPcZFpump",
+      "name": "honse",
+      "symbol": "honse"
+    },
+    "quoteToken": {
+      "address": "So11111111111111111111111111111111111111112",
+      "name": "Wrapped SOL",
+      "symbol": "SOL"
+    },
+    "priceNative": "0.0000005502",
+    "priceUsd": "0.00005702",
+    "txns": {
+      "m5": {
+        "buys": 20,
+        "sells": 20
+      },
+      "h1": {
+        "buys": 37,
+        "sells": 23
+      },
+      "h6": {
+        "buys": 43,
+        "sells": 44
+      },
+      "h24": {
+        "buys": 101,
+        "sells": 110
+      }
+    },
+    "volume": {
+      "h24": 11814.75,
+      "h6": 5829.83,
+      "h1": 4763.71,
+      "m5": 3357.32
+    },
+    "priceChange": {
+      "m5": 29.22,
+      "h1": 67.28,
+      "h6": 71.37,
+      "h24": 44.46
+    },
+    "liquidity": {
+      "usd": 25532.33,
+      "base": 239479206,
+      "quote": 114.6018
+    },
+    "fdv": 55150,
+    "marketCap": 55150,
+    "pairCreatedAt": 1786653774000,
+    "info": {
+      "imageUrl": "https://cdn.dexscreener.com/cms/images/9a3csngBWWUf6L_W?width=800&height=800&quality=95&format=auto",
+      "header": "https://cdn.dexscreener.com/cms/images/XFcDUF9lkJLoUNSf?width=1500&height=500&quality=95&format=auto",
+      "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/46vV3ZpFNLZn1CDRYnAvqPsdW5ejEYn9GK9kPcZFpump?timestamp=1788646800000",
+      "websites": [],
+      "socials": [
+        {
+          "url": "https://x.com/honsecto",
+          "type": "twitter"
+        },
+        {
+          "url": "https://t.me/honseofficialcto",
+          "type": "telegram"
+        }
+      ]
+    },
+    "boosts": {
+      "active": 10
+    }
+  },
+  {
+    "chainId": "solana",
+    "dexId": "pumpswap",
+    "url": "https://dexscreener.com/solana/hjhy8rsftg1wrggp7gvxmdgstxpp8mhintjbbzpe46f7",
+    "pairAddress": "HJhY8rSftg1WRGgP7gvxmdGsTXPp8mhiNTJBBZpe46f7",
+    "baseToken": {
+      "address": "4nLMnQ6pfXZxarab6F8h1ETUDceSzUcLEjWhqHLCpump",
+      "name": "In Herba Credimus",
+      "symbol": "$HERBA"
+    },
+    "quoteToken": {
+      "address": "So11111111111111111111111111111111111111112",
+      "name": "Wrapped SOL",
+      "symbol": "SOL"
+    },
+    "priceNative": "0.0000001796",
+    "priceUsd": "0.00001862",
+    "txns": {
+      "m5": {
+        "buys": 58,
+        "sells": 16
+      },
+      "h1": {
+        "buys": 974,
+        "sells": 361
+      },
+      "h6": {
+        "buys": 1584,
+        "sells": 545
+      },
+      "h24": {
+        "buys": 1586,
+        "sells": 545
+      }
+    },
+    "volume": {
+      "h24": 31312.84,
+      "h6": 31294.8,
+      "h1": 17447.05,
+      "m5": 425.26
+    },
+    "priceChange": {
+      "m5": 1.05,
+      "h1": 5.98,
+      "h6": 52.74,
+      "h24": 53.3
+    },
+    "liquidity": {
+      "usd": 9839.2,
+      "base": 313122573,
+      "quote": 38.6781
+    },
+    "fdv": 17342,
+    "marketCap": 17342,
+    "pairCreatedAt": 1787084103000,
+    "info": {
+      "imageUrl": "https://cdn.dexscreener.com/cms/images/kEA7yJvLltC2-HtW?width=800&height=800&quality=95&format=auto",
+      "header": "https://cdn.dexscreener.com/cms/images/hu5kJbR13pQpnCMt?width=1500&height=500&quality=95&format=auto",
+      "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/4nLMnQ6pfXZxarab6F8h1ETUDceSzUcLEjWhqHLCpump?timestamp=1788646800000",
+      "websites": [
+        {
+          "url": "https://theherbacoin.com/",
+          "label": "Website"
+        }
+      ],
+      "socials": [
+        {
+          "url": "https://x.com/THEHerbacoin",
+          "type": "twitter"
+        },
+        {
+          "url": "https://t.me/THEHerbaCoin",
+          "type": "telegram"
+        }
+      ]
+    },
+    "boosts": {
+      "active": 30
+    }
+  }
+]
