@@ -58,6 +58,7 @@ describe("NO_SYNTHETIC_MARKET_DATA_IN_PRODUCTION", () => {
       "FALLBACK_BOOSTS",
       "FALLBACK_ADS",
       "mockData",
+      "FALLBACK_PAIRS",
       'simulate "live"',
       "simulate 'live'",
     ];
@@ -73,6 +74,33 @@ describe("NO_SYNTHETIC_MARKET_DATA_IN_PRODUCTION", () => {
 
   it("production source never imports test fixtures", () => {
     const offenders = FILES.filter((f) => /from\s+["'].*(tests|fixtures)\//.test(read(f))).map(rel);
+    expect(offenders).toEqual([]);
+  });
+
+  it("no hardcoded market price literals survive in the DEX realtime path", () => {
+    // The values the DEXTOOLS tab used to serve as live market data.
+    const priceLiterals = [/"178\.5"/, /"3620"/, /"0\.0245"/, /"12\.5"/, /priceUsd:\s*["']\d/];
+    const dexFiles = FILES.filter(
+      (f) => rel(f).includes("DexRealtimeTab") || rel(f).includes("providers/dexPairs"),
+    );
+    expect(dexFiles.length).toBeGreaterThan(0);
+    const offenders: string[] = [];
+    for (const file of dexFiles) {
+      const body = read(file);
+      for (const re of priceLiterals) {
+        if (re.test(body)) offenders.push(`${rel(file)} :: ${re}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("pair selection never sorts candidates by liquidity to pick a winner", () => {
+    // Sorting by liquidity is exactly how "AERO/USDC" resolved to SPX/USDC and
+    // how a spoofed SOL with $2.16B of fake depth beat the real Orca pool.
+    const dexFiles = FILES.filter(
+      (f) => rel(f).includes("DexRealtimeTab") || rel(f).includes("providers/dexPairs"),
+    );
+    const offenders = dexFiles.filter((f) => /sort\([^)]*liquidity/s.test(read(f))).map(rel);
     expect(offenders).toEqual([]);
   });
 

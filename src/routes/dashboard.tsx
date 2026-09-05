@@ -235,7 +235,9 @@ const DashboardIndex = memo(function DashboardIndex() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          <Panel title="DEX REALTIME · LIVE" icon={Eye}>
+          {/* The inner panel reports the real provider state per source, so this
+              wrapper no longer asserts "LIVE" on its behalf. */}
+          <Panel title="DEX REALTIME" icon={Eye}>
             <DexRealtimeTab />
           </Panel>
         </motion.div>
