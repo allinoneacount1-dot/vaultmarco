@@ -224,7 +224,21 @@ export default function HeroScene() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[1]" aria-hidden>
+      {/*
+        The wrapper above opts out of pointer events because this scene is purely
+        decorative (note aria-hidden, and no pointer handlers anywhere in it).
+        That alone is not enough: react-three-fiber sets pointerEvents to "auto"
+        on its own wrapper so its event system can work, which overrides the
+        intent declared above. Since that wrapper is pinned across the viewport,
+        the canvas then sits over every scroll position and swallows clicks on
+        everything in main that does not out-stack it — the Vault Index calls to
+        action, the Registry cards, the FAQ accordions and the footer.
+
+        Passing the style explicitly restores the declared intent. Pointer
+        handling has no effect on painting, so the scene renders identically.
+      */}
       <Canvas
+        style={{ pointerEvents: "none" }}
         dpr={[1, 2]}
         frameloop={active ? "always" : "never"}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
