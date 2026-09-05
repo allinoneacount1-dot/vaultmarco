@@ -1,8 +1,36 @@
-import { useMarketPrices, formatPrice } from "@/hooks/useMarketPrices";
+import { useMarketPrices, formatPrice, type FeedStatus } from "@/hooks/useMarketPrices";
+
+/**
+ * Truthful label for the ticker's existing status chip. "LIVE" is reserved for
+ * data that came from a successful provider read; last-known-good data reads
+ * "STALE" and an unavailable provider reads "OFFLINE".
+ */
+function statusLabel(status: FeedStatus): string {
+  switch (status) {
+    case "loading":
+      return "SYNC";
+    case "live":
+    case "degraded":
+      return "LIVE";
+    case "stale":
+      return "STALE";
+    case "offline":
+      return "OFFLINE";
+  }
+}
+
+const PLACEHOLDER: Array<{ sym: string; px: number; ch: number | null }> = [
+  { sym: "SOL", px: 0, ch: null },
+  { sym: "ETH", px: 0, ch: null },
+  { sym: "BTC", px: 0, ch: null },
+];
 
 export function LiveTicker() {
-  const { data, isLoading, isError } = useMarketPrices();
+  const { data, providerStatus } = useMarketPrices();
   const coins = data ?? [];
+  const rows: Array<{ sym: string; px: number; ch: number | null }> = coins.length
+    ? coins
+    : PLACEHOLDER;
 
   return (
     <div
@@ -15,22 +43,14 @@ export function LiveTicker() {
           <div key={k} className="flex items-center gap-10 px-5">
             <span className="flex items-center gap-2 text-[9px] tracking-[0.3em] text-(--gold)">
               <span className="inline-block size-1 rounded-full bg-(--gold)" />
-              {isError ? "OFFLINE" : isLoading ? "SYNC" : "LIVE"}
+              {statusLabel(providerStatus)}
             </span>
-            {(coins.length
-              ? coins
-              : [
-                  { sym: "SOL", px: 0, ch: 0 },
-                  { sym: "ETH", px: 0, ch: 0 },
-                  { sym: "BTC", px: 0, ch: 0 },
-                ]
-            ).map((c) => (
+            {rows.map((c) => (
               <span key={c.sym + k} className="flex items-center gap-2.5">
                 <span className="text-(--faint)">{c.sym}</span>
                 {c.px > 0 && <span className="text-(--bone)">{formatPrice(c.px)}</span>}
-                <span className={c.ch < 0 ? "text-(--down)" : "text-(--up)"}>
-                  {c.ch >= 0 ? "+" : ""}
-                  {c.ch.toFixed(2)}%
+                <span className={c.ch != null && c.ch < 0 ? "text-(--down)" : "text-(--up)"}>
+                  {c.ch == null ? "—" : `${c.ch >= 0 ? "+" : ""}${c.ch.toFixed(2)}%`}
                 </span>
               </span>
             ))}

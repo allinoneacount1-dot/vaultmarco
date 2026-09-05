@@ -1,15 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import {
+  COINGECKO_SOURCE,
+  fetchMarketPrices,
+  type MarketCoin as ProviderMarketCoin,
+} from "@/lib/providers/coingecko";
+import { type DataEnvelope, type ProviderStatus, resolveEnvelope } from "@/lib/providers/envelope";
 
-export type MarketCoin = {
-  id: string;
-  sym: string;
-  name: string;
-  px: number;
-  ch: number; // 24h % change
-  volume: number; // 24h volume
-  mc: number; // market cap
-  image?: string;
-};
+export type MarketCoin = ProviderMarketCoin;
 
 export type ChainHeatmapItem = {
   name: string;
@@ -18,43 +15,8 @@ export type ChainHeatmapItem = {
   ch: number;
 };
 
-const COINS = [
-  "bitcoin",
-  "ethereum",
-  "solana",
-  "hyperliquid",
-  "bonk",
-  "pepe",
-  "sui",
-  "toncoin",
-  "binancecoin",
-  "avalanche-2",
-  "arbitrum",
-  "optimism",
-  "polygon-ecosystem-token",
-  "chainlink",
-  "dogecoin",
-  "shiba-inu",
-];
-
-const SYM_MAP: Record<string, string> = {
-  bitcoin: "BTC",
-  ethereum: "ETH",
-  solana: "SOL",
-  hyperliquid: "HYPE",
-  bonk: "BONK",
-  pepe: "PEPE",
-  sui: "SUI",
-  toncoin: "TON",
-  binancecoin: "BNB",
-  "avalanche-2": "AVAX",
-  arbitrum: "ARB",
-  optimism: "OP",
-  "polygon-ecosystem-token": "POL",
-  chainlink: "LINK",
-  dogecoin: "DOGE",
-  "shiba-inu": "SHIB",
-};
+/** Provider status as the UI sees it, including the initial load. */
+export type FeedStatus = "loading" | ProviderStatus;
 
 const CHAINS = [
   "SOL",
@@ -71,74 +33,47 @@ const CHAINS = [
   "LINK",
 ];
 
-// Reliable fallback data (always works)
-const FALLBACK_MARKET_DATA: MarketCoin[] = [
-  { id: "bitcoin", sym: "BTC", name: "Bitcoin", px: 69420, ch: 2.45, volume: 28500000000, mc: 1360000000000 },
-  { id: "ethereum", sym: "ETH", name: "Ethereum", px: 3620, ch: 1.89, volume: 15200000000, mc: 436000000000 },
-  { id: "solana", sym: "SOL", name: "Solana", px: 178, ch: 4.21, volume: 4100000000, mc: 79000000000 },
-  { id: "hyperliquid", sym: "HYPE", name: "Hyperliquid", px: 12.5, ch: 8.76, volume: 890000000, mc: 5200000000 },
-  { id: "bonk", sym: "BONK", name: "Bonk", px: 0.0000215, ch: -3.42, volume: 320000000, mc: 1300000000 },
-  { id: "pepe", sym: "PEPE", name: "Pepe", px: 0.0000142, ch: 5.12, volume: 2100000000, mc: 6300000000 },
-  { id: "sui", sym: "SUI", name: "Sui", px: 2.45, ch: -1.23, volume: 280000000, mc: 3100000000 },
-  { id: "toncoin", sym: "TON", name: "Toncoin", px: 7.89, ch: 3.14, volume: 150000000, mc: 11200000000 },
-  { id: "binancecoin", sym: "BNB", name: "BNB", px: 610, ch: 0.89, volume: 1100000000, mc: 92000000000 },
-  { id: "avalanche-2", sym: "AVAX", name: "Avalanche", px: 38.5, ch: 2.34, volume: 420000000, mc: 14700000000 },
-  { id: "arbitrum", sym: "ARB", name: "Arbitrum", px: 2.12, ch: -0.56, volume: 310000000, mc: 4600000000 },
-  { id: "optimism", sym: "OP", name: "Optimism", px: 3.45, ch: 1.78, volume: 240000000, mc: 5100000000 },
-  { id: "polygon-ecosystem-token", sym: "POL", name: "Polygon", px: 0.89, ch: 0.45, volume: 180000000, mc: 9200000000 },
-  { id: "chainlink", sym: "LINK", name: "Chainlink", px: 17.8, ch: 2.91, volume: 450000000, mc: 10900000000 },
-  { id: "dogecoin", sym: "DOGE", name: "Dogecoin", px: 0.152, ch: 1.23, volume: 890000000, mc: 21500000000 },
-  { id: "shiba-inu", sym: "SHIB", name: "Shiba Inu", px: 0.0000234, ch: -2.15, volume: 620000000, mc: 13800000000 },
-];
-
-async function fetchPrices(): Promise<MarketCoin[]> {
-  try {
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${COINS.join(
-      ",",
-    )}&price_change_percentage=24h&order=market_cap_desc`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-    const data = await res.json();
-    return (
-      data as Array<{
-        id: string;
-        symbol: string;
-        name: string;
-        current_price: number;
-        price_change_percentage_24h?: number;
-        total_volume?: number;
-        market_cap?: number;
-        image?: string;
-      }>
-    ).map((c) => ({
-      id: c.id,
-      sym: SYM_MAP[c.id] ?? c.symbol.toUpperCase(),
-      name: c.name,
-      px: c.current_price,
-      ch: c.price_change_percentage_24h ?? 0,
-      volume: c.total_volume ?? 0,
-      mc: c.market_cap ?? 0,
-      image: c.image,
-    }));
-  } catch (err) {
-    console.warn("CoinGecko failed, using fallback data:", err);
-    // Return fallback data with tiny random variations to simulate "live" feel
-    return FALLBACK_MARKET_DATA.map((coin) => ({
-      ...coin,
-      px: coin.px * (1 + (Math.random() * 0.02 - 0.01)),
-      ch: coin.ch + (Math.random() * 0.4 - 0.2),
-    }));
-  }
-}
-
+/**
+ * Live market prices.
+ *
+ * There is no hardcoded fallback. If CoinGecko fails, react-query retains the
+ * last *real* successful response and this hook reports it as `stale`; if there
+ * has never been a successful response it reports `offline` with no data. No
+ * value returned from here is ever synthesized or randomized.
+ */
 export function useMarketPrices() {
-  return useQuery({
+  const query = useQuery<DataEnvelope<MarketCoin[]>>({
     queryKey: ["market-prices"],
-    queryFn: fetchPrices,
+    queryFn: () => fetchMarketPrices(),
     refetchInterval: 60_000,
     staleTime: 30_000,
     retry: 1,
+    // Surface provider failures as errors instead of letting react-query pause
+    // them as an "offline" condition — a paused query would keep showing the
+    // last payload with a LIVE label and no way to know the feed is down.
+    networkMode: "always",
   });
+
+  const envelope = resolveEnvelope({
+    source: COINGECKO_SOURCE,
+    previous: query.data,
+    isError: query.isError,
+    error: query.error,
+    fetchStatus: query.fetchStatus,
+    fetchFailureCount: query.failureCount,
+    fetchFailureReason: query.failureReason,
+  });
+
+  const providerStatus: FeedStatus =
+    query.isPending && !envelope ? "loading" : (envelope?.status ?? "offline");
+
+  return {
+    ...query,
+    /** Unchanged consumer shape: the coin list, or undefined when unavailable. */
+    data: envelope?.data as MarketCoin[] | undefined,
+    envelope,
+    providerStatus,
+  };
 }
 
 export function useChainHeatmap(data?: MarketCoin[]): ChainHeatmapItem[] {
@@ -146,12 +81,7 @@ export function useChainHeatmap(data?: MarketCoin[]): ChainHeatmapItem[] {
     const coin = data?.find((c) => c.sym === sym);
     const ch = coin?.ch ?? 0;
     const heat = Math.max(0, Math.min(100, Math.abs(ch) * 5));
-    return {
-      name: sym,
-      sym,
-      heat,
-      ch,
-    };
+    return { name: sym, sym, heat, ch };
   });
 }
 
@@ -164,15 +94,12 @@ export function useVolumeData(data?: MarketCoin[]) {
   }));
 }
 
+/**
+ * Alerts derived from real price movement. Returns an empty list when there is
+ * no market data — it must never invent alerts about assets it has no data for.
+ */
 export function useMarketAlerts(data?: MarketCoin[]) {
-  const baseAlerts = [
-    { sym: "HYPE", type: "BREAKOUT", status: "ok" as const },
-    { sym: "BONK", type: "VOL SPIKE", status: "ok" as const },
-    { sym: "PEPE", type: "DUMP RISK", status: "bad" as const },
-    { sym: "SUI", type: "RECLAIM", status: "ok" as const },
-  ];
-
-  if (!data) return baseAlerts;
+  if (!data) return [];
 
   return data.slice(0, 6).map((c) => {
     const ch = c.ch;
@@ -190,8 +117,6 @@ export function useMarketAlerts(data?: MarketCoin[]) {
     } else if (ch < -5) {
       type = "DUMP";
       status = "bad";
-    } else {
-      type = "UPDATE";
     }
     return { sym: c.sym, type, status };
   });

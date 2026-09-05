@@ -9,28 +9,47 @@ function compact(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
-/** Machined stat cells — LIVE: totals derived from the top-20 tape + boost feed. */
+/**
+ * Machined stat cells — totals derived from the top-20 tape + boost feed.
+ *
+ * Every cell reads "—" when its provider has no real data to report. A zero is
+ * only ever shown when a provider actually reported zero.
+ */
 export function KPICards() {
-  const { data: coins, isLoading } = useMarketPrices();
-  const { data: boosts } = useTokenBoosts();
+  const { data: coins, providerStatus: marketStatus } = useMarketPrices();
+  const { data: boosts, providerStatus: boostsStatus } = useTokenBoosts();
 
   const list = coins ?? [];
+  const hasMarket = list.length > 0;
   const volume = list.reduce((a, c) => a + (c.volume || 0), 0);
   const mcap = list.reduce((a, c) => a + (c.mc || 0), 0);
   const top = list.length ? [...list].sort((a, b) => b.ch - a.ch)[0] : null;
-  const boostCount = Array.isArray(boosts) ? boosts.length : null;
+  const boostCount = boosts ? boosts.length : null;
+
+  const marketSub =
+    marketStatus === "stale"
+      ? "LAST KNOWN · COINGECKO"
+      : marketStatus === "offline"
+        ? "UNAVAILABLE · COINGECKO"
+        : "LIVE · COINGECKO";
+  const boostsSub =
+    boostsStatus === "stale"
+      ? "DEXSCREENER · LAST KNOWN"
+      : boostsStatus === "offline"
+        ? "DEXSCREENER · UNAVAILABLE"
+        : "DEXSCREENER FEED";
 
   const kpis = [
     {
       title: "MARKET CAP · TOP 20",
-      value: isLoading ? "—" : compact(mcap),
-      sub: "LIVE · COINGECKO",
+      value: hasMarket ? compact(mcap) : "—",
+      sub: marketSub,
       up: true,
       icon: DollarSign,
     },
     {
       title: "VOLUME · 24H",
-      value: isLoading ? "—" : compact(volume),
+      value: hasMarket ? compact(volume) : "—",
       sub: "ACROSS THE TAPE",
       up: true,
       icon: BarChart3,
@@ -45,7 +64,7 @@ export function KPICards() {
     {
       title: "ACTIVE BOOSTS",
       value: boostCount === null ? "—" : String(boostCount),
-      sub: "DEXSCREENER FEED",
+      sub: boostsSub,
       up: true,
       icon: Zap,
     },

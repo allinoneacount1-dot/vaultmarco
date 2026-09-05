@@ -1,0 +1,42 @@
+[
+  {
+    "url": "https://dexscreener.com/robinhood/0x47366e0f257ac009e82bd46fb74e2fb50826ce98",
+    "chainId": "robinhood",
+    "tokenAddress": "0x47366e0f257ac009e82bd46fb74e2fb50826ce98",
+    "date": "2026-09-05T21:29:05.657Z",
+    "type": "tokenAd",
+    "impressions": 10000
+  },
+  {
+    "url": "https://dexscreener.com/solana/vcfn4s4n2ok4fzvp2dahfhgwm7owyasthl1eakydndt",
+    "chainId": "solana",
+    "tokenAddress": "VCFN4S4N2oK4FZvp2daHfhgWm7oWyAsthL1EakYDNDT",
+    "date": "2026-09-05T17:34:12.284Z",
+    "type": "tokenAd",
+    "impressions": 50000
+  },
+  {
+    "url": "https://dexscreener.com/solana/cbytnf7upzvewhh4zp6umogm2rwahhmgrjwljnpwpump",
+    "chainId": "solana",
+    "tokenAddress": "CbyTNf7UPzvewHh4Zp6umogM2RWahhmGRJWLJnPwpump",
+    "date": "2026-09-05T13:26:03.913Z",
+    "type": "tokenAd",
+    "impressions": 10000
+  },
+  {
+    "url": "https://dexscreener.com/solana/fwq2m6nqox3y85omv8weve4pvt98atrqfnqkt1oepump",
+    "chainId": "solana",
+    "tokenAddress": "Fwq2m6nQox3y85omV8WeVe4pVT98aTRqFnqKt1oepump",
+    "date": "2026-09-05T12:20:13.566Z",
+    "type": "trendingBarAd",
+    "durationHours": 24
+  },
+  {
+    "url": "https://dexscreener.com/robinhood/0x3411662c33b06eab95ddf056b149796c6719f5ef",
+    "chainId": "robinhood",
+    "tokenAddress": "0x3411662c33b06eab95ddf056b149796c6719f5ef",
+    "date": "2026-09-05T10:43:04.134Z",
+    "type": "tokenAd",
+    "impressions": 10000
+  }
+]
