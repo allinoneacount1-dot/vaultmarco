@@ -1,0 +1,606 @@
+{
+  "solana": {
+    "schemaVersion": "1.0.0",
+    "pairs": [
+      {
+        "chainId": "solana",
+        "dexId": "orca",
+        "url": "https://dexscreener.com/solana/czfq3xzzdmsdgduyrnltrhgc47cxcztlg4crryfu44ze",
+        "pairAddress": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+        "labels": ["wp"],
+        "baseToken": {
+          "address": "So11111111111111111111111111111111111111112",
+          "name": "Wrapped SOL",
+          "symbol": "SOL"
+        },
+        "quoteToken": {
+          "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "name": "USD Coin",
+          "symbol": "USDC"
+        },
+        "priceNative": "103.2794",
+        "priceUsd": "103.27",
+        "txns": {
+          "m5": {
+            "buys": 120,
+            "sells": 68
+          },
+          "h1": {
+            "buys": 747,
+            "sells": 762
+          },
+          "h6": {
+            "buys": 5457,
+            "sells": 6150
+          },
+          "h24": {
+            "buys": 17730,
+            "sells": 20452
+          }
+        },
+        "volume": {
+          "h24": 51197248.61,
+          "h6": 16934291.93,
+          "h1": 1686315.7,
+          "m5": 287415.85
+        },
+        "priceChange": {
+          "m5": -0.07,
+          "h1": -0.65,
+          "h6": -0.44,
+          "h24": 1.29
+        },
+        "liquidity": {
+          "usd": 25847366.55,
+          "base": 114672,
+          "quote": 14004075
+        },
+        "pairCreatedAt": 1688106058000,
+        "info": {
+          "imageUrl": "https://cdn.dexscreener.com/cms/images/fcfb87378d3198fe753ca08ba51a5552a84f34cf48cd09d83971aa195bdf00d2?width=800&height=800&quality=95&format=auto",
+          "header": "https://cdn.dexscreener.com/cms/images/7a8b9d77ffff37a36144cdebff51443a7c35bd737e8f327fc03f1121357731dd?width=1500&height=500&quality=95&format=auto",
+          "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/So11111111111111111111111111111111111111112?timestamp=1788651600000",
+          "websites": [
+            {
+              "url": "https://solana.com",
+              "label": "Website"
+            }
+          ],
+          "socials": [
+            {
+              "url": "https://x.com/solana",
+              "type": "twitter"
+            }
+          ]
+        }
+      }
+    ],
+    "pair": {
+      "chainId": "solana",
+      "dexId": "orca",
+      "url": "https://dexscreener.com/solana/czfq3xzzdmsdgduyrnltrhgc47cxcztlg4crryfu44ze",
+      "pairAddress": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+      "labels": ["wp"],
+      "baseToken": {
+        "address": "So11111111111111111111111111111111111111112",
+        "name": "Wrapped SOL",
+        "symbol": "SOL"
+      },
+      "quoteToken": {
+        "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "name": "USD Coin",
+        "symbol": "USDC"
+      },
+      "priceNative": "103.2794",
+      "priceUsd": "103.27",
+      "txns": {
+        "m5": {
+          "buys": 120,
+          "sells": 68
+        },
+        "h1": {
+          "buys": 747,
+          "sells": 762
+        },
+        "h6": {
+          "buys": 5457,
+          "sells": 6150
+        },
+        "h24": {
+          "buys": 17730,
+          "sells": 20452
+        }
+      },
+      "volume": {
+        "h24": 51197248.61,
+        "h6": 16934291.93,
+        "h1": 1686315.7,
+        "m5": 287415.85
+      },
+      "priceChange": {
+        "m5": -0.07,
+        "h1": -0.65,
+        "h6": -0.44,
+        "h24": 1.29
+      },
+      "liquidity": {
+        "usd": 25847366.55,
+        "base": 114672,
+        "quote": 14004075
+      },
+      "pairCreatedAt": 1688106058000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/fcfb87378d3198fe753ca08ba51a5552a84f34cf48cd09d83971aa195bdf00d2?width=800&height=800&quality=95&format=auto",
+        "header": "https://cdn.dexscreener.com/cms/images/7a8b9d77ffff37a36144cdebff51443a7c35bd737e8f327fc03f1121357731dd?width=1500&height=500&quality=95&format=auto",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/So11111111111111111111111111111111111111112?timestamp=1788651600000",
+        "websites": [
+          {
+            "url": "https://solana.com",
+            "label": "Website"
+          }
+        ],
+        "socials": [
+          {
+            "url": "https://x.com/solana",
+            "type": "twitter"
+          }
+        ]
+      }
+    }
+  },
+  "ethereum": {
+    "schemaVersion": "1.0.0",
+    "pairs": [
+      {
+        "chainId": "ethereum",
+        "dexId": "uniswap",
+        "url": "https://dexscreener.com/ethereum/0x11b815efb8f581194ae79006d24e0d814b7697f6",
+        "pairAddress": "0x11b815efB8f581194ae79006d24E0d814B7697F6",
+        "labels": ["v3"],
+        "baseToken": {
+          "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "name": "Wrapped Ether",
+          "symbol": "WETH"
+        },
+        "quoteToken": {
+          "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "name": "Tether USD",
+          "symbol": "USDT"
+        },
+        "priceNative": "2481.03774",
+        "priceUsd": "2481.037",
+        "txns": {
+          "m5": {
+            "buys": 5,
+            "sells": 5
+          },
+          "h1": {
+            "buys": 39,
+            "sells": 28
+          },
+          "h6": {
+            "buys": 323,
+            "sells": 286
+          },
+          "h24": {
+            "buys": 1202,
+            "sells": 849
+          }
+        },
+        "volume": {
+          "h24": 4647480.22,
+          "h6": 990267.7,
+          "h1": 74339.63,
+          "m5": 11959.51
+        },
+        "priceChange": {
+          "m5": -0.02,
+          "h1": -0.03,
+          "h6": 0.23,
+          "h24": 1.1
+        },
+        "liquidity": {
+          "usd": 8437392.01,
+          "base": 1742.006746,
+          "quote": 4115407
+        },
+        "fdv": 5036877359,
+        "marketCap": 5040357904,
+        "pairCreatedAt": 1620251172000,
+        "info": {
+          "imageUrl": "https://cdn.dexscreener.com/cms/images/e7ad3f643e8706e541538413f2afad46f18cafb430606caae3c70c0f7425c16e?width=800&height=800&quality=95&format=auto",
+          "openGraph": "https://cdn.dexscreener.com/token-images/og/ethereum/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2?timestamp=1788651600000",
+          "websites": [],
+          "socials": []
+        }
+      }
+    ],
+    "pair": {
+      "chainId": "ethereum",
+      "dexId": "uniswap",
+      "url": "https://dexscreener.com/ethereum/0x11b815efb8f581194ae79006d24e0d814b7697f6",
+      "pairAddress": "0x11b815efB8f581194ae79006d24E0d814B7697F6",
+      "labels": ["v3"],
+      "baseToken": {
+        "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "name": "Wrapped Ether",
+        "symbol": "WETH"
+      },
+      "quoteToken": {
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "name": "Tether USD",
+        "symbol": "USDT"
+      },
+      "priceNative": "2481.03774",
+      "priceUsd": "2481.037",
+      "txns": {
+        "m5": {
+          "buys": 5,
+          "sells": 5
+        },
+        "h1": {
+          "buys": 39,
+          "sells": 28
+        },
+        "h6": {
+          "buys": 323,
+          "sells": 286
+        },
+        "h24": {
+          "buys": 1202,
+          "sells": 849
+        }
+      },
+      "volume": {
+        "h24": 4647480.22,
+        "h6": 990267.7,
+        "h1": 74339.63,
+        "m5": 11959.51
+      },
+      "priceChange": {
+        "m5": -0.02,
+        "h1": -0.03,
+        "h6": 0.23,
+        "h24": 1.1
+      },
+      "liquidity": {
+        "usd": 8437392.01,
+        "base": 1742.006746,
+        "quote": 4115407
+      },
+      "fdv": 5036877359,
+      "marketCap": 5040357904,
+      "pairCreatedAt": 1620251172000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/e7ad3f643e8706e541538413f2afad46f18cafb430606caae3c70c0f7425c16e?width=800&height=800&quality=95&format=auto",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/ethereum/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2?timestamp=1788651600000",
+        "websites": [],
+        "socials": []
+      }
+    }
+  },
+  "hyperliquid": {
+    "schemaVersion": "1.0.0",
+    "pairs": [
+      {
+        "chainId": "hyperliquid",
+        "dexId": "hyperliquid",
+        "url": "https://dexscreener.com/hyperliquid/0x13ba5fea7078ab3798fbce53b4d0721c",
+        "pairAddress": "0x13ba5fea7078ab3798fbce53b4d0721c",
+        "baseToken": {
+          "address": "0x0d01dc56dcaaca66ad901c959b4011ec",
+          "name": "HYPE",
+          "symbol": "HYPE"
+        },
+        "quoteToken": {
+          "address": "0x6d1e7cde53ba9467b783cb7c530ce054",
+          "name": "USDC",
+          "symbol": "USDC"
+        },
+        "priceNative": "85.2730",
+        "priceUsd": "85.27",
+        "txns": {
+          "m5": {
+            "buys": 212,
+            "sells": 91
+          },
+          "h1": {
+            "buys": 3134,
+            "sells": 1354
+          },
+          "h6": {
+            "buys": 20618,
+            "sells": 11037
+          },
+          "h24": {
+            "buys": 56018,
+            "sells": 29402
+          }
+        },
+        "volume": {
+          "h24": 50337187.91,
+          "h6": 18827805.98,
+          "h1": 1743038.67,
+          "m5": 104295.72
+        },
+        "priceChange": {
+          "m5": -0.06,
+          "h1": -0.27,
+          "h6": -0.28,
+          "h24": 0.95
+        },
+        "fdv": 85184365686,
+        "marketCap": 28475359474,
+        "pairCreatedAt": 1732865408000,
+        "info": {
+          "imageUrl": "https://cdn.dexscreener.com/cms/images/c4528ba2506121f3f2a1f3db2ef5d27907f8305ebe2088319c2de50effaa76e4?width=800&height=800&quality=95&format=auto",
+          "header": "https://cdn.dexscreener.com/cms/images/c171c98a371c3663710f1a3bf5a8d427955a7af0ee5728724f088314e4e6b31d?width=1500&height=500&quality=95&format=auto",
+          "openGraph": "https://cdn.dexscreener.com/token-images/og/hyperliquid/0x0d01dc56dcaaca66ad901c959b4011ec?timestamp=1788651600000",
+          "websites": [
+            {
+              "url": "https://hyperfoundation.org/",
+              "label": "Website"
+            },
+            {
+              "url": "https://hyperliquid.gitbook.io/hyperliquid-docs",
+              "label": "Docs"
+            }
+          ],
+          "socials": [
+            {
+              "url": "https://x.com/HyperliquidX",
+              "type": "twitter"
+            },
+            {
+              "url": "https://discord.gg/hyperliquid",
+              "type": "discord"
+            }
+          ]
+        }
+      }
+    ],
+    "pair": {
+      "chainId": "hyperliquid",
+      "dexId": "hyperliquid",
+      "url": "https://dexscreener.com/hyperliquid/0x13ba5fea7078ab3798fbce53b4d0721c",
+      "pairAddress": "0x13ba5fea7078ab3798fbce53b4d0721c",
+      "baseToken": {
+        "address": "0x0d01dc56dcaaca66ad901c959b4011ec",
+        "name": "HYPE",
+        "symbol": "HYPE"
+      },
+      "quoteToken": {
+        "address": "0x6d1e7cde53ba9467b783cb7c530ce054",
+        "name": "USDC",
+        "symbol": "USDC"
+      },
+      "priceNative": "85.2730",
+      "priceUsd": "85.27",
+      "txns": {
+        "m5": {
+          "buys": 212,
+          "sells": 91
+        },
+        "h1": {
+          "buys": 3134,
+          "sells": 1354
+        },
+        "h6": {
+          "buys": 20618,
+          "sells": 11037
+        },
+        "h24": {
+          "buys": 56018,
+          "sells": 29402
+        }
+      },
+      "volume": {
+        "h24": 50337187.91,
+        "h6": 18827805.98,
+        "h1": 1743038.67,
+        "m5": 104295.72
+      },
+      "priceChange": {
+        "m5": -0.06,
+        "h1": -0.27,
+        "h6": -0.28,
+        "h24": 0.95
+      },
+      "fdv": 85184365686,
+      "marketCap": 28475359474,
+      "pairCreatedAt": 1732865408000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/c4528ba2506121f3f2a1f3db2ef5d27907f8305ebe2088319c2de50effaa76e4?width=800&height=800&quality=95&format=auto",
+        "header": "https://cdn.dexscreener.com/cms/images/c171c98a371c3663710f1a3bf5a8d427955a7af0ee5728724f088314e4e6b31d?width=1500&height=500&quality=95&format=auto",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/hyperliquid/0x0d01dc56dcaaca66ad901c959b4011ec?timestamp=1788651600000",
+        "websites": [
+          {
+            "url": "https://hyperfoundation.org/",
+            "label": "Website"
+          },
+          {
+            "url": "https://hyperliquid.gitbook.io/hyperliquid-docs",
+            "label": "Docs"
+          }
+        ],
+        "socials": [
+          {
+            "url": "https://x.com/HyperliquidX",
+            "type": "twitter"
+          },
+          {
+            "url": "https://discord.gg/hyperliquid",
+            "type": "discord"
+          }
+        ]
+      }
+    }
+  },
+  "base": {
+    "schemaVersion": "1.0.0",
+    "pairs": [
+      {
+        "chainId": "base",
+        "dexId": "aerodrome",
+        "url": "https://dexscreener.com/base/0x6cdcb1c4a4d1c3c6d054b27ac5b77e89eafb971d",
+        "pairAddress": "0x6cDcb1C4A4D1C3C6d054b27AC5B77e89eAFb971d",
+        "baseToken": {
+          "address": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+          "name": "Aerodrome",
+          "symbol": "AERO"
+        },
+        "quoteToken": {
+          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "name": "USD Coin",
+          "symbol": "USDC"
+        },
+        "priceNative": "0.5507",
+        "priceUsd": "0.5507",
+        "txns": {
+          "m5": {
+            "buys": 5,
+            "sells": 5
+          },
+          "h1": {
+            "buys": 81,
+            "sells": 88
+          },
+          "h6": {
+            "buys": 468,
+            "sells": 620
+          },
+          "h24": {
+            "buys": 1048,
+            "sells": 1735
+          }
+        },
+        "volume": {
+          "h24": 2613927.89,
+          "h6": 1443718.11,
+          "h1": 214083.18,
+          "m5": 3583.67
+        },
+        "priceChange": {
+          "m5": 0.05,
+          "h1": 1.45,
+          "h6": 4.48,
+          "h24": 10.41
+        },
+        "liquidity": {
+          "usd": 30660924,
+          "base": 27835092,
+          "quote": 15330462
+        },
+        "fdv": 1087026154,
+        "marketCap": 543486937,
+        "pairCreatedAt": 1694127045000,
+        "info": {
+          "imageUrl": "https://cdn.dexscreener.com/cms/images/f950c4e0a9ded4f6b5c811cf33570a65c6f7ea8630d937cd69065269e9dc3a03?width=800&height=800&quality=95&format=auto",
+          "header": "https://cdn.dexscreener.com/cms/images/c16c2e02ffddde41226e2f5aeea4ac76f3e0a6234c362fef88572f5169772504?width=1500&height=500&quality=95&format=auto",
+          "openGraph": "https://cdn.dexscreener.com/token-images/og/base/0x940181a94a35a4569e4529a3cdfb74e38fd98631?timestamp=1788651600000",
+          "websites": [
+            {
+              "url": "https://aerodrome.finance/docs",
+              "label": "Website"
+            },
+            {
+              "url": "https://aerodrome.finance/docs",
+              "label": "Docs"
+            }
+          ],
+          "socials": [
+            {
+              "url": "https://x.com/aerodromefi",
+              "type": "twitter"
+            },
+            {
+              "url": "https://discord.gg/aerodrome",
+              "type": "discord"
+            }
+          ]
+        }
+      }
+    ],
+    "pair": {
+      "chainId": "base",
+      "dexId": "aerodrome",
+      "url": "https://dexscreener.com/base/0x6cdcb1c4a4d1c3c6d054b27ac5b77e89eafb971d",
+      "pairAddress": "0x6cDcb1C4A4D1C3C6d054b27AC5B77e89eAFb971d",
+      "baseToken": {
+        "address": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+        "name": "Aerodrome",
+        "symbol": "AERO"
+      },
+      "quoteToken": {
+        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "name": "USD Coin",
+        "symbol": "USDC"
+      },
+      "priceNative": "0.5507",
+      "priceUsd": "0.5507",
+      "txns": {
+        "m5": {
+          "buys": 5,
+          "sells": 5
+        },
+        "h1": {
+          "buys": 81,
+          "sells": 88
+        },
+        "h6": {
+          "buys": 468,
+          "sells": 620
+        },
+        "h24": {
+          "buys": 1048,
+          "sells": 1735
+        }
+      },
+      "volume": {
+        "h24": 2613927.89,
+        "h6": 1443718.11,
+        "h1": 214083.18,
+        "m5": 3583.67
+      },
+      "priceChange": {
+        "m5": 0.05,
+        "h1": 1.45,
+        "h6": 4.48,
+        "h24": 10.41
+      },
+      "liquidity": {
+        "usd": 30660924,
+        "base": 27835092,
+        "quote": 15330462
+      },
+      "fdv": 1087026154,
+      "marketCap": 543486937,
+      "pairCreatedAt": 1694127045000,
+      "info": {
+        "imageUrl": "https://cdn.dexscreener.com/cms/images/f950c4e0a9ded4f6b5c811cf33570a65c6f7ea8630d937cd69065269e9dc3a03?width=800&height=800&quality=95&format=auto",
+        "header": "https://cdn.dexscreener.com/cms/images/c16c2e02ffddde41226e2f5aeea4ac76f3e0a6234c362fef88572f5169772504?width=1500&height=500&quality=95&format=auto",
+        "openGraph": "https://cdn.dexscreener.com/token-images/og/base/0x940181a94a35a4569e4529a3cdfb74e38fd98631?timestamp=1788651600000",
+        "websites": [
+          {
+            "url": "https://aerodrome.finance/docs",
+            "label": "Website"
+          },
+          {
+            "url": "https://aerodrome.finance/docs",
+            "label": "Docs"
+          }
+        ],
+        "socials": [
+          {
+            "url": "https://x.com/aerodromefi",
+            "type": "twitter"
+          },
+          {
+            "url": "https://discord.gg/aerodrome",
+            "type": "discord"
+          }
+        ]
+      }
+    }
+  }
+}
