@@ -4,6 +4,8 @@ import { Panel } from "./Panel";
 import { formatNumber } from "./shared/helpers";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRadar } from "@/hooks/usePairUniverse";
+import { useTokenDrawerActions } from "@/hooks/useTokenDrawer";
+import { refFromSnapshot } from "@/lib/tokenDrawer";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import type { LiquidityEvent } from "@/lib/signals/liquidity";
 import type { MomentumSignal } from "@/lib/signals/momentum";
@@ -128,13 +130,19 @@ function ChainChip({ chainId }: { chainId: string }) {
   );
 }
 
-function RowShell({ href, children }: { href: string | null; children: React.ReactNode }) {
+/** A radar row opens the Token Intelligence Drawer; provider links live inside it. */
+function RowShell({ snapshot, children }: { snapshot?: PairSnapshot; children: React.ReactNode }) {
+  const { open } = useTokenDrawerActions();
   const className =
-    "flex items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all";
-  return href ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+    "flex w-full items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 text-left hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all";
+  return snapshot ? (
+    <button
+      type="button"
+      onClick={(e) => open(refFromSnapshot(snapshot), e.currentTarget)}
+      className={`${className} cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)`}
+    >
       {children}
-    </a>
+    </button>
   ) : (
     <div className={className}>{children}</div>
   );
@@ -144,7 +152,7 @@ function MomentumRow({ signal, snapshot }: { signal: MomentumSignal; snapshot?: 
   const symbol = snapshot?.baseSymbol ?? signal.key;
   const priceM5 = snapshot?.priceChange.m5 ?? null;
   return (
-    <RowShell href={snapshot?.url ?? null}>
+    <RowShell snapshot={snapshot}>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <ChainChip chainId={snapshot?.chainId ?? signal.key.split(":")[0]} />
@@ -185,7 +193,7 @@ function RiskRow({ event, snapshot }: { event: LiquidityEvent; snapshot?: PairSn
   const symbol = snapshot?.baseSymbol ?? event.key;
   const c = event.change;
   return (
-    <RowShell href={snapshot?.url ?? null}>
+    <RowShell snapshot={snapshot}>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <ChainChip chainId={snapshot?.chainId ?? event.key.split(":")[0]} />

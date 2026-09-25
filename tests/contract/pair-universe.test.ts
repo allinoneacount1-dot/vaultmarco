@@ -5,6 +5,7 @@ import { type RealtimeInput, fetchPairUniverse } from "@/lib/providers/universe"
 import { fetchAds, fetchTokenBoosts } from "@/lib/providers/dexscreener";
 import { fetchRealtimePairs } from "@/lib/providers/dexPairs";
 import { SnapshotHistory } from "@/lib/signals/history";
+import { assetKey, canonicalAddressForKey, sameAddress } from "@/lib/assetIdentity";
 
 const fixture = (name: string) =>
   JSON.parse(readFileSync(fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url)), "utf8"));
@@ -80,7 +81,7 @@ async function realtimeFromFastLane(fail: Fail = {}): Promise<RealtimeInput> {
   }
 }
 
-const SOL = "solana:so11111111111111111111111111111111111111112";
+const SOL = "solana:So11111111111111111111111111111111111111112";
 
 describe("pair universe — composition", () => {
   it("is Boost LATEST ∪ Boost TOP ∪ Ads ∪ resolved canonical DEX Realtime, deduplicated", async () => {
@@ -95,17 +96,13 @@ describe("pair universe — composition", () => {
     const resolved = rt.ok ? rt.rows.filter((r) => r.resolved) : [];
     expect(resolved.length).toBeGreaterThan(0);
     for (const row of resolved) {
-      const snap = u.snapshots.find(
-        (s) => s.pairAddress?.toLowerCase() === row.pairAddress.toLowerCase(),
-      );
+      const snap = u.snapshots.find((s) => sameAddress(s.pairAddress, row.pairAddress));
       expect(snap?.sources).toContain("realtime");
     }
     expect(u.snapshots.find((s) => s.key === SOL)?.sources).toEqual(["realtime"]);
 
     // A token in both boost lists carries both sources, in fixed order.
-    const topKeys = BOOSTS_TOP.map((b) =>
-      `${String(b.chainId)}:${String(b.tokenAddress)}`.toLowerCase(),
-    );
+    const topKeys = BOOSTS_TOP.map((b) => assetKey(String(b.chainId), String(b.tokenAddress)));
     const honse = u.snapshots.find((s) => s.baseSymbol === "honse");
     expect(topKeys).toContain(honse?.key);
     expect(honse?.sources.slice(0, 2)).toEqual(["boost-latest", "boost-top"]);
@@ -140,7 +137,7 @@ describe("pair universe — composition", () => {
     const requested = slow.urls
       .filter((u) => u.includes("/tokens/v1/"))
       .flatMap((u) => u.split("/tokens/v1/")[1].split("/")[1].split(","))
-      .map((a) => a.toLowerCase());
+      .map((a) => canonicalAddressForKey(a));
     expect(new Set(requested).size).toBe(requested.length);
   });
 
@@ -304,7 +301,7 @@ describe("pair universe — feed semantics", () => {
     const rt = await realtimeFromFastLane();
     await fetchPairUniverse(undefined, history, rt, deps().deps);
     await fetchPairUniverse(undefined, history, rt, { ...deps().deps, now: () => now() + 60_000 });
-    const key = "solana:46vv3zpfnlzn1cdrynavqpsdw5ejeyn9gk9kpczfpump";
+    const key = "solana:46vV3ZpFNLZn1CDRYnAvqPsdW5ejEYn9GK9kPcZFpump";
     expect(history.get(key).map((s) => s.observedAt)).toEqual([now(), now() + 60_000]);
   });
 });

@@ -1,3 +1,4 @@
+import { assetKey } from "@/lib/assetIdentity";
 import type { DexPair } from "@/lib/providers/schemas";
 
 /** Which DexScreener source(s) put this pair into the universe. */
@@ -63,8 +64,9 @@ const txn = (w: { buys?: number; sells?: number } | undefined): TxnWindow | null
     ? { buys: w.buys, sells: w.sells }
     : null;
 
+/** Delegates to the single identity rule in lib/assetIdentity. */
 export function snapshotKey(chainId: string, baseAddress: string): string {
-  return `${chainId.toLowerCase()}:${baseAddress.toLowerCase()}`;
+  return assetKey(chainId, baseAddress);
 }
 
 export function toPairSnapshot(

@@ -12,6 +12,8 @@ import {
 } from "@/lib/providers/dexPairs";
 import { type ProviderStatus, resolveEnvelope } from "@/lib/providers/envelope";
 import { useRealtimeQuery } from "@/hooks/usePairUniverse";
+import { useTokenDrawerActions } from "@/hooks/useTokenDrawer";
+import { refFromRealtime } from "@/lib/tokenDrawer";
 
 type FeedStatus = "loading" | ProviderStatus;
 
@@ -72,6 +74,7 @@ function notice(status: FeedStatus, unresolved: number): string | null {
 
 export function DexRealtimeTab() {
   const [dexSource, setDexSource] = useState("screener"); // screener or dextools
+  const { open: openToken } = useTokenDrawerActions();
   const { rows, status } = useRealtimePairs();
 
   const isDexTools = dexSource === "dextools";
@@ -133,16 +136,10 @@ export function DexRealtimeTab() {
             >
               {message && <div className="text-[11px] text-muted-foreground">{message}</div>}
               {data.map((p) => {
-                const href = isDexTools ? dexToolsUrl(p) : (p.url ?? dexToolsUrl(p));
-                return (
-                  <motion.a
-                    key={p.key}
-                    variants={fadeUp}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group"
-                  >
+                const rowClass =
+                  "flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group";
+                const content = (
+                  <>
                     <div>
                       <div className="flex items-center gap-2 text-[12px] font-mono text-foreground">
                         <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold)">
@@ -169,7 +166,35 @@ export function DexRealtimeTab() {
                       </div>
                       <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-(--gold) transition-all opacity-0 group-hover:opacity-100" />
                     </div>
-                  </motion.a>
+                  </>
+                );
+                // DEXTOOLS has no market API: its rows stay external explorer links.
+                if (isDexTools) {
+                  return (
+                    <motion.a
+                      key={p.key}
+                      variants={fadeUp}
+                      href={dexToolsUrl(p)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={rowClass}
+                    >
+                      {content}
+                    </motion.a>
+                  );
+                }
+                // DEXSCREENER rows open the Token Intelligence Drawer; the
+                // provider link is one tap away inside it.
+                return (
+                  <motion.button
+                    key={p.key}
+                    variants={fadeUp}
+                    type="button"
+                    onClick={(e) => openToken(refFromRealtime(p), e.currentTarget)}
+                    className={`${rowClass} w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)`}
+                  >
+                    {content}
+                  </motion.button>
                 );
               })}
             </motion.div>
