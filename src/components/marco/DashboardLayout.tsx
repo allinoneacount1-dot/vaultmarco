@@ -1,6 +1,7 @@
 import { useState, memo } from "react";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { GasTracker } from "./GasTracker";
+import { GlobalSearch } from "./GlobalSearch";
 
 function DashboardLayoutComponent({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -16,6 +17,7 @@ function DashboardLayoutComponent({ children }: { children: React.ReactNode }) {
         <div className="hairline-b sticky top-0 z-[30] flex h-[56px] items-center justify-between bg-(--void)/95 px-4 pl-16 sm:px-6 lg:pl-8">
           <span className="mono-label hidden sm:block">VAULT://INTELLIGENCE DESK</span>
           <div className="flex items-center gap-4">
+            <GlobalSearch />
             <GasTracker />
             <span className="mono-label flex items-center gap-2 text-[9px]! text-(--gold)!">
               <span className="size-1 rounded-full bg-(--gold)" /> LIVE

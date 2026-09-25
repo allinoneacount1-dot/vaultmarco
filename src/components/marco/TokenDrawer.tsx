@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { radarHistory, useRadar } from "@/hooks/usePairUniverse";
 import { type OpenToken, useOpenToken, useTokenDrawerActions } from "@/hooks/useTokenDrawer";
 import { normalizeChain } from "@/lib/providers/dexscreener";
+import { shortAddress } from "@/lib/search";
 import type { PairIntelligence } from "@/lib/signals/intelligence";
 import type { Evidence } from "@/lib/signals/momentum";
 import type { PairSnapshot, TxnWindow, UniverseSource } from "@/lib/signals/pairSnapshot";
@@ -56,6 +57,7 @@ const ENTRY_LABEL: Record<EntryPoint, string> = {
   boost: "BOOST FEED",
   ad: "ADS FEED",
   realtime: "DEX REALTIME",
+  search: "GLOBAL SEARCH",
 };
 
 /* ------------------------------------------------------------------ *
@@ -595,8 +597,4 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
       )}
     </Section>
   );
-}
-
-function shortAddress(a: string) {
-  return a.length <= 11 ? a : `${a.slice(0, 5)}…${a.slice(-4)}`;
 }
