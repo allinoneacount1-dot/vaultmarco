@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createLoadLifecycle } from "./tradingViewLifecycle";
 
 type Status = "loading" | "ready" | "error";
 
@@ -34,14 +35,12 @@ export function TradingViewChart({
     const widget = outer.querySelector<HTMLDivElement>(".tradingview-widget-container__widget");
     if (!widget) return;
 
-    let cancelled = false;
     setStatus("loading");
-    const fail = () => {
-      if (!cancelled) setStatus("error");
-    };
-    const ready = () => {
-      if (!cancelled) setStatus("ready");
-    };
+    // Settles once (ready or error) and owns the only load timeout: a loaded
+    // chart can never be flipped to error by the timeout, a failed one can
+    // never be flipped back by a late load, and nothing settles after cleanup.
+    const lifecycle = createLoadLifecycle({ timeoutMs: LOAD_TIMEOUT_MS, onSettle: setStatus });
+    const { ready, fail } = lifecycle;
 
     // TradingView's loader inserts its iframe inside the outer container (into
     // the inner widget div); watch the whole subtree so we catch it wherever it
@@ -54,7 +53,6 @@ export function TradingViewChart({
       iframe.addEventListener("error", fail, { once: true });
     });
     observer.observe(outer, { childList: true, subtree: true });
-    const timeout = window.setTimeout(fail, LOAD_TIMEOUT_MS);
 
     const script = document.createElement("script");
     script.src = EMBED_SRC;
@@ -82,9 +80,8 @@ export function TradingViewChart({
     outer.appendChild(script);
 
     return () => {
-      cancelled = true;
+      lifecycle.dispose();
       observer.disconnect();
-      window.clearTimeout(timeout);
       // Drop everything TradingView created plus our script so a remount
       // (symbol change, StrictMode) starts from a clean container.
       script.remove();
