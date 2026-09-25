@@ -3,8 +3,10 @@ import { formatNumber, formatPrice2 } from "./shared/helpers";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { radarHistory, useRadar } from "@/hooks/usePairUniverse";
 import { type OpenToken, useOpenToken, useTokenDrawerActions } from "@/hooks/useTokenDrawer";
+import { useWatchlist } from "@/hooks/useWatchlist";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import { shortAddress } from "@/lib/search";
+import { WATCHLIST_MAX_ITEMS } from "@/lib/watchlist";
 import type { PairIntelligence } from "@/lib/signals/intelligence";
 import type { Evidence } from "@/lib/signals/momentum";
 import type { PairSnapshot, TxnWindow, UniverseSource } from "@/lib/signals/pairSnapshot";
@@ -58,6 +60,7 @@ const ENTRY_LABEL: Record<EntryPoint, string> = {
   ad: "ADS FEED",
   realtime: "DEX REALTIME",
   search: "GLOBAL SEARCH",
+  watchlist: "WATCHLIST",
 };
 
 /* ------------------------------------------------------------------ *
@@ -564,6 +567,19 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
     return () => window.clearTimeout(t);
   }, [copy]);
 
+  const watchlist = useWatchlist();
+  const watched = watchlist.isWatched(ref_.key);
+  const [full, setFull] = useState(false);
+  const onWatch = () => {
+    if (watched) {
+      watchlist.unwatch(ref_.key);
+      setFull(false);
+    } else {
+      // Identity only: the canonical key is derived from the ORIGINAL chain + address.
+      setFull(!watchlist.watch({ chainId: ref_.chainId, address: ref_.address }));
+    }
+  };
+
   const explorer = explorerUrl(ref_.chainId, ref_.address);
   const onCopy = async () => {
     try {
@@ -578,6 +594,15 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
   return (
     <Section title="ACTIONS">
       <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onWatch}
+          aria-pressed={watched}
+          className={watched ? `${ACTION} text-(--gold)!` : ACTION}
+          data-testid="watch"
+        >
+          {watched ? "UNWATCH" : "WATCH"}
+        </button>
         <button type="button" onClick={onCopy} className={ACTION} data-testid="copy-ca">
           {copy === "copied" ? "COPIED" : "COPY CA"}
         </button>
@@ -602,6 +627,16 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
           </a>
         )}
       </div>
+      {full && (
+        <p className="text-[10px] text-muted-foreground">
+          Watchlist is full ({WATCHLIST_MAX_ITEMS}) — unwatch a token first.
+        </p>
+      )}
+      {watched && watchlist.persistence === "memory" && (
+        <p className="text-[10px] text-muted-foreground">
+          Browser storage is unavailable — this watchlist will not survive a reload.
+        </p>
+      )}
       {copy === "failed" && (
         <p className="text-[10px] text-muted-foreground">
           Copy failed — select the contract address above.

@@ -11,7 +11,7 @@ import type { PairSnapshot, UniverseSource } from "@/lib/signals/pairSnapshot";
  * ------------------------------------------------------------------ */
 
 /** Where the user opened the drawer from. */
-export type EntryPoint = "radar" | "boost" | "ad" | "realtime" | "search";
+export type EntryPoint = "radar" | "boost" | "ad" | "realtime" | "search" | "watchlist";
 
 /**
  * A reference to one token, built at the entry point from the record the row
