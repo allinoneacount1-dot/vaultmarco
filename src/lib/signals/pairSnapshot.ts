@@ -1,7 +1,15 @@
 import type { DexPair } from "@/lib/providers/schemas";
 
-/** Which feed(s) put this pair into the universe. */
-export type UniverseMembership = "boost" | "ad" | "boost+ad";
+/** Which DexScreener source(s) put this pair into the universe. */
+export type UniverseSource = "boost-latest" | "boost-top" | "ad" | "realtime";
+
+/** Fixed display/storage order so `sources` is deterministic. */
+export const UNIVERSE_SOURCES: readonly UniverseSource[] = [
+  "boost-latest",
+  "boost-top",
+  "ad",
+  "realtime",
+];
 
 export type TxnWindow = { buys: number; sells: number };
 
@@ -23,7 +31,8 @@ export type PairSnapshot = {
   baseName: string | null;
   baseAddress: string;
   quoteSymbol: string | null;
-  membership: UniverseMembership;
+  /** Every source that referenced this pair this round, in UNIVERSE_SOURCES order. */
+  sources: UniverseSource[];
 
   /** Epoch ms when this response was received. */
   observedAt: number;
@@ -61,7 +70,7 @@ export function snapshotKey(chainId: string, baseAddress: string): string {
 export function toPairSnapshot(
   pair: DexPair,
   observedAt: number,
-  membership: UniverseMembership,
+  sources: readonly UniverseSource[],
 ): PairSnapshot {
   const price = pair.priceUsd != null ? Number(pair.priceUsd) : NaN;
   return {
@@ -74,7 +83,7 @@ export function toPairSnapshot(
     baseName: pair.baseToken.name ?? null,
     baseAddress: pair.baseToken.address,
     quoteSymbol: pair.quoteToken?.symbol ?? null,
-    membership,
+    sources: UNIVERSE_SOURCES.filter((src) => sources.includes(src)),
     observedAt,
     pairCreatedAt: num(pair.pairCreatedAt),
     priceUsd: Number.isFinite(price) ? price : null,

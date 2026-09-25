@@ -23,6 +23,27 @@ describe("SnapshotHistory", () => {
     expect(h.get("solana:tokenx")[0].liquidityUsd).toBe(2);
   });
 
+  it("reports the earliest RETAINED observation as `since`, not the first ever seen", () => {
+    const h = new SnapshotHistory(60);
+    h.record([snapshot({ key: "a:1", observedAt: T0 })]);
+    h.record([snapshot({ key: "a:1", observedAt: T0 + 30 * MIN })]);
+    expect(h.since).toBe(T0);
+    // Advance past the 60-minute window: T0 is pruned, T0+30m is still retained.
+    h.record([snapshot({ key: "a:1", observedAt: T0 + 75 * MIN })]);
+    expect(h.get("a:1").map((s) => s.observedAt)).toEqual([T0 + 30 * MIN, T0 + 75 * MIN]);
+    expect(h.since).toBe(T0 + 30 * MIN);
+    expect(h.since).not.toBe(T0);
+  });
+
+  it("reports null once everything has been pruned", () => {
+    const h = new SnapshotHistory(60);
+    h.record([snapshot({ key: "a:1", observedAt: T0 })]);
+    h.record([]);
+    expect(h.since).toBe(T0);
+    const fresh = new SnapshotHistory(60);
+    expect(fresh.since).toBeNull();
+  });
+
   it("forgets observations older than its window and drops empty pairs", () => {
     const h = new SnapshotHistory(60);
     h.record([snapshot({ key: "a:1", observedAt: T0 })]);

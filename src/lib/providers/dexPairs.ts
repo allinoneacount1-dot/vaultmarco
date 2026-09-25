@@ -91,6 +91,12 @@ export type RealtimeRow = {
   liquidityUsd: number | null;
   /** Provider's own link for this pair. */
   url: string | null;
+  /**
+   * The identity-validated provider payload this row was built from, kept so
+   * the pair universe can snapshot canonical pairs without re-fetching them.
+   * Absent on unresolved rows.
+   */
+  pair?: DexPair;
 };
 
 export type Deps = { fetchJson: typeof fetchJson; now: () => number };
@@ -177,6 +183,7 @@ async function resolveOne(want: CanonicalPair, deps: Deps): Promise<RealtimeRow>
       volume24h: num(pair.volume?.h24),
       liquidityUsd: num(pair.liquidity?.usd),
       url: pair.url ?? null,
+      pair,
     };
   }
 

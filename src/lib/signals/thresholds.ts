@@ -24,8 +24,10 @@ export const PREVIOUS_WINDOW_MINUTES_MATURE = 55;
 
 /**
  * For pairs younger than an hour, the h1 bucket only covers the pair's
- * lifetime, so the previous window is `age − 5` minutes — but never shorter
- * than this, or a few seconds of history would be scaled up into a fake pace.
+ * lifetime, so the previous window is exactly `age − 5` minutes. When that is
+ * shorter than this, VA/TA are INSUFFICIENT_HISTORY. This is a qualification
+ * gate, not a floor on the denominator: VA/TA first become available at
+ * RECENT_WINDOW_MINUTES + MIN_SAFE_PREVIOUS_MINUTES = 15 minutes of age.
  */
 export const MIN_SAFE_PREVIOUS_MINUTES = 10;
 

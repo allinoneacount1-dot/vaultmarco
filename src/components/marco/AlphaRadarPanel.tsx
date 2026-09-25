@@ -3,11 +3,12 @@ import { Radar } from "lucide-react";
 import { Panel } from "./Panel";
 import { formatNumber } from "./shared/helpers";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { type FeedStatus, usePairUniverseQuery, useUniverseSlice } from "@/hooks/usePairUniverse";
+import { useRadar } from "@/hooks/usePairUniverse";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import type { LiquidityEvent } from "@/lib/signals/liquidity";
 import type { MomentumSignal } from "@/lib/signals/momentum";
 import type { PairSnapshot } from "@/lib/signals/pairSnapshot";
+import type { RadarStatus } from "@/lib/providers/universe";
 
 type Mode = "momentum" | "risk";
 
@@ -19,10 +20,27 @@ const mins = (n: number) => (n < 60 ? `${Math.round(n)}m` : `${(n / 60).toFixed(
 const clock = (ms: number) =>
   new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 
-function notice(status: FeedStatus, mode: Mode, universeSize: number): string {
-  if (status === "offline") return "Feed unavailable — DexScreener could not be reached.";
-  if (status === "stale") return "Showing last known data — DexScreener is not responding.";
-  if (universeSize === 0) return "No pairs in the universe yet.";
+const detail = (issues: string[]) => (issues.length > 0 ? issues.join(" · ") : null);
+
+/**
+ * Status line for the radar's own aggregate status. Only a LIVE radar may say
+ * the universe is empty; failures are always named, never shown as "no pairs".
+ */
+function statusNotice(status: RadarStatus, issues: string[]): string | null {
+  switch (status) {
+    case "offline":
+      return `Radar unavailable — ${detail(issues) ?? "DexScreener could not be reached"}.`;
+    case "stale":
+      return `Showing last known radar — ${detail(issues) ?? "DexScreener is not responding"}.`;
+    case "degraded":
+      return `Partial universe — ${detail(issues)}.`;
+    default:
+      return null;
+  }
+}
+
+function emptyNotice(mode: Mode, universeSize: number): string {
+  if (universeSize === 0) return "No pairs in the universe right now.";
   return mode === "momentum"
     ? `No EARLY MOMENTUM signal across ${universeSize} pairs right now.`
     : `No liquidity event across ${universeSize} pairs in the last hour.`;
@@ -39,14 +57,14 @@ function notice(status: FeedStatus, mode: Mode, universeSize: number): string {
 export function AlphaRadarPanel() {
   const [mode, setMode] = useState<Mode>("momentum");
   const isMobile = useIsMobile();
-  const { data: universe } = usePairUniverseQuery();
-  // Radar status follows the boost feed's provider status: the same poll feeds both.
-  const { providerStatus } = useUniverseSlice((u) => u.boosts);
+  // Radar status is derived from the inputs that built this radar (see RadarStatus).
+  const { status, universe, inputs } = useRadar();
 
   const radar = universe?.radar;
   const byKey = new Map<string, PairSnapshot>((universe?.snapshots ?? []).map((s) => [s.key, s]));
   const limit = isMobile ? ROWS_MOBILE : ROWS_DESKTOP;
-  const isLoading = providerStatus === "loading";
+  const isLoading = status === "loading";
+  const statusLine = status === "loading" ? null : statusNotice(status, inputs?.issues ?? []);
 
   const momentum = radar?.momentum.slice(0, limit) ?? [];
   const risk = radar?.risk.slice(0, limit) ?? [];
@@ -71,14 +89,17 @@ export function AlphaRadarPanel() {
 
       <Panel title={`ALPHA RADAR · ${mode.toUpperCase()}`} icon={Radar}>
         <div className="space-y-2 lg:space-y-3">
+          {statusLine && (
+            <div className="text-[11px] lg:text-[12px] text-muted-foreground">{statusLine}</div>
+          )}
           {isLoading ? (
             <div className="rounded-md border border-(--hairline) p-3">
               <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
               <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
             </div>
-          ) : rows === 0 ? (
+          ) : status === "offline" ? null : rows === 0 ? (
             <div className="text-[11px] lg:text-[12px] text-muted-foreground">
-              {notice(providerStatus, mode, radar?.universeSize ?? 0)}
+              {emptyNotice(mode, radar?.universeSize ?? 0)}
             </div>
           ) : mode === "momentum" ? (
             momentum.map((m) => <MomentumRow key={m.key} signal={m} snapshot={byKey.get(m.key)} />)
@@ -86,7 +107,7 @@ export function AlphaRadarPanel() {
             risk.map((e) => <RiskRow key={e.key} event={e} snapshot={byKey.get(e.key)} />)
           )}
 
-          {radar && !isLoading && (
+          {radar && !isLoading && status !== "offline" && (
             <div className="pt-1 text-[10px] font-mono text-(--faint)">
               UNIVERSE {radar.universeSize} PAIRS · HISTORY SINCE{" "}
               {radar.historySince != null ? clock(radar.historySince) : "—"} · RULES: VA≥3 TA≥2

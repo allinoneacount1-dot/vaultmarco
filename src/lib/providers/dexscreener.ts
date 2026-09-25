@@ -89,10 +89,28 @@ export async function enrichTokens(
   refs: Array<{ chainId: string; tokenAddress: string }>,
   deps: Deps = defaultDeps,
 ): Promise<Map<string, DexPair>> {
+  return (await enrichTokensDetailed(refs, deps)).index;
+}
+
+/** Outcome of one enrichment pass, so callers can tell "no pairs" from "lookup failed". */
+export type EnrichmentResult = {
+  index: Map<string, DexPair>;
+  /** Distinct (chain, address) references requested. */
+  requested: number;
+  batches: number;
+  failedBatches: number;
+};
+
+/** {@link enrichTokens} plus batch accounting. */
+export async function enrichTokensDetailed(
+  refs: Array<{ chainId: string; tokenAddress: string }>,
+  deps: Deps = defaultDeps,
+): Promise<EnrichmentResult> {
   const byChain = new Map<string, string[]>();
   for (const ref of refs) {
     const list = byChain.get(ref.chainId) ?? [];
-    if (!list.includes(ref.tokenAddress)) list.push(ref.tokenAddress);
+    const addr = ref.tokenAddress.toLowerCase();
+    if (!list.some((a) => a.toLowerCase() === addr)) list.push(ref.tokenAddress);
     byChain.set(ref.chainId, list);
   }
 
@@ -115,8 +133,12 @@ export async function enrichTokens(
     }),
   );
 
+  let failedBatches = 0;
   for (const result of results) {
-    if (result.status !== "fulfilled") continue;
+    if (result.status !== "fulfilled") {
+      failedBatches++;
+      continue;
+    }
     for (const pair of result.value) {
       const key = tokenKey(pair.chainId, pair.baseToken.address);
       const existing = index.get(key);
@@ -128,7 +150,8 @@ export async function enrichTokens(
     }
   }
 
-  return index;
+  const requested = [...byChain.values()].reduce((n, list) => n + list.length, 0);
+  return { index, requested, batches: batches.length, failedBatches };
 }
 
 function numberOrNull(value: number | undefined | null): number | null {

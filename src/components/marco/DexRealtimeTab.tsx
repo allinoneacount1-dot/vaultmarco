@@ -4,8 +4,16 @@ import { Panel } from "./Panel";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer } from "./SectionHeader";
 import { formatNumber } from "./shared/helpers";
-import { CANONICAL_PAIRS, dexToolsUrl, type RealtimeRow } from "@/lib/providers/dexPairs";
-import { type FeedStatus, useUniverseSlice } from "@/hooks/usePairUniverse";
+import {
+  CANONICAL_PAIRS,
+  DEXSCREENER_SOURCE,
+  dexToolsUrl,
+  type RealtimeRow,
+} from "@/lib/providers/dexPairs";
+import { type ProviderStatus, resolveEnvelope } from "@/lib/providers/envelope";
+import { useRealtimeQuery } from "@/hooks/usePairUniverse";
+
+type FeedStatus = "loading" | ProviderStatus;
 
 /** Identity-only rows: real pair identity, no market values claimed. */
 const IDENTITY_ROWS: RealtimeRow[] = CANONICAL_PAIRS.map((p) => ({
@@ -34,13 +42,24 @@ function changeText(n: number | null): string {
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
-/**
- * The canonical pairs are resolved inside the shared pair-universe poll, so
- * this panel no longer runs its own request loop.
- */
 function useRealtimePairs() {
-  const { data, providerStatus } = useUniverseSlice((u) => u.realtime);
-  return { rows: data as RealtimeRow[] | undefined, status: providerStatus };
+  // Fast lane (30 s); the pair universe reads the same cache entry.
+  const query = useRealtimeQuery();
+
+  const envelope = resolveEnvelope({
+    source: DEXSCREENER_SOURCE,
+    previous: query.data,
+    isError: query.isError,
+    error: query.error,
+    fetchStatus: query.fetchStatus,
+    fetchFailureCount: query.failureCount,
+    fetchFailureReason: query.failureReason,
+  });
+
+  const status: FeedStatus =
+    query.isPending && !envelope ? "loading" : (envelope?.status ?? "offline");
+
+  return { rows: envelope?.data, status };
 }
 
 function notice(status: FeedStatus, unresolved: number): string | null {

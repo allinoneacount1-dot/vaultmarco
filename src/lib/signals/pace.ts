@@ -16,8 +16,14 @@ import {
  * life, so dividing by 60 would manufacture acceleration. Instead:
  *
  *   previous        = max(h1 − m5, 0)
- *   previousMinutes = age ≥ 60 ? 55 : max(age − 5, MIN_SAFE_PREVIOUS_MINUTES)
+ *   previousMinutes = age ≥ 60 ? 55 : age − 5        (the time h1 − m5 actually covers)
  *   ratio           = (m5 / 5) / (previous / previousMinutes)
+ *
+ * MIN_SAFE_PREVIOUS_MINUTES is a qualification gate, never a duration: when
+ * `age − 5` is shorter than it, the result is INSUFFICIENT_HISTORY. Stretching
+ * the denominator instead would spread a few minutes of real activity over
+ * time the pair did not exist, deflate the previous pace and inflate the
+ * ratio. With the gate at 10 minutes, VA/TA become available at age 15.
  *
  * When there is not enough previous activity to compare against, the result
  * is INSUFFICIENT_HISTORY — never a forced number.
@@ -40,10 +46,14 @@ export type PaceInsufficientReason =
   | "NO_PREVIOUS_WINDOW"
   | "INSUFFICIENT_HISTORY";
 
-/** Minutes covered by the previous window for a pair of the given age. */
-export function previousWindowMinutes(ageMinutes: number): number {
+/**
+ * Minutes actually covered by the previous window (h1 − m5) for a pair of the
+ * given age, or null when that span is shorter than MIN_SAFE_PREVIOUS_MINUTES.
+ */
+export function previousWindowMinutes(ageMinutes: number): number | null {
   if (ageMinutes >= 60) return PREVIOUS_WINDOW_MINUTES_MATURE;
-  return Math.max(ageMinutes - RECENT_WINDOW_MINUTES, MIN_SAFE_PREVIOUS_MINUTES);
+  const actual = ageMinutes - RECENT_WINDOW_MINUTES;
+  return actual >= MIN_SAFE_PREVIOUS_MINUTES ? actual : null;
 }
 
 function compare(
@@ -56,10 +66,12 @@ function compare(
   if (recent == null) return { ok: false, reason: "NO_RECENT_WINDOW" };
   if (hour == null) return { ok: false, reason: "NO_PREVIOUS_WINDOW" };
 
+  const previousMinutes = previousWindowMinutes(ageMinutes);
+  if (previousMinutes == null) return { ok: false, reason: "INSUFFICIENT_HISTORY" };
+
   const previous = Math.max(hour - recent, 0);
   if (previous < minPrevious) return { ok: false, reason: "INSUFFICIENT_HISTORY" };
 
-  const previousMinutes = previousWindowMinutes(ageMinutes);
   const recentPerMinute = recent / RECENT_WINDOW_MINUTES;
   const previousPerMinute = previous / previousMinutes;
   return {

@@ -12,14 +12,12 @@ import { HISTORY_MAX_AGE_MINUTES } from "./thresholds";
  */
 export class SnapshotHistory {
   private readonly byKey = new Map<string, PairSnapshot[]>();
-  private startedAt: number | null = null;
 
   constructor(private readonly maxAgeMinutes: number = HISTORY_MAX_AGE_MINUTES) {}
 
   /** Record one poll's worth of observations. Later observations must not be older than earlier ones. */
   record(snapshots: readonly PairSnapshot[]): void {
     for (const s of snapshots) {
-      if (this.startedAt == null || s.observedAt < this.startedAt) this.startedAt = s.observedAt;
       const list = this.byKey.get(s.key) ?? [];
       const last = list[list.length - 1];
       // One entry per observation time; a re-run of the same poll replaces it.
@@ -35,9 +33,18 @@ export class SnapshotHistory {
     return this.byKey.get(key) ?? [];
   }
 
-  /** Epoch ms of the earliest observation still known, or null before the first record. */
+  /**
+   * Epoch ms of the earliest observation still RETAINED, or null when empty.
+   * Computed from what is held, so after pruning it never claims history the
+   * signal functions can no longer see.
+   */
   get since(): number | null {
-    return this.startedAt;
+    let earliest: number | null = null;
+    for (const list of this.byKey.values()) {
+      const first = list[0]?.observedAt;
+      if (first != null && (earliest == null || first < earliest)) earliest = first;
+    }
+    return earliest;
   }
 
   private prune(now: number): void {

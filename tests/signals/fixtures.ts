@@ -20,7 +20,7 @@ export function snapshot(over: Partial<PairSnapshot> & { ageMinutes?: number } =
     baseName: "Token X",
     baseAddress: "tokenx",
     quoteSymbol: "SOL",
-    membership: "boost",
+    sources: ["boost-latest"],
     observedAt,
     pairCreatedAt: observedAt - ageMinutes * MIN,
     priceUsd: 0.01,
