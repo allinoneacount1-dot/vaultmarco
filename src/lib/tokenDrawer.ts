@@ -11,7 +11,7 @@ import type { PairSnapshot, UniverseSource } from "@/lib/signals/pairSnapshot";
  * ------------------------------------------------------------------ */
 
 /** Where the user opened the drawer from. */
-export type EntryPoint = "radar" | "boost" | "ad" | "realtime";
+export type EntryPoint = "radar" | "boost" | "ad" | "realtime" | "search";
 
 /**
  * A reference to one token, built at the entry point from the record the row
@@ -33,10 +33,10 @@ export type TokenRef = {
   url: string | null;
 };
 
-export function refFromSnapshot(s: PairSnapshot): TokenRef {
+export function refFromSnapshot(s: PairSnapshot, entry: EntryPoint = "radar"): TokenRef {
   return {
     key: s.key,
-    entry: "radar",
+    entry,
     chainId: s.chainId,
     address: s.baseAddress,
     symbol: s.baseSymbol,

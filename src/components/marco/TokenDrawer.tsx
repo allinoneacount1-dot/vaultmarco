@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { radarHistory, useRadar } from "@/hooks/usePairUniverse";
 import { type OpenToken, useOpenToken, useTokenDrawerActions } from "@/hooks/useTokenDrawer";
 import { normalizeChain } from "@/lib/providers/dexscreener";
+import { shortAddress } from "@/lib/search";
 import type { PairIntelligence } from "@/lib/signals/intelligence";
 import type { Evidence } from "@/lib/signals/momentum";
 import type { PairSnapshot, TxnWindow, UniverseSource } from "@/lib/signals/pairSnapshot";
@@ -56,6 +57,7 @@ const ENTRY_LABEL: Record<EntryPoint, string> = {
   boost: "BOOST FEED",
   ad: "ADS FEED",
   realtime: "DEX REALTIME",
+  search: "GLOBAL SEARCH",
 };
 
 /* ------------------------------------------------------------------ *
@@ -235,10 +237,22 @@ function SignalSection({ model }: { model: DrawerModel }) {
     );
   }
   const { momentum, risk } = model.intel;
+  // A stale round is the last real round carried forward while providers
+  // fail: its signals are history, not signals of the current round.
+  const stale = model.status === "stale";
   return (
     <Section title="SIGNAL">
+      {stale && (
+        <p className="text-[11px] text-(--champagne)" data-testid="signal-stale">
+          STALE — from the last successful round
+          {model.intel.snapshot ? ` (observed ${clock(model.intel.snapshot.observedAt)})` : ""}, not
+          the current round.
+        </p>
+      )}
       {!momentum && !risk && (
-        <p className="text-[11px] text-muted-foreground">No signal on this pair this round.</p>
+        <p className="text-[11px] text-muted-foreground">
+          {stale ? "No signal in the last successful round." : "No signal on this pair this round."}
+        </p>
       )}
       {momentum && (
         <div className="space-y-1" data-testid="signal-momentum">
@@ -595,8 +609,4 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
       )}
     </Section>
   );
-}
-
-function shortAddress(a: string) {
-  return a.length <= 11 ? a : `${a.slice(0, 5)}…${a.slice(-4)}`;
 }

@@ -28,6 +28,11 @@ export class SnapshotHistory {
     this.prune(Math.max(...snapshots.map((s) => s.observedAt), 0));
   }
 
+  /** The latest retained observation of every pair still in history. */
+  latestAll(): PairSnapshot[] {
+    return [...this.byKey.values()].map((list) => list[list.length - 1]);
+  }
+
   /** Time-ordered observations of one pair (oldest first). */
   get(key: string): readonly PairSnapshot[] {
     return this.byKey.get(key) ?? [];

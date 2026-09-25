@@ -22,7 +22,11 @@ export type TxnWindow = { buys: number; sells: number };
  * computed value can be traced back to the raw fields on this object.
  */
 export type PairSnapshot = {
-  /** `chainId:baseTokenAddress` (lowercase) — the same identity the feeds use. */
+  /**
+   * Canonical `assetKey(chainId, baseAddress)` (lib/assetIdentity): chain
+   * lowercased; 0x-hex addresses lowercased; every other address (e.g.
+   * Solana/Base58) kept exactly. The same identity the feeds use.
+   */
   key: string;
   chainId: string;
   dexId: string | null;
