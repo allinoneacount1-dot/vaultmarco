@@ -129,7 +129,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                 <motion.button
                   type="button"
                   disabled={!token}
-                  onClick={() => token && openToken(refFromBoost(token))}
+                  onClick={(e) => token && openToken(refFromBoost(token), e.currentTarget)}
                   key={token?.id || i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -183,7 +183,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                 <motion.button
                   type="button"
                   disabled={!token}
-                  onClick={() => token && openToken(refFromAd(token))}
+                  onClick={(e) => token && openToken(refFromAd(token), e.currentTarget)}
                   key={token?.id || i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

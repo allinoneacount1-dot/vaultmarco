@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { formatNumber, formatPrice2 } from "./shared/helpers";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { radarHistory, useRadar } from "@/hooks/usePairUniverse";
-import { useOpenTokenRef, useTokenDrawerActions } from "@/hooks/useTokenDrawer";
+import { type OpenToken, useOpenToken, useTokenDrawerActions } from "@/hooks/useTokenDrawer";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import type { PairIntelligence } from "@/lib/signals/intelligence";
 import type { Evidence } from "@/lib/signals/momentum";
@@ -16,11 +16,15 @@ import {
   explorerUrl,
   resolveDrawerModel,
 } from "@/lib/tokenDrawer";
+import * as SheetPrimitive from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 import {
   Sheet,
-  SheetContent,
+  SheetClose,
   SheetDescription,
   SheetHeader,
+  SheetOverlay,
+  SheetPortal,
   SheetTitle,
 } from "@/components/ui/sheet";
 
@@ -67,7 +71,13 @@ const ENTRY_LABEL: Record<EntryPoint, string> = {
  * number is a snapshot field or a PairIntelligence field.
  */
 export function TokenDrawer() {
-  const ref = useOpenTokenRef();
+  const openToken = useOpenToken();
+  // Keep the last opened token while the sheet animates closed, so its content
+  // does not blank out and focus can still return to the row that opened it.
+  // (Adjusting state during render — no effect, no extra commit.)
+  const [shown, setShown] = useState<OpenToken | null>(openToken);
+  if (openToken && openToken !== shown) setShown(openToken);
+  const ref = shown?.ref ?? null;
   const { close } = useTokenDrawerActions();
   const isMobile = useIsMobile();
   const { status, universe } = useRadar();
@@ -77,18 +87,38 @@ export function TokenDrawer() {
     : null;
 
   return (
-    <Sheet open={ref != null} onOpenChange={(o) => !o && close()}>
-      <SheetContent
-        side={isMobile ? "bottom" : "right"}
-        data-testid="token-drawer"
-        data-key={ref?.key}
-        data-kind={model?.kind}
-        className={`bg-(--graphite) border-(--hairline) p-0 overflow-y-auto overscroll-contain ${
-          isMobile ? "h-[85vh]" : "w-full sm:max-w-md"
-        }`}
-      >
-        {model && <DrawerBody model={model} />}
-      </SheetContent>
+    <Sheet open={openToken != null} onOpenChange={(o) => !o && close()}>
+      {/* Composed from the Sheet parts (rather than SheetContent) so both the
+          overlay and the panel sit on the design system's modal layer
+          (--z-modal), above the dashboard's fixed nav and mobile menu button. */}
+      <SheetPortal>
+        <SheetOverlay className="z-[var(--z-modal)]" />
+        <SheetPrimitive.Content
+          data-testid="token-drawer"
+          data-key={ref?.key}
+          data-kind={model?.kind}
+          onCloseAutoFocus={(e) => {
+            // Return focus to the row that opened the drawer (mouse or keyboard),
+            // as long as that row is still on the page.
+            const trigger = shown?.trigger;
+            if (trigger?.isConnected) {
+              e.preventDefault();
+              trigger.focus();
+            }
+          }}
+          className={`fixed z-[var(--z-modal)] bg-(--graphite) shadow-lg overflow-y-auto overscroll-contain transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out ${
+            isMobile
+              ? "inset-x-0 bottom-0 h-[85vh] border-t border-(--hairline) data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom"
+              : "inset-y-0 right-0 h-full w-full sm:max-w-md border-l border-(--hairline) data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right"
+          }`}
+        >
+          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 cursor-pointer transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </SheetClose>
+          {model && <DrawerBody model={model} />}
+        </SheetPrimitive.Content>
+      </SheetPortal>
     </Sheet>
   );
 }

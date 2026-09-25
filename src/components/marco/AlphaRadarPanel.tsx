@@ -138,7 +138,7 @@ function RowShell({ snapshot, children }: { snapshot?: PairSnapshot; children: R
   return snapshot ? (
     <button
       type="button"
-      onClick={() => open(refFromSnapshot(snapshot))}
+      onClick={(e) => open(refFromSnapshot(snapshot), e.currentTarget)}
       className={`${className} cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)`}
     >
       {children}

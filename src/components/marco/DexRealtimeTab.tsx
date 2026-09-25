@@ -190,7 +190,7 @@ export function DexRealtimeTab() {
                     key={p.key}
                     variants={fadeUp}
                     type="button"
-                    onClick={() => openToken(refFromRealtime(p))}
+                    onClick={(e) => openToken(refFromRealtime(p), e.currentTarget)}
                     className={`${rowClass} w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)`}
                   >
                     {content}
