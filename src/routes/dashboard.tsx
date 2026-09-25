@@ -12,16 +12,25 @@ import { Activity, TrendingUp, Zap, Eye } from "lucide-react";
 import { DexRealtimeTab } from "@/components/marco/DexRealtimeTab";
 import { MarketChartPanel } from "@/components/marco/MarketChartPanel";
 import { AlphaRadarPanel } from "@/components/marco/AlphaRadarPanel";
+import { TokenDrawer } from "@/components/marco/TokenDrawer";
+import { TokenDrawerProvider } from "@/components/marco/TokenDrawerProvider";
+import { useTokenDrawerActions } from "@/hooks/useTokenDrawer";
+import { refFromAd, refFromBoost } from "@/lib/tokenDrawer";
 import { useTokenBoosts, useAds, type FeedStatus } from "@/hooks/useDexScreener";
 import { useGlobalStats } from "@/hooks/useGlobalStats";
 import { getTierColor, getAdTypeIcon, formatNumber, formatPrice2 } from "@/components/marco/shared/helpers";
 import type { BoostToken, AdToken } from "@/components/marco/shared/types";
 
 function DashboardComponent() {
+  // The Token Intelligence Drawer is mounted once here, with the dashboard,
+  // so opening it never mounts a new data observer.
   return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
+    <TokenDrawerProvider>
+      <DashboardLayout>
+        <Outlet />
+      </DashboardLayout>
+      <TokenDrawer />
+    </TokenDrawerProvider>
   );
 }
 
@@ -50,6 +59,7 @@ const DashboardIndex = memo(function DashboardIndex() {
   const { data: boosts, providerStatus: boostsStatus } = useTokenBoosts();
   const { data: ads, providerStatus: adsStatus } = useAds();
   const { data: gs } = useGlobalStats();
+  const { open: openToken } = useTokenDrawerActions();
 
   const boostsLoading = boostsStatus === "loading";
   const adsLoading = adsStatus === "loading";
@@ -116,12 +126,15 @@ const DashboardIndex = memo(function DashboardIndex() {
             <div className="space-y-2 lg:space-y-3">
               {!boostsLoading && boostRows.length === 0 && <FeedNotice status={boostsStatus} />}
               {boostRows.map((token, i) => (
-                <motion.div 
+                <motion.button
+                  type="button"
+                  disabled={!token}
+                  onClick={() => token && openToken(refFromBoost(token))}
                   key={token?.id || i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="flex items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 hover:bg-(--panel-2) transition-all"
+                  className="flex w-full items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 text-left hover:bg-(--panel-2) transition-all cursor-pointer disabled:cursor-default focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -151,7 +164,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                       </div>
                     </div>
                   )}
-                </motion.div>
+                </motion.button>
               ))}
             </div>
           </Panel>
@@ -167,12 +180,15 @@ const DashboardIndex = memo(function DashboardIndex() {
             <div className="space-y-2 lg:space-y-3">
               {!adsLoading && adRows.length === 0 && <FeedNotice status={adsStatus} />}
               {adRows.map((token, i) => (
-                <motion.div 
+                <motion.button
+                  type="button"
+                  disabled={!token}
+                  onClick={() => token && openToken(refFromAd(token))}
                   key={token?.id || i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="flex items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 hover:bg-(--panel-2) transition-all"
+                  className="flex w-full items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 text-left hover:bg-(--panel-2) transition-all cursor-pointer disabled:cursor-default focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -200,7 +216,7 @@ const DashboardIndex = memo(function DashboardIndex() {
                       </div>
                     </div>
                   )}
-                </motion.div>
+                </motion.button>
               ))}
             </div>
           </Panel>

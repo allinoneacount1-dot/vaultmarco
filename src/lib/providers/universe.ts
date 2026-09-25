@@ -20,6 +20,7 @@ import {
   snapshotKey,
   toPairSnapshot,
 } from "@/lib/signals/pairSnapshot";
+import { type PairIntelligence, buildIntelligence } from "@/lib/signals/intelligence";
 import { type RadarResult, computeRadar } from "@/lib/signals/radar";
 
 /**
@@ -82,6 +83,8 @@ export type PairUniverse = {
   /** Latest observation of every pair in the universe, deduplicated by chain + base address. */
   snapshots: PairSnapshot[];
   radar: RadarResult;
+  /** Per-pair intelligence for every snapshot this round (Token Drawer input). */
+  intelligence: Record<string, PairIntelligence>;
   radarInputs: RadarInputs;
   observedAt: number;
 };
@@ -203,11 +206,13 @@ export async function fetchPairUniverse(
 
   if (current.length > 0 || healthy) {
     history.record(current);
+    const radar = computeRadar(current, history, observedAt);
     return {
       boosts,
       ads,
       snapshots: current,
-      radar: computeRadar(current, history, observedAt),
+      radar,
+      intelligence: buildIntelligence(current, history, radar),
       radarInputs: { status: healthy ? "live" : "degraded", sources, enrichment: counts, issues },
       observedAt,
     };
@@ -221,6 +226,7 @@ export async function fetchPairUniverse(
     ads,
     snapshots: fallback?.snapshots ?? [],
     radar: fallback?.radar ?? computeRadar([], history, observedAt),
+    intelligence: fallback?.intelligence ?? {},
     radarInputs: {
       status: fallback ? "stale" : "offline",
       sources,
