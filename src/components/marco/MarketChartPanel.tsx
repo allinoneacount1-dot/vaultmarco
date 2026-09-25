@@ -17,20 +17,16 @@ type AssetId = (typeof ASSETS)[number]["id"];
  * Live TradingView chart with a BTC / ETH / SOL / BNB switch, using the same
  * pill selector as DEX REALTIME.
  *
- * Each chart is a full TradingView iframe, so they mount lazily on first
- * selection and are then kept mounted but hidden (`invisible`, not
- * `display:none`, so the iframe keeps its size and TradingView needs no
- * re-layout). Switching is therefore instant and never reloads the page or
- * the other charts.
+ * Single active widget: exactly one TradingView embed instance exists at any
+ * time. Switching assets unmounts the current chart (its cleanup removes the
+ * script and iframe) and mounts a fresh one for the new symbol, so there is
+ * never more than one iframe, websocket or render loop alive — important on
+ * mobile. The chart box keeps a fixed height, so a switch causes no layout
+ * shift; the existing skeleton covers the load.
  */
 export function MarketChartPanel() {
   const [asset, setAsset] = useState<AssetId>("BTC");
-  const [mounted, setMounted] = useState<ReadonlySet<AssetId>>(() => new Set(["BTC"]));
-
-  const select = (id: AssetId) => {
-    setAsset(id);
-    setMounted((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
-  };
+  const active = ASSETS.find((a) => a.id === asset) ?? ASSETS[0];
 
   return (
     <Panel title={`MARKET CHART · ${asset}/USDT`} icon={CandlestickChart}>
@@ -39,7 +35,7 @@ export function MarketChartPanel() {
           {ASSETS.map((a) => (
             <button
               key={a.id}
-              onClick={() => select(a.id)}
+              onClick={() => setAsset(a.id)}
               aria-pressed={asset === a.id}
               className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
                 asset === a.id
@@ -52,16 +48,9 @@ export function MarketChartPanel() {
           ))}
         </div>
 
-        <div className="relative h-[320px] sm:h-[400px] lg:h-[480px] overflow-hidden rounded-md border border-(--hairline)">
-          {ASSETS.filter((a) => mounted.has(a.id)).map((a) => (
-            <div
-              key={a.id}
-              aria-hidden={asset !== a.id}
-              className={`absolute inset-0 ${asset === a.id ? "visible" : "invisible pointer-events-none"}`}
-            >
-              <TradingViewChart symbol={a.symbol} className="h-full" />
-            </div>
-          ))}
+        <div className="h-[320px] sm:h-[400px] lg:h-[480px] overflow-hidden rounded-md border border-(--hairline)">
+          {/* `key` forces a clean remount per symbol. */}
+          <TradingViewChart key={active.id} symbol={active.symbol} className="h-full" />
         </div>
       </div>
     </Panel>

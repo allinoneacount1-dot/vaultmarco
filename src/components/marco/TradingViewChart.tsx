@@ -11,10 +11,11 @@ const EMBED_SRC = "https://s3.tradingview.com/external-embedding/embed-widget-ad
  * TradingView Advanced Chart — real market data from TradingView, skinned to
  * the MONOLITH panel surface (`--panel` canvas, `--hairline` grid).
  *
- * TradingView's loader reads its config from the *text content* of the
- * `<script>` tag and renders an iframe into the sibling
- * `.tradingview-widget-container__widget` element, so each chart injects its
- * own script element; nothing about the chart is synthesized locally.
+ * Follows TradingView's official React embed structure: the ref sits on the
+ * outer `.tradingview-widget-container`, the embed script (with its JSON
+ * config as text content) is appended to that outer element, and TradingView's
+ * loader renders its iframe into the inner `.tradingview-widget-container__widget`.
+ * Nothing about the chart is synthesized locally.
  */
 export function TradingViewChart({
   symbol,
@@ -23,28 +24,35 @@ export function TradingViewChart({
   symbol: string;
   className?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const container = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>("loading");
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const outer = container.current;
+    if (!outer) return;
+    const widget = outer.querySelector<HTMLDivElement>(".tradingview-widget-container__widget");
+    if (!widget) return;
 
     let cancelled = false;
     setStatus("loading");
-    const fail = () => !cancelled && setStatus("error");
-    const ready = () => !cancelled && setStatus("ready");
+    const fail = () => {
+      if (!cancelled) setStatus("error");
+    };
+    const ready = () => {
+      if (!cancelled) setStatus("ready");
+    };
 
-    // The loader swaps the container's children for an iframe; wait for it,
-    // then for that iframe's load event.
+    // TradingView's loader inserts its iframe inside the outer container (into
+    // the inner widget div); watch the whole subtree so we catch it wherever it
+    // lands, then wait for that iframe's load event.
     const observer = new MutationObserver(() => {
-      const iframe = container.querySelector("iframe");
+      const iframe = outer.querySelector("iframe");
       if (!iframe) return;
       observer.disconnect();
       iframe.addEventListener("load", ready, { once: true });
       iframe.addEventListener("error", fail, { once: true });
     });
-    observer.observe(container, { childList: true });
+    observer.observe(outer, { childList: true, subtree: true });
     const timeout = window.setTimeout(fail, LOAD_TIMEOUT_MS);
 
     const script = document.createElement("script");
@@ -52,7 +60,7 @@ export function TradingViewChart({
     script.type = "text/javascript";
     script.async = true;
     script.onerror = fail;
-    script.textContent = JSON.stringify({
+    script.innerHTML = JSON.stringify({
       autosize: true,
       symbol,
       interval: "60",
@@ -70,24 +78,30 @@ export function TradingViewChart({
       save_image: false,
       support_host: "https://www.tradingview.com",
     });
-    container.appendChild(script);
+    outer.appendChild(script);
 
     return () => {
       cancelled = true;
       observer.disconnect();
       window.clearTimeout(timeout);
-      container.replaceChildren();
+      // Drop everything TradingView created plus our script so a remount
+      // (symbol change, StrictMode) starts from a clean container.
+      script.remove();
+      widget.replaceChildren();
+      outer.querySelectorAll("iframe").forEach((el) => el.remove());
     };
   }, [symbol]);
 
   return (
-    <div className={`tradingview-widget-container relative ${className}`} data-status={status}>
+    <div className={`relative ${className}`} data-status={status}>
       <div
-        ref={containerRef}
-        className={`tradingview-widget-container__widget h-full w-full transition-opacity duration-500 ${
+        ref={container}
+        className={`tradingview-widget-container h-full w-full transition-opacity duration-500 ${
           status === "ready" ? "opacity-100" : "opacity-0"
         }`}
-      />
+      >
+        <div className="tradingview-widget-container__widget h-full w-full" />
+      </div>
 
       {status === "loading" && (
         <div role="status" aria-label="Loading chart" className="absolute inset-0 p-3">
