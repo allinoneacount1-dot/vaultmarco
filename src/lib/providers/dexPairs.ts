@@ -2,6 +2,7 @@ import { z } from "zod";
 import { type DataEnvelope, ProviderError, liveEnvelope } from "./envelope";
 import { fetchJson } from "./http";
 import { DexPairSchema, type DexPair } from "./schemas";
+import { sameAddress } from "@/lib/assetIdentity";
 
 export const DEXSCREENER_SOURCE = "dexscreener";
 const API_BASE = "https://api.dexscreener.com";
@@ -102,7 +103,8 @@ export type RealtimeRow = {
 export type Deps = { fetchJson: typeof fetchJson; now: () => number };
 const defaultDeps: Deps = { fetchJson, now: () => Date.now() };
 
-const eq = (a: string | undefined, b: string) => (a ?? "").toLowerCase() === b.toLowerCase();
+/** Chain slugs compare case-insensitively; addresses follow the asset identity rule. */
+const sameChain = (a: string | undefined, b: string) => (a ?? "").toLowerCase() === b.toLowerCase();
 
 /**
  * `/latest/dex/pairs/{chainId}/{pairAddress}` wraps its result, unlike the
@@ -122,9 +124,9 @@ const num = (v: number | undefined | null): number | null =>
  */
 export function validateCandidate(want: CanonicalPair, got: DexPair): boolean {
   return (
-    eq(got.chainId, want.chainId) &&
-    eq(got.baseToken?.address, want.baseAddress) &&
-    eq(got.quoteToken?.address, want.quoteAddress)
+    sameChain(got.chainId, want.chainId) &&
+    sameAddress(got.baseToken?.address, want.baseAddress) &&
+    sameAddress(got.quoteToken?.address, want.quoteAddress)
   );
 }
 

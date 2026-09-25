@@ -1,6 +1,7 @@
 import type { AdToken, AdType, BoostTier, BoostToken } from "@/components/marco/shared/types";
 import { type DataEnvelope, ProviderError, liveEnvelope } from "./envelope";
 import { fetchJson } from "./http";
+import { assetKey, canonicalAddressForKey } from "@/lib/assetIdentity";
 import {
   type DexAdItem,
   DexAdItemSchema,
@@ -39,9 +40,12 @@ export function normalizeChain(chain: string): string {
   return CHAIN_ID_MAP[chain.toLowerCase()] ?? chain.toLowerCase();
 }
 
-/** Stable identity for a crypto asset: chain + address, never symbol. */
+/**
+ * Stable identity for a crypto asset: chain + address, never symbol.
+ * Delegates to the single identity rule in lib/assetIdentity.
+ */
 export function tokenKey(chainId: string, tokenAddress: string): string {
-  return `${chainId.toLowerCase()}:${tokenAddress.toLowerCase()}`;
+  return assetKey(chainId, tokenAddress);
 }
 
 /**
@@ -109,8 +113,10 @@ export async function enrichTokensDetailed(
   const byChain = new Map<string, string[]>();
   for (const ref of refs) {
     const list = byChain.get(ref.chainId) ?? [];
-    const addr = ref.tokenAddress.toLowerCase();
-    if (!list.some((a) => a.toLowerCase() === addr)) list.push(ref.tokenAddress);
+    // Deduplicate by asset identity: EVM case variants collapse, case-distinct
+    // Solana/Base58 addresses stay distinct requests.
+    const addr = canonicalAddressForKey(ref.tokenAddress);
+    if (!list.some((a) => canonicalAddressForKey(a) === addr)) list.push(ref.tokenAddress);
     byChain.set(ref.chainId, list);
   }
 

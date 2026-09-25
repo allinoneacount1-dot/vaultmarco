@@ -1,6 +1,6 @@
 import type { AdToken, BoostToken } from "@/components/marco/shared/types";
 import { CANONICAL_PAIRS, type RealtimeRow } from "@/lib/providers/dexPairs";
-import { tokenKey } from "@/lib/providers/dexscreener";
+import { assetKey } from "@/lib/assetIdentity";
 import type { PairUniverse, RadarStatus } from "@/lib/providers/universe";
 import type { SnapshotHistory } from "@/lib/signals/history";
 import { type PairIntelligence, pairIntelligence } from "@/lib/signals/intelligence";
@@ -17,10 +17,9 @@ export type EntryPoint = "radar" | "boost" | "ad" | "realtime";
  * A reference to one token, built at the entry point from the record the row
  * already renders.
  *
- * `key` is the lowercase `chainId:baseAddress` used ONLY for lookup. Every
- * address that is displayed, copied or put in a link comes from `address` —
- * the provider's original value — because Solana addresses are case-sensitive
- * and must never be reconstructed from the lowercase key.
+ * `key` is the canonical asset key (lib/assetIdentity) used ONLY for lookup.
+ * Every address that is displayed, copied or put in a link comes from
+ * `address` — the provider's original value — never from the key.
  */
 export type TokenRef = {
   key: string;
@@ -48,7 +47,7 @@ export function refFromSnapshot(s: PairSnapshot): TokenRef {
 
 export function refFromBoost(t: BoostToken): TokenRef {
   return {
-    key: tokenKey(t.chainId, t.tokenAddress),
+    key: assetKey(t.chainId, t.tokenAddress),
     entry: "boost",
     chainId: t.chainId,
     address: t.tokenAddress,
@@ -60,7 +59,7 @@ export function refFromBoost(t: BoostToken): TokenRef {
 
 export function refFromAd(t: AdToken): TokenRef {
   return {
-    key: tokenKey(t.chainId, t.tokenAddress),
+    key: assetKey(t.chainId, t.tokenAddress),
     entry: "ad",
     chainId: t.chainId,
     address: t.tokenAddress,
@@ -80,7 +79,7 @@ export function refFromRealtime(row: RealtimeRow): TokenRef {
   const chainId = canonical?.chainId ?? row.chainId;
   const address = canonical?.baseAddress ?? row.pair?.baseToken.address ?? row.pairAddress;
   return {
-    key: tokenKey(chainId, address),
+    key: assetKey(chainId, address),
     entry: "realtime",
     chainId,
     address,
@@ -132,8 +131,8 @@ function sourceDetails(
   key: string,
   universe: PairUniverse | undefined,
 ): SourceDetail[] {
-  const boost = universe?.boosts?.data.find((b) => tokenKey(b.chainId, b.tokenAddress) === key);
-  const ad = universe?.ads?.data.find((a) => tokenKey(a.chainId, a.tokenAddress) === key);
+  const boost = universe?.boosts?.data.find((b) => assetKey(b.chainId, b.tokenAddress) === key);
+  const ad = universe?.ads?.data.find((a) => assetKey(a.chainId, a.tokenAddress) === key);
   return sources.map((source) => {
     if (source === "boost-latest" && boost) {
       // Boost units as the provider reports them (not USD).

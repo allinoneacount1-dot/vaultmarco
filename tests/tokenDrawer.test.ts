@@ -80,14 +80,14 @@ describe("stable identity from all four entry points", () => {
     expect(refFromRealtime(solRow).key).toBe(refFromSnapshot(solSnap).key);
   });
 
-  it("uses the lowercase key only for lookup; every ref keeps the provider's original address", async () => {
+  it("keys a Solana token by its exact address; every ref keeps the provider's original address", async () => {
     const u = await round(new SnapshotHistory());
     const snap = u.snapshots.find((s) => s.baseAddress === HONSE)!;
     const boost = u.boosts!.data.find((b) => b.tokenAddress === HONSE)!;
     for (const ref of [refFromSnapshot(snap), refFromBoost(boost)]) {
-      expect(ref.key).toBe(ref.key.toLowerCase());
-      expect(ref.address).toBe(HONSE); // mixed case preserved
-      expect(ref.address).not.toBe(ref.key.split(":")[1]);
+      expect(ref.key).toBe(`solana:${HONSE}`); // Base58 case preserved in the key
+      expect(ref.key).not.toBe(ref.key.toLowerCase());
+      expect(ref.address).toBe(HONSE); // and in the display/copy/link address
     }
     const solRow = (await fetchRealtimePairs(deps())).data.find((r) => r.key === "SOL/USDC")!;
     expect(refFromRealtime(solRow).address).toBe(WSOL);
