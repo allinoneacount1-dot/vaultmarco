@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Activity, ArrowUpRight } from "lucide-react";
 import { Panel } from "./Panel";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer } from "./SectionHeader";
 import { formatNumber } from "./shared/helpers";
@@ -9,10 +8,10 @@ import {
   CANONICAL_PAIRS,
   DEXSCREENER_SOURCE,
   dexToolsUrl,
-  fetchRealtimePairs,
   type RealtimeRow,
 } from "@/lib/providers/dexPairs";
-import { type DataEnvelope, type ProviderStatus, resolveEnvelope } from "@/lib/providers/envelope";
+import { type ProviderStatus, resolveEnvelope } from "@/lib/providers/envelope";
+import { useRealtimeQuery } from "@/hooks/usePairUniverse";
 
 type FeedStatus = "loading" | ProviderStatus;
 
@@ -44,16 +43,8 @@ function changeText(n: number | null): string {
 }
 
 function useRealtimePairs() {
-  const query = useQuery<DataEnvelope<RealtimeRow[]>>({
-    queryKey: ["dexRealtime", "screener"],
-    queryFn: () => fetchRealtimePairs(),
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-    retry: 1,
-    // Surface provider failure as an error rather than a paused query, so a
-    // stale payload can never keep a live label.
-    networkMode: "always",
-  });
+  // Fast lane (30 s); the pair universe reads the same cache entry.
+  const query = useRealtimeQuery();
 
   const envelope = resolveEnvelope({
     source: DEXSCREENER_SOURCE,
