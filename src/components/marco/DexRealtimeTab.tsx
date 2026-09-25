@@ -1,20 +1,11 @@
 import { useState } from "react";
 import { Activity, ArrowUpRight } from "lucide-react";
 import { Panel } from "./Panel";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer } from "./SectionHeader";
 import { formatNumber } from "./shared/helpers";
-import {
-  CANONICAL_PAIRS,
-  DEXSCREENER_SOURCE,
-  dexToolsUrl,
-  fetchRealtimePairs,
-  type RealtimeRow,
-} from "@/lib/providers/dexPairs";
-import { type DataEnvelope, type ProviderStatus, resolveEnvelope } from "@/lib/providers/envelope";
-
-type FeedStatus = "loading" | ProviderStatus;
+import { CANONICAL_PAIRS, dexToolsUrl, type RealtimeRow } from "@/lib/providers/dexPairs";
+import { type FeedStatus, useUniverseSlice } from "@/hooks/usePairUniverse";
 
 /** Identity-only rows: real pair identity, no market values claimed. */
 const IDENTITY_ROWS: RealtimeRow[] = CANONICAL_PAIRS.map((p) => ({
@@ -43,32 +34,13 @@ function changeText(n: number | null): string {
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
+/**
+ * The canonical pairs are resolved inside the shared pair-universe poll, so
+ * this panel no longer runs its own request loop.
+ */
 function useRealtimePairs() {
-  const query = useQuery<DataEnvelope<RealtimeRow[]>>({
-    queryKey: ["dexRealtime", "screener"],
-    queryFn: () => fetchRealtimePairs(),
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-    retry: 1,
-    // Surface provider failure as an error rather than a paused query, so a
-    // stale payload can never keep a live label.
-    networkMode: "always",
-  });
-
-  const envelope = resolveEnvelope({
-    source: DEXSCREENER_SOURCE,
-    previous: query.data,
-    isError: query.isError,
-    error: query.error,
-    fetchStatus: query.fetchStatus,
-    fetchFailureCount: query.failureCount,
-    fetchFailureReason: query.failureReason,
-  });
-
-  const status: FeedStatus =
-    query.isPending && !envelope ? "loading" : (envelope?.status ?? "offline");
-
-  return { rows: envelope?.data, status };
+  const { data, providerStatus } = useUniverseSlice((u) => u.realtime);
+  return { rows: data as RealtimeRow[] | undefined, status: providerStatus };
 }
 
 function notice(status: FeedStatus, unresolved: number): string | null {

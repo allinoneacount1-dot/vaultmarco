@@ -61,6 +61,16 @@ export const DexAdsResponseSchema = z.array(z.unknown());
  * Root: array of pair objects. Used to enrich boosts/ads with real
  * symbol, name, price, volume, liquidity and image.
  * ------------------------------------------------------------------ */
+/** Per-window buy/sell counts as the provider reports them. */
+const TxnWindowSchema = z
+  .object({ buys: z.number().finite().nonnegative(), sells: z.number().finite().nonnegative() })
+  .partial();
+
+/**
+ * The m5 / h1 / h6 windows below were already present in every verified
+ * response (see tests/fixtures/dexscreener.tokens.solana.json); they are read
+ * additively so existing consumers of the h24 fields are unaffected.
+ */
 export const DexPairSchema = z.object({
   chainId: z.string().min(1),
   dexId: z.string().optional(),
@@ -75,10 +85,34 @@ export const DexPairSchema = z.object({
     .object({ address: z.string().optional(), symbol: z.string().optional() })
     .optional(),
   priceUsd: z.string().optional(),
-  volume: z.object({ h24: z.number().finite().optional() }).partial().optional(),
-  priceChange: z.object({ h24: z.number().finite().optional() }).partial().optional(),
+  txns: z
+    .object({ m5: TxnWindowSchema, h1: TxnWindowSchema, h6: TxnWindowSchema, h24: TxnWindowSchema })
+    .partial()
+    .optional(),
+  volume: z
+    .object({
+      m5: z.number().finite().optional(),
+      h1: z.number().finite().optional(),
+      h6: z.number().finite().optional(),
+      h24: z.number().finite().optional(),
+    })
+    .partial()
+    .optional(),
+  priceChange: z
+    .object({
+      m5: z.number().finite().optional(),
+      h1: z.number().finite().optional(),
+      h6: z.number().finite().optional(),
+      h24: z.number().finite().optional(),
+    })
+    .partial()
+    .optional(),
   liquidity: z.object({ usd: z.number().finite().optional() }).partial().optional(),
+  fdv: z.number().finite().optional(),
   marketCap: z.number().finite().optional(),
+  /** Epoch ms of pool creation, as reported by the provider. */
+  pairCreatedAt: z.number().finite().optional(),
+  boosts: z.object({ active: z.number().finite().optional() }).partial().optional(),
   info: z.object({ imageUrl: z.string().optional() }).partial().optional(),
 });
 export type DexPair = z.infer<typeof DexPairSchema>;

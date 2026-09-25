@@ -2,7 +2,9 @@ import type { AdToken, AdType, BoostTier, BoostToken } from "@/components/marco/
 import { type DataEnvelope, ProviderError, liveEnvelope } from "./envelope";
 import { fetchJson } from "./http";
 import {
+  type DexAdItem,
   DexAdItemSchema,
+  type DexBoostItem,
   DexBoostItemSchema,
   DexPairSchema,
   type DexPair,
@@ -19,7 +21,7 @@ const ENRICH_BATCH_SIZE = 30;
  * few entries; enriching the highest-boosted slice keeps request count low
  * while guaranteeing every rendered row has real, provider-sourced identity.
  */
-const ENRICH_LIMIT = 12;
+export const ENRICH_LIMIT = 12;
 
 export type Deps = { fetchJson: typeof fetchJson; now: () => number };
 
@@ -142,22 +144,41 @@ function priceOrNull(priceUsd: string | undefined): number | null {
 /* ------------------------------------------------------------------ *
  * Token boosts
  * ------------------------------------------------------------------ */
+/** Raw boost list, highest cumulative boost first. */
+export async function fetchBoostItems(
+  endpoint: "latest" | "top" = "latest",
+  deps: Deps = defaultDeps,
+): Promise<{ ranked: DexBoostItem[]; dropped: number }> {
+  const url = `${API_BASE}/token-boosts/${endpoint}/v1`;
+  const raw = await deps.fetchJson(DEXSCREENER_SOURCE, url);
+  const { items, dropped } = parseItems(DEXSCREENER_SOURCE, raw, DexBoostItemSchema);
+  return { ranked: [...items].sort((a, b) => b.totalAmount - a.totalAmount), dropped };
+}
+
+/** The slice of a ranked list that gets enriched with pair data. */
+export function enrichRefs(
+  ranked: ReadonlyArray<{ chainId: string; tokenAddress: string }>,
+): Array<{ chainId: string; tokenAddress: string }> {
+  return ranked
+    .slice(0, ENRICH_LIMIT)
+    .map((r) => ({ chainId: r.chainId, tokenAddress: r.tokenAddress }));
+}
+
 export async function fetchTokenBoosts(
   endpoint: "latest" | "top" = "latest",
   deps: Deps = defaultDeps,
 ): Promise<DataEnvelope<BoostToken[]>> {
-  const url = `${API_BASE}/token-boosts/${endpoint}/v1`;
-  const raw = await deps.fetchJson(DEXSCREENER_SOURCE, url);
-  const { items, dropped } = parseItems(DEXSCREENER_SOURCE, raw, DexBoostItemSchema);
+  const { ranked, dropped } = await fetchBoostItems(endpoint, deps);
+  const index = await enrichTokens(enrichRefs(ranked), deps);
+  return liveEnvelope(DEXSCREENER_SOURCE, toBoostTokens(ranked, index), deps.now(), dropped);
+}
 
-  const ranked = [...items].sort((a, b) => b.totalAmount - a.totalAmount);
-  const toEnrich = ranked.slice(0, ENRICH_LIMIT);
-  const index = await enrichTokens(
-    toEnrich.map((b) => ({ chainId: b.chainId, tokenAddress: b.tokenAddress })),
-    deps,
-  );
-
-  const data: BoostToken[] = ranked.map((item) => {
+/** Map ranked boost items onto the UI record, using whatever pair data was enriched. */
+export function toBoostTokens(
+  ranked: readonly DexBoostItem[],
+  index: Map<string, DexPair>,
+): BoostToken[] {
+  return ranked.map((item) => {
     const pair = index.get(tokenKey(item.chainId, item.tokenAddress));
     return {
       id: tokenKey(item.chainId, item.tokenAddress),
@@ -178,26 +199,30 @@ export async function fetchTokenBoosts(
       url: item.url,
     };
   });
-
-  return liveEnvelope(DEXSCREENER_SOURCE, data, deps.now(), dropped);
 }
 
 /* ------------------------------------------------------------------ *
  * Ads
  * ------------------------------------------------------------------ */
-export async function fetchAds(deps: Deps = defaultDeps): Promise<DataEnvelope<AdToken[]>> {
+/** Raw ad list, newest first. */
+export async function fetchAdItems(
+  deps: Deps = defaultDeps,
+): Promise<{ ranked: DexAdItem[]; dropped: number }> {
   const url = `${API_BASE}/ads/latest/v1`;
   const raw = await deps.fetchJson(DEXSCREENER_SOURCE, url);
   const { items, dropped } = parseItems(DEXSCREENER_SOURCE, raw, DexAdItemSchema);
+  return { ranked: [...items].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)), dropped };
+}
 
-  const ranked = [...items].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
-  const toEnrich = ranked.slice(0, ENRICH_LIMIT);
-  const index = await enrichTokens(
-    toEnrich.map((a) => ({ chainId: a.chainId, tokenAddress: a.tokenAddress })),
-    deps,
-  );
+export async function fetchAds(deps: Deps = defaultDeps): Promise<DataEnvelope<AdToken[]>> {
+  const { ranked, dropped } = await fetchAdItems(deps);
+  const index = await enrichTokens(enrichRefs(ranked), deps);
+  return liveEnvelope(DEXSCREENER_SOURCE, toAdTokens(ranked, index), deps.now(), dropped);
+}
 
-  const data: AdToken[] = ranked.map((item) => {
+/** Map ranked ad items onto the UI record, using whatever pair data was enriched. */
+export function toAdTokens(ranked: readonly DexAdItem[], index: Map<string, DexPair>): AdToken[] {
+  return ranked.map((item) => {
     const pair = index.get(tokenKey(item.chainId, item.tokenAddress));
     const ts = Date.parse(item.date);
     return {
@@ -220,8 +245,6 @@ export async function fetchAds(deps: Deps = defaultDeps): Promise<DataEnvelope<A
       url: item.url,
     };
   });
-
-  return liveEnvelope(DEXSCREENER_SOURCE, data, deps.now(), dropped);
 }
 
 export { ProviderError };

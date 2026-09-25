@@ -11,6 +11,7 @@ import { Panel } from "@/components/marco/Panel";
 import { Activity, TrendingUp, Zap, Eye } from "lucide-react";
 import { DexRealtimeTab } from "@/components/marco/DexRealtimeTab";
 import { MarketChartPanel } from "@/components/marco/MarketChartPanel";
+import { AlphaRadarPanel } from "@/components/marco/AlphaRadarPanel";
 import { useTokenBoosts, useAds, type FeedStatus } from "@/hooks/useDexScreener";
 import { useGlobalStats } from "@/hooks/useGlobalStats";
 import { getTierColor, getAdTypeIcon, formatNumber, formatPrice2 } from "@/components/marco/shared/helpers";
@@ -251,6 +252,16 @@ const DashboardIndex = memo(function DashboardIndex() {
           transition={{ duration: 0.6, delay: 0.7 }}
         >
           <MarketChartPanel />
+        </motion.div>
+
+        {/* Alpha Radar (full width) */}
+        <motion.div
+          className="xl:col-span-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <AlphaRadarPanel />
         </motion.div>
       </div>
     </div>
