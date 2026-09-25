@@ -14,7 +14,8 @@ const EMBED_SRC = "https://s3.tradingview.com/external-embedding/embed-widget-ad
  * Follows TradingView's official React embed structure: the ref sits on the
  * outer `.tradingview-widget-container`, the embed script (with its JSON
  * config as text content) is appended to that outer element, and TradingView's
- * loader renders its iframe into the inner `.tradingview-widget-container__widget`.
+ * loader renders its iframe into the inner `.tradingview-widget-container__widget`,
+ * with TradingView's `.tradingview-widget-copyright` attribution kept below it.
  * Nothing about the chart is synthesized locally.
  */
 export function TradingViewChart({
@@ -94,24 +95,43 @@ export function TradingViewChart({
 
   return (
     <div className={`relative ${className}`} data-status={status}>
-      <div
-        ref={container}
-        className={`tradingview-widget-container h-full w-full transition-opacity duration-500 ${
-          status === "ready" ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <div className="tradingview-widget-container__widget h-full w-full" />
+      <div ref={container} className="tradingview-widget-container h-full w-full">
+        {/* Official layout: widget takes the container minus the 32px attribution row. */}
+        <div
+          className={`tradingview-widget-container__widget w-full h-[calc(100%-32px)] transition-opacity duration-500 ${
+            status === "ready" ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        {/* TradingView's required attribution — always rendered and visible,
+            styled with the panel's existing mono caption + gold link tokens. */}
+        <div className="tradingview-widget-copyright hairline-t flex h-8 items-center px-3 text-[10px] font-mono text-muted-foreground">
+          <a
+            href="https://www.tradingview.com/"
+            rel="noopener nofollow"
+            target="_blank"
+            className="text-(--gold) hover:text-(--bone) transition-colors"
+          >
+            <span className="blue-text">Track all markets on TradingView</span>
+          </a>
+        </div>
       </div>
 
       {status === "loading" && (
-        <div role="status" aria-label="Loading chart" className="absolute inset-0 p-3">
+        <div
+          role="status"
+          aria-label="Loading chart"
+          className="absolute inset-x-0 top-0 bottom-8 p-3"
+        >
           <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
           <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
         </div>
       )}
 
       {status === "error" && (
-        <div role="alert" className="absolute inset-0 flex items-center justify-center p-3">
+        <div
+          role="alert"
+          className="absolute inset-x-0 top-0 bottom-8 flex items-center justify-center p-3"
+        >
           <div className="text-[11px] text-muted-foreground text-center">
             Chart unavailable — TradingView could not be reached.{" "}
             <a
