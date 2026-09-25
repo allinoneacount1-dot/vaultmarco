@@ -104,10 +104,25 @@ function sortNewestFirst(items: WatchItem[]): WatchItem[] {
 }
 
 /**
- * Browser-local repository (versioned JSON in localStorage). Falls back to
- * memory when storage is unavailable or throws (private mode, quota), and
- * says so through `persistence()`. Other tabs' changes arrive through the
- * `storage` event.
+ * Browser-local repository (versioned JSON in localStorage).
+ *
+ * Write-safety model — one rule, held for the repository's whole lifetime:
+ *
+ *   `persistence` starts "local" only if storage exists and holds a missing,
+ *   corrupt or v1 payload. It becomes "memory" — PERMANENTLY — the moment
+ *   storage cannot be read, a write throws (quota / private mode), or a
+ *   payload from a NEWER version is seen (on load, on a storage event, or
+ *   just before a mutation). Nothing re-enables writing; a newer payload is
+ *   therefore never overwritten by this instance.
+ *
+ *   Every local mutation re-reads storage first and applies WATCH / UNWATCH
+ *   to the FRESH persisted items, not to this tab's possibly stale snapshot
+ *   (another tab may have written before its storage event arrived). So
+ *   mutations from several tabs compose in the order they happen: nothing is
+ *   dropped and nothing already removed is resurrected.
+ *
+ *   In memory mode the list keeps working for this tab and ignores storage
+ *   events (it can no longer interpret what is stored).
  */
 export function createLocalWatchlistRepository(
   storage: KeyValueStorage | null,
@@ -121,15 +136,29 @@ export function createLocalWatchlistRepository(
       return { items: [], writable: false };
     }
   };
-  let loaded = read();
-  let items: readonly WatchItem[] = loaded.items;
-  let persistence: WatchlistPersistence = storage && loaded.writable ? "local" : "memory";
+  const initial = read();
+  let items: readonly WatchItem[] = initial.items;
+  let persistence: WatchlistPersistence = storage && initial.writable ? "local" : "memory";
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((l) => l());
 
-  const commit = (next: WatchItem[]) => {
-    items = next;
-    if (persistence === "local") {
+  /**
+   * The base a mutation must apply to: the fresh persisted items while
+   * writing is safe; otherwise this tab's own list (and writing stops).
+   */
+  const mutationBase = (): readonly WatchItem[] => {
+    if (persistence !== "local") return items;
+    const fresh = read();
+    if (!fresh.writable) {
+      persistence = "memory";
+      return items;
+    }
+    return fresh.items;
+  };
+
+  /** Adopt `next` as the list, persisting it only while writing is still safe. */
+  const commit = (next: readonly WatchItem[], write: boolean) => {
+    if (write && persistence === "local") {
       try {
         storage!.setItem(
           WATCHLIST_STORAGE_KEY,
@@ -139,13 +168,21 @@ export function createLocalWatchlistRepository(
         persistence = "memory";
       }
     }
+    items = next;
     emit();
   };
 
   const onStorage = (e: Event) => {
     if ((e as StorageEvent).key !== WATCHLIST_STORAGE_KEY) return;
-    loaded = read();
-    items = loaded.items;
+    if (persistence !== "local") return;
+    const fresh = read();
+    if (!fresh.writable) {
+      // A newer (or unreadable) payload arrived: keep this tab's list, stop writing.
+      persistence = "memory";
+      emit();
+      return;
+    }
+    items = fresh.items;
     emit();
   };
 
@@ -153,14 +190,28 @@ export function createLocalWatchlistRepository(
     list: () => items,
     add: ({ chainId, address }) => {
       const key = assetKey(chainId, address);
-      if (items.some((i) => i.key === key)) return true;
-      if (items.length >= WATCHLIST_MAX_ITEMS) return false;
-      commit([{ key, chainId, address, addedAt: now() }, ...items]);
+      const base = mutationBase();
+      if (base.some((i) => i.key === key)) {
+        if (base !== items) commit(base, false); // adopt what another tab wrote
+        return true;
+      }
+      if (base.length >= WATCHLIST_MAX_ITEMS) {
+        if (base !== items) commit(base, false);
+        return false;
+      }
+      commit([{ key, chainId, address, addedAt: now() }, ...base], true);
       return true;
     },
     remove: (key) => {
-      if (!items.some((i) => i.key === key)) return;
-      commit(items.filter((i) => i.key !== key));
+      const base = mutationBase();
+      if (!base.some((i) => i.key === key)) {
+        if (base !== items) commit(base, false);
+        return;
+      }
+      commit(
+        base.filter((i) => i.key !== key),
+        true,
+      );
     },
     subscribe: (listener) => {
       if (listeners.size === 0) events?.addEventListener("storage", onStorage);

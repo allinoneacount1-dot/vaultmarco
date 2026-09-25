@@ -139,6 +139,137 @@ describe("local watchlist repository", () => {
   });
 });
 
+describe("cross-tab integrity (two tabs = two repositories over one storage)", () => {
+  const X = { chainId: "solana", address: HONSE };
+  const Y = { chainId: "ethereum", address: WETH };
+  const Z = { chainId: "base", address: "0x940181a94A35A4569E4529A3CDfB74e38FD98631" };
+  const keyOf = (t: { chainId: string; address: string }) => assetKey(t.chainId, t.address);
+  const persistedKeys = (s: ReturnType<typeof memoryStorage>) =>
+    (stored(s).items as Array<{ key: string }>).map((i) => i.key).sort();
+  const V2 = JSON.stringify({
+    version: 2,
+    items: [
+      { key: "solana:FromTheFuture", chainId: "solana", address: "FromTheFuture", addedAt: 9 },
+    ],
+    extra: { notUnderstoodByV1: true },
+  });
+
+  it("a NEWER version arriving AFTER init (storage event): memory mode, v2 bytes untouched", () => {
+    const s = memoryStorage();
+    const bus = eventBus();
+    const repo = createLocalWatchlistRepository(s, bus);
+    const off = repo.subscribe(() => {});
+    repo.add(X);
+    expect(repo.persistence()).toBe("local");
+
+    // Another tab (a newer MARCOVAULT) replaces the payload.
+    s.setItem(WATCHLIST_STORAGE_KEY, V2);
+    bus.fire(WATCHLIST_STORAGE_KEY);
+
+    expect(repo.persistence()).toBe("memory");
+    // v2 entries are not interpreted as v1; this tab keeps its own list.
+    expect(repo.list().map((i) => i.key)).toEqual([keyOf(X)]);
+
+    expect(repo.add(Y)).toBe(true); // WATCH works in memory
+    expect(repo.list().map((i) => i.key)).toEqual([keyOf(Y), keyOf(X)]);
+    repo.remove(keyOf(X)); // UNWATCH works in memory
+    expect(repo.list().map((i) => i.key)).toEqual([keyOf(Y)]);
+
+    expect(s.data.get(WATCHLIST_STORAGE_KEY)).toBe(V2); // byte-for-byte unchanged
+
+    // A later v1 write + event must not re-enable writing for this instance.
+    s.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify({ version: 1, items: [] }));
+    bus.fire(WATCHLIST_STORAGE_KEY);
+    expect(repo.persistence()).toBe("memory");
+    const before = s.data.get(WATCHLIST_STORAGE_KEY);
+    repo.add(Z);
+    expect(s.data.get(WATCHLIST_STORAGE_KEY)).toBe(before);
+    off();
+  });
+
+  it("a NEWER version written with NO event yet: the next WATCH / UNWATCH still never overwrites it", () => {
+    const s = memoryStorage();
+    const repo = createLocalWatchlistRepository(s);
+    repo.add(X);
+    s.setItem(WATCHLIST_STORAGE_KEY, V2); // event not delivered yet
+    expect(repo.add(Y)).toBe(true);
+    repo.remove(keyOf(X));
+    expect(s.data.get(WATCHLIST_STORAGE_KEY)).toBe(V2);
+    expect(repo.persistence()).toBe("memory");
+    expect(repo.list().map((i) => i.key)).toEqual([keyOf(Y)]);
+  });
+
+  it("lost-update race: A adds X, B (stale, no event) adds Y → both persisted", () => {
+    const s = memoryStorage();
+    const a = createLocalWatchlistRepository(s);
+    const b = createLocalWatchlistRepository(s);
+    expect([a.list(), b.list()]).toEqual([[], []]);
+    a.add(X);
+    b.add(Y); // B has not seen A's write
+    expect(persistedKeys(s)).toEqual([keyOf(X), keyOf(Y)].sort());
+    expect(
+      b
+        .list()
+        .map((i) => i.key)
+        .sort(),
+    ).toEqual([keyOf(X), keyOf(Y)].sort());
+  });
+
+  it("stale remove/add: mutations apply in call order to the persisted list", () => {
+    const s = memoryStorage();
+    const seed = createLocalWatchlistRepository(s);
+    seed.add(X);
+    seed.add(Y);
+    const a = createLocalWatchlistRepository(s);
+    const b = createLocalWatchlistRepository(s); // both see X + Y
+
+    a.remove(keyOf(X));
+    b.add(Z); // B still believes X is watched
+    expect(persistedKeys(s)).toEqual([keyOf(Y), keyOf(Z)].sort()); // X not resurrected
+
+    b.remove(keyOf(X)); // already gone: no-op, B adopts the persisted list
+    expect(persistedKeys(s)).toEqual([keyOf(Y), keyOf(Z)].sort());
+    expect(
+      b
+        .list()
+        .map((i) => i.key)
+        .sort(),
+    ).toEqual([keyOf(Y), keyOf(Z)].sort());
+
+    a.remove(keyOf(Z)); // A never saw Z locally, but it is persisted → removed
+    expect(persistedKeys(s)).toEqual([keyOf(Y)]);
+
+    b.add(Y); // already watched (idempotent): nothing duplicated
+    expect(persistedKeys(s)).toEqual([keyOf(Y)]);
+  });
+
+  it("quota failure mid-life: memory mode sticks; later storage events are ignored", () => {
+    const s = memoryStorage();
+    const bus = eventBus();
+    let failWrites = false;
+    const flaky = {
+      getItem: s.getItem,
+      setItem: (k: string, v: string) => {
+        if (failWrites) throw new Error("QuotaExceededError");
+        s.setItem(k, v);
+      },
+    };
+    const repo = createLocalWatchlistRepository(flaky, bus);
+    const off = repo.subscribe(() => {});
+    repo.add(X);
+    failWrites = true;
+    repo.add(Y);
+    expect(repo.persistence()).toBe("memory");
+    expect(repo.list().map((i) => i.key)).toEqual([keyOf(Y), keyOf(X)]);
+    failWrites = false;
+    s.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify({ version: 1, items: [] }));
+    bus.fire(WATCHLIST_STORAGE_KEY);
+    expect(repo.persistence()).toBe("memory");
+    expect(repo.list().map((i) => i.key)).toEqual([keyOf(Y), keyOf(X)]);
+    off();
+  });
+});
+
 describe("stored payload parsing (versioned)", () => {
   it("corrupt JSON or wrong shape → empty and writable", () => {
     expect(parseStoredWatchlist("{not json")).toEqual({ items: [], writable: true });

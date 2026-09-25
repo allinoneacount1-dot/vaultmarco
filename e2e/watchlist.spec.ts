@@ -262,6 +262,32 @@ test.describe("Smart Watchlist", () => {
     expect(problems).toEqual([]);
   });
 
+  test("two real tabs: each WATCHes a different token → both persisted, both tabs converge", async ({
+    context,
+  }) => {
+    const tabA = await context.newPage();
+    const tabB = await context.newPage();
+    const a = await setup(tabA);
+    const b = await setup(tabB); // both tabs are open with an empty watchlist
+    await openViaSearch(tabA, HONSE, `solana:${HONSE}`);
+    await watchButton(tabA).click();
+    await openViaSearch(tabB, WETH, `ethereum:${WETH.toLowerCase()}`);
+    await watchButton(tabB).click();
+    const keys = (await stored(tabA)).items.map((i: { key: string }) => i.key).sort();
+    expect(keys).toEqual([`ethereum:${WETH.toLowerCase()}`, `solana:${HONSE}`].sort());
+    for (const tab of [tabA, tabB]) {
+      await closeDrawer(tab);
+      await watchlistMode(tab).click();
+      await expect(tab.getByText("WATCHLIST · 2 TOKENS")).toBeVisible();
+    }
+    // UNWATCH in one tab reaches the other.
+    await watchRow(tabB, `solana:${HONSE}`).click();
+    await watchButton(tabB).click();
+    await closeDrawer(tabB);
+    await expect(watchRow(tabA, `solana:${HONSE}`)).toHaveCount(0);
+    expect([...a.problems, ...b.problems]).toEqual([]);
+  });
+
   for (const [w, h] of [
     [1440, 900],
     [768, 1024],
