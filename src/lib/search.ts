@@ -1,7 +1,7 @@
 import type { AdToken, BoostToken } from "@/components/marco/shared/types";
 import { canonicalAddressForKey, isEvmHexAddress } from "@/lib/assetIdentity";
 import { normalizeChain } from "@/lib/providers/dexscreener";
-import type { PairUniverse } from "@/lib/providers/universe";
+import type { PairUniverse, RadarStatus } from "@/lib/providers/universe";
 import type { PairSnapshot, UniverseSource } from "@/lib/signals/pairSnapshot";
 import { type TokenRef, refFromAd, refFromBoost, refFromSnapshot } from "@/lib/tokenDrawer";
 
@@ -12,10 +12,24 @@ import { type TokenRef, refFromAd, refFromBoost, refFromSnapshot } from "@/lib/t
  * snapshot history; it never fetches, never invents entries, and uses the
  * canonical `assetKey` identity, so a search result opens exactly the same
  * Token Intelligence Drawer model as any other entry point.
+ *
+ * Temporal truth follows the radar status (resolveRadarStatus), the same rule
+ * the Token Drawer uses: a universe round is CURRENT only when it is live or
+ * degraded. A stale fallback round stays searchable but is labelled STALE,
+ * and its radar signals are reported as the last observed signal, never as
+ * a signal of the current round. Offline / loading: nothing is current.
  */
 
-/** How much MARCOVAULT currently knows about an indexed token. */
-export type SearchState = "current" | "retained" | "identity";
+/**
+ * How much MARCOVAULT currently knows about an indexed token:
+ *   current  — in this round's universe (live or degraded)
+ *   stale    — in the last real round, carried forward while providers fail
+ *   retained — observed within the history window, not in the universe
+ *   identity — known from a feed record only (no observation)
+ */
+export type SearchState = "current" | "stale" | "retained" | "identity";
+
+export type RadarSignal = "EARLY MOMENTUM" | "LIQ REMOVED" | "LIQ ADDED";
 
 export type SearchEntry = {
   key: string;
@@ -28,15 +42,19 @@ export type SearchEntry = {
   symbol: string | null;
   name: string | null;
   sources: UniverseSource[];
-  /** Latest real observation, when there is one (current or retained). */
+  /** Latest real observation, when there is one (current, stale or retained). */
   snapshot: PairSnapshot | null;
-  /** The radar's own signal for this pair this round, if any. */
-  signal: "EARLY MOMENTUM" | "LIQ REMOVED" | "LIQ ADDED" | null;
+  /** For `current`: whether this round is fully live or degraded. */
+  round: "live" | "degraded" | null;
+  /** The radar's signal for this pair in the CURRENT round, if any. */
+  signal: RadarSignal | null;
+  /** For `stale`: the signal the last real round carried — not a current signal. */
+  lastSignal: RadarSignal | null;
 };
 
 type HistoryReader = { latestAll(): PairSnapshot[] };
 
-const STATE_ORDER: Record<SearchState, number> = { current: 0, retained: 1, identity: 2 };
+const STATE_ORDER: Record<SearchState, number> = { current: 0, stale: 1, retained: 2, identity: 3 };
 
 /**
  * Build the search index: every pair in the current universe, every pair
@@ -47,9 +65,10 @@ const STATE_ORDER: Record<SearchState, number> = { current: 0, retained: 1, iden
 export function buildSearchIndex(
   universe: PairUniverse | undefined,
   history: HistoryReader,
+  status: RadarStatus | "loading",
 ): SearchEntry[] {
   const out = new Map<string, SearchEntry>();
-  const signalFor = (key: string): SearchEntry["signal"] => {
+  const signalFor = (key: string): RadarSignal | null => {
     if (universe?.radar.momentum.some((m) => m.key === key)) return "EARLY MOMENTUM";
     const risk = universe?.radar.risk.find((e) => e.key === key);
     return risk ? (risk.direction === "REMOVED" ? "LIQ REMOVED" : "LIQ ADDED") : null;
@@ -64,10 +83,16 @@ export function buildSearchIndex(
     name: s.baseName,
     sources: s.sources,
     snapshot: s,
+    round: state === "current" && (status === "live" || status === "degraded") ? status : null,
     signal: state === "current" ? signalFor(s.key) : null,
+    lastSignal: state === "stale" ? signalFor(s.key) : null,
   });
 
-  for (const s of universe?.snapshots ?? []) out.set(s.key, fromSnapshot(s, "current"));
+  const roundState: SearchState | null =
+    status === "live" || status === "degraded" ? "current" : status === "stale" ? "stale" : null;
+  if (roundState) {
+    for (const s of universe?.snapshots ?? []) out.set(s.key, fromSnapshot(s, roundState));
+  }
   for (const s of history.latestAll()) {
     if (!out.has(s.key)) out.set(s.key, fromSnapshot(s, "retained"));
   }
@@ -84,7 +109,9 @@ export function buildSearchIndex(
       name: ref.name,
       sources: [source],
       snapshot: null,
+      round: null,
       signal: null,
+      lastSignal: null,
     });
   };
   for (const b of (universe?.boosts?.data ?? []) as BoostToken[])

@@ -24,7 +24,13 @@ const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 const TV = `(()=>{const s=document.currentScript;const w=s.parentElement.querySelector(".tradingview-widget-container__widget");const f=document.createElement("iframe");f.srcdoc="<body></body>";w.appendChild(f);})();`;
 
-type Setup = { duplicate?: boolean };
+type Setup = {
+  duplicate?: boolean;
+  /** honse gets a buyer-dominant 5-minute window, so the radar fires EARLY MOMENTUM. */
+  signal?: boolean;
+  /** Flip `down` to make every DexScreener endpoint fail (complete provider outage). */
+  provider?: { down: boolean };
+};
 
 async function setup(page: Page, opts: Setup = {}) {
   const problems: string[] = [];
@@ -39,9 +45,13 @@ async function setup(page: Page, opts: Setup = {}) {
     if (!r.url().startsWith("http://127.0.0.1")) requests.push(r.url());
   });
 
-  const tokens = opts.duplicate
+  let tokens = opts.duplicate
     ? TOKENS.map((p, i) => (i === 1 ? { ...p, baseToken: { ...p.baseToken, symbol: "honse" } } : p))
     : TOKENS;
+  if (opts.signal) {
+    tokens = structuredClone(tokens) as typeof TOKENS;
+    (tokens[0] as unknown as { txns: { m5: unknown } }).txns.m5 = { buys: 30, sells: 10 };
+  }
   await page.route("https://s3.tradingview.com/**", (r) =>
     r.fulfill({ contentType: "application/javascript", body: TV }),
   );
@@ -54,6 +64,7 @@ async function setup(page: Page, opts: Setup = {}) {
   }
   await page.route("https://api.dexscreener.com/**", (r) => {
     const u = r.request().url();
+    if (opts.provider?.down) return r.fulfill({ status: 503, body: "down" });
     const json = (x: unknown) =>
       r.fulfill({ contentType: "application/json", body: JSON.stringify(x) });
     if (u.includes("/token-boosts/")) return json(BOOSTS);
@@ -86,7 +97,17 @@ const trigger = (page: Page) => page.getByRole("button", { name: /search/i }).fi
  * return the request count to measure from.
  */
 async function freeze(page: Page, requests: string[]) {
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1_000));
+  // The page's Date.now() can trail the fake clock right after runFor(), so
+  // step the pause target forward until it lands in the future. Anything a
+  // fast-forward triggers settles below, before counting starts.
+  for (const ahead of [1_000, 10_000, 60_000]) {
+    try {
+      await page.clock.pauseAt(await page.evaluate((a) => Date.now() + a, ahead));
+      break;
+    } catch (e) {
+      if (!/past/.test(String(e)) || ahead === 60_000) throw e;
+    }
+  }
   // Startup retries of the (aborted) non-DEX providers may still be in
   // flight: wait until no new request has appeared for 1.5 s of real time.
   let seen = -1;
@@ -221,6 +242,113 @@ test.describe("Global Search / Cmd-K", () => {
       await expect(drawer(page)).toHaveCount(0);
       expect(n).toBeGreaterThanOrEqual(0);
     }
+    expect(problems).toEqual([]);
+  });
+
+  test("fast Enter: query A → immediately query B → Enter opens B, never A", async ({ page }) => {
+    const { problems } = await setup(page);
+    await openPalette(page);
+    await input(page).fill("honse");
+    await expect(options(page)).toHaveCount(1); // A is on screen
+    await input(page).fill("herba");
+    await page.keyboard.press("Enter"); // no wait between B and Enter
+    await expect(drawer(page)).toHaveAttribute("data-key", `solana:${HERBA}`);
+    await page.keyboard.press("Escape");
+    await expect(drawer(page)).toHaveCount(0);
+
+    // Harsher: replace the text and press Enter inside ONE task, before React
+    // can re-render — Enter must still follow the text the input holds.
+    await openPalette(page);
+    await input(page).fill("herba");
+    await expect(options(page)).toHaveCount(1); // A (herba) is on screen
+    await input(page).evaluate((el: HTMLInputElement) => {
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      set.call(el, "honse");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+      );
+    });
+    await expect(drawer(page)).toHaveAttribute("data-key", `solana:${HONSE}`);
+    expect(problems).toEqual([]);
+  });
+
+  test("unknown full address → immediate Enter opens nothing from the previous query", async ({
+    page,
+  }) => {
+    const { problems, requests } = await setup(page);
+    const before = await freeze(page, requests);
+    await openPalette(page);
+    await input(page).fill("honse");
+    await expect(options(page)).toHaveCount(1);
+    await input(page).fill("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
+    await page.keyboard.press("Enter");
+    await expect(drawer(page)).toHaveCount(0);
+    // Same-task variant: "honse" is rendered, then the address replaces it and
+    // Enter fires before React re-renders.
+    await input(page).fill("honse");
+    await expect(options(page)).toHaveCount(1);
+    await input(page).evaluate((el: HTMLInputElement) => {
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      set.call(el, "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+      );
+    });
+    await expect(palette(page)).toContainText("NOT IN CURRENT MARCOVAULT UNIVERSE");
+    await expect(palette(page)).toBeVisible();
+    await expect(drawer(page)).toHaveCount(0);
+    expect(requests.slice(before)).toEqual([]);
+    expect(problems).toEqual([]);
+  });
+
+  test("LIVE → complete provider failure → STALE while Search is open", async ({ page }) => {
+    test.setTimeout(240_000); // fake-clock rounds are slow to simulate
+    const provider = { down: false };
+    const { problems, requests } = await setup(page, { signal: true, provider });
+    await openPalette(page);
+    await input(page).fill("honse");
+    const row = palette(page).locator(`[data-key="solana:${HONSE}"]`);
+    await expect(palette(page).getByTestId("search-status")).toHaveText("UNIVERSE LIVE");
+    await expect(row).toBeVisible();
+    await expect(row.getByTestId("temporal")).toHaveCount(0); // current, live
+    await expect(row.getByText("EARLY MOMENTUM", { exact: true })).toBeVisible(); // fresh signal
+
+    // Every DexScreener endpoint fails from now on; let the normal polls run.
+    provider.down = true;
+    await expect
+      .poll(
+        async () => {
+          await page.clock.runFor(60_000); // one slow-lane round
+          return palette(page).getByTestId("search-status").textContent();
+        },
+        { timeout: 150_000 },
+      )
+      .toBe("UNIVERSE STALE");
+
+    // Still searchable, now visibly non-current; the old signal is history.
+    await expect(row).toBeVisible();
+    await expect(row.getByTestId("temporal")).toHaveText("STALE");
+    await expect(row.getByText("EARLY MOMENTUM", { exact: true })).toHaveCount(0);
+    await expect(row.getByTestId("last-signal")).toHaveText("LAST SIGNAL EARLY MOMENTUM");
+    await expect(row).toContainText("LIQ"); // last real market data kept
+    await input(page).fill("radar"); // radar = signals of the CURRENT round only
+    await expect(options(page)).toHaveCount(0);
+
+    // Typing while stale issues no request.
+    const before = await freeze(page, requests);
+    for (const q of ["h", "hon", "honse", HONSE, "solana", "boost"]) await input(page).fill(q);
+    expect(requests.slice(before)).toEqual([]);
+
+    // Search and Token Drawer agree.
+    await page.clock.resume();
+    await input(page).fill("honse");
+    await page.keyboard.press("Enter");
+    await expect(drawer(page)).toHaveAttribute("data-key", `solana:${HONSE}`);
+    await expect(drawer(page).getByTestId("status")).toHaveText("STALE");
+    await expect(drawer(page).getByTestId("signal-stale")).toBeVisible();
+    await expect(drawer(page).getByTestId("contract-address")).toHaveText(HONSE);
     expect(problems).toEqual([]);
   });
 

@@ -10,6 +10,7 @@ import {
   searchIndex,
   shortAddress,
 } from "@/lib/search";
+import { resolveRadarStatus } from "@/hooks/usePairUniverse";
 import { T0, snapshot } from "./signals/fixtures";
 
 /** Recorded mixed-case Solana address — its case is identity. */
@@ -86,7 +87,7 @@ function universe(snapshots: PairSnapshot[], extra: Partial<PairUniverse> = {}):
 }
 
 const ALL = [honse, weth, mixed, pepeSol, pepeEth, honsePrefix];
-const index = buildSearchIndex(universe(ALL), new SnapshotHistory());
+const index = buildSearchIndex(universe(ALL), new SnapshotHistory(), "live");
 const keys = (q: string) => searchIndex(index, q).results.map((r) => r.entry.key);
 
 describe("Global Search — matching", () => {
@@ -167,7 +168,10 @@ describe("Global Search — matching", () => {
       baseName: "Moon Dog",
       liquidityUsd: 1_000_000,
     });
-    const out = searchIndex(buildSearchIndex(universe([b, a]), new SnapshotHistory()), "moon");
+    const out = searchIndex(
+      buildSearchIndex(universe([b, a]), new SnapshotHistory(), "live"),
+      "moon",
+    );
     expect(out.results.map((r) => [r.entry.key, r.tier])).toEqual([
       [a.key, TIER.EXACT_NAME],
       [b.key, TIER.NAME_PREFIX],
@@ -219,6 +223,7 @@ describe("Global Search — matching", () => {
         },
       }),
       new SnapshotHistory(),
+      "live",
     );
     expect(searchIndex(withSignal, "radar").results.map((r) => r.entry.key)).toEqual([honse.key]);
     expect(searchIndex(withSignal, "radar").results[0].entry.signal).toBe("EARLY MOMENTUM");
@@ -238,7 +243,7 @@ describe("Global Search — matching", () => {
   });
 
   it("deterministic: same input → same order, independent of index order", () => {
-    const reversed = buildSearchIndex(universe([...ALL].reverse()), new SnapshotHistory());
+    const reversed = buildSearchIndex(universe([...ALL].reverse()), new SnapshotHistory(), "live");
     for (const q of ["", "pepe", "boost", "solana", "e"]) {
       const a = searchIndex(index, q).results.map((r) => r.entry.key);
       expect(searchIndex(index, q).results.map((r) => r.entry.key)).toEqual(a);
@@ -275,6 +280,7 @@ describe("Global Search — index", () => {
     const idx = buildSearchIndex(
       universe([honse], { boosts: { data: [boost, idOnly] } as never }),
       history,
+      "live",
     );
     const byKey = new Map(idx.map((e) => [e.key, e]));
     expect(idx).toHaveLength(3);
@@ -289,8 +295,107 @@ describe("Global Search — index", () => {
   });
 
   it("empty universe and empty history → empty index, no results", () => {
-    const idx = buildSearchIndex(undefined, new SnapshotHistory());
+    const idx = buildSearchIndex(undefined, new SnapshotHistory(), "offline");
     expect(idx).toEqual([]);
     expect(searchIndex(idx, "").results).toEqual([]);
+  });
+});
+
+describe("Global Search — temporal truth (same rule as radar + drawer)", () => {
+  const signalled = (status: PairUniverse["radarInputs"]["status"]) =>
+    universe(ALL, {
+      radar: {
+        momentum: [{ key: honse.key } as never],
+        risk: [],
+        universeSize: ALL.length,
+        historySince: T0,
+        observedAt: T0,
+      },
+      radarInputs: { status } as PairUniverse["radarInputs"],
+    });
+  const entry = (idx: ReturnType<typeof buildSearchIndex>, key: string) =>
+    idx.find((e) => e.key === key)!;
+
+  it("LIVE → current, fresh signal", () => {
+    const idx = buildSearchIndex(signalled("live"), new SnapshotHistory(), "live");
+    const e = entry(idx, honse.key);
+    expect([e.state, e.round, e.signal, e.lastSignal]).toEqual([
+      "current",
+      "live",
+      "EARLY MOMENTUM",
+      null,
+    ]);
+  });
+
+  it("DEGRADED → still the current round, labelled degraded", () => {
+    const idx = buildSearchIndex(signalled("degraded"), new SnapshotHistory(), "degraded");
+    const e = entry(idx, honse.key);
+    expect([e.state, e.round, e.signal]).toEqual(["current", "degraded", "EARLY MOMENTUM"]);
+  });
+
+  it("STALE → last real data stays searchable, non-current; carried signal is NOT a current signal", () => {
+    const idx = buildSearchIndex(signalled("stale"), new SnapshotHistory(), "stale");
+    const e = entry(idx, honse.key);
+    expect(e.state).toBe("stale");
+    expect(e.round).toBeNull();
+    expect(e.signal).toBeNull(); // not presented as fired this round
+    expect(e.lastSignal).toBe("EARLY MOMENTUM"); // kept, relabelled as history
+    expect(e.snapshot?.liquidityUsd).toBe(250_000); // last real data kept
+    expect(searchIndex(idx, "honse").results[0].entry.key).toBe(honse.key);
+    // "radar" finds only signals of the current round.
+    expect(searchIndex(idx, "radar").results).toEqual([]);
+  });
+
+  it("OFFLINE / LOADING → nothing is current; history is retained, never current", () => {
+    const history = new SnapshotHistory();
+    history.record([honse]);
+    for (const status of ["offline", "loading"] as const) {
+      const idx = buildSearchIndex(signalled("live"), history, status);
+      expect(idx.some((e) => e.state === "current" || e.state === "stale")).toBe(false);
+      expect(entry(idx, honse.key).state).toBe("retained");
+      expect(entry(idx, honse.key).signal).toBeNull();
+    }
+  });
+
+  it("stale entries rank below current ones, above retained", () => {
+    const history = new SnapshotHistory();
+    const gone = pair("solana", "Honz111111111111111111111111111111111111pump", {
+      baseSymbol: "HONSE",
+      observedAt: T0 - 60_000,
+    });
+    history.record([gone]);
+    const idx = buildSearchIndex(universe([honse]), history, "stale");
+    expect(searchIndex(idx, "honse").results.map((r) => r.entry.state)).toEqual([
+      "stale",
+      "retained",
+    ]);
+  });
+});
+
+describe("resolveRadarStatus — one rule for radar, drawer and search", () => {
+  const data = (status: PairUniverse["radarInputs"]["status"], n = 1) =>
+    universe(ALL.slice(0, n), { radarInputs: { status } as PairUniverse["radarInputs"] });
+  const q = (over: Partial<Parameters<typeof resolveRadarStatus>[0]>) =>
+    resolveRadarStatus({
+      data: undefined,
+      isPending: false,
+      isError: false,
+      fetchStatus: "idle",
+      failureCount: 0,
+      ...over,
+    });
+
+  it("round status passes through when the query is healthy", () => {
+    for (const s of ["live", "degraded", "stale", "offline"] as const)
+      expect(q({ data: data(s) })).toBe(s);
+  });
+  it("whole round failing keeps previous data as STALE, or OFFLINE if it had none", () => {
+    expect(q({ data: data("live"), isError: true })).toBe("stale");
+    expect(q({ data: data("live", 0), isError: true })).toBe("offline");
+    expect(q({ data: data("live"), fetchStatus: "paused", failureCount: 1 })).toBe("stale");
+  });
+  it("loading before any data; offline with no data", () => {
+    expect(q({ isPending: true })).toBe("loading");
+    expect(q({})).toBe("offline");
   });
 });

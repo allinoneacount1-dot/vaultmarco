@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useDeferredValue,
   useEffect,
   useId,
   useMemo,
@@ -8,15 +7,16 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { type QueryState, useQueryClient } from "@tanstack/react-query";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Search } from "lucide-react";
-import { PAIR_UNIVERSE_KEY, radarHistory } from "@/hooks/usePairUniverse";
+import { PAIR_UNIVERSE_KEY, radarHistory, resolveRadarStatus } from "@/hooks/usePairUniverse";
 import { useTokenDrawerActions } from "@/hooks/useTokenDrawer";
 import { formatNumber } from "@/components/marco/shared/helpers";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import type { PairUniverse } from "@/lib/providers/universe";
 import {
+  type RadarSignal,
   type SearchEntry,
   type SearchResult,
   TIER_LABEL,
@@ -71,12 +71,23 @@ export function GlobalSearch() {
   );
 }
 
+/** The active option: the chosen key if it is still listed, else the first result. */
+function activeIndex(results: readonly SearchResult[], key: string | null): number {
+  if (results.length === 0) return -1;
+  const i = results.findIndex((r) => r.entry.key === key);
+  return i >= 0 ? i : 0;
+}
+
 function isMac() {
   return typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 }
 
-/** The Pair Universe as cached right now; re-reads only while `active`. */
-function useCachedUniverse(active: boolean): PairUniverse | undefined {
+/**
+ * The Pair Universe query's cached state right now (data + fetch status);
+ * re-reads only while `active`. Reading the state — not just the data — lets
+ * Search apply the same temporal-truth rule as the radar and the drawer.
+ */
+function useCachedUniverseState(active: boolean): QueryState<PairUniverse> | undefined {
   const queryClient = useQueryClient();
   const subscribe = useCallback(
     (onChange: () => void) =>
@@ -89,7 +100,7 @@ function useCachedUniverse(active: boolean): PairUniverse | undefined {
   );
   return useSyncExternalStore(
     subscribe,
-    () => queryClient.getQueryData<PairUniverse>(PAIR_UNIVERSE_KEY),
+    () => queryClient.getQueryState<PairUniverse>(PAIR_UNIVERSE_KEY),
     () => undefined,
   );
 }
@@ -113,17 +124,24 @@ function SearchDialog({
   // opens after the palette releases focus — never two modals at once.
   const chosen = useRef<SearchEntry | null>(null);
 
-  const universe = useCachedUniverse(open);
-  // `radarHistory` is written in the same poll that replaces `universe`.
+  const state = useCachedUniverseState(open);
+  const status = resolveRadarStatus({
+    data: state?.data,
+    isPending: !state || state.status === "pending",
+    isError: state?.status === "error",
+    fetchStatus: state?.fetchStatus ?? "idle",
+    failureCount: state?.fetchFailureCount ?? 0,
+  });
+  // `radarHistory` is written in the same poll that replaces the universe.
   const index = useMemo(
-    () => (open ? buildSearchIndex(universe, radarHistory) : []),
-    [open, universe],
+    () => (open ? buildSearchIndex(state?.data, radarHistory, status) : []),
+    [open, state?.data, status],
   );
-  const deferred = useDeferredValue(query);
-  const outcome = useMemo(() => searchIndex(index, deferred), [index, deferred]);
+  // Results derive synchronously from the SAME query the input shows — no
+  // deferred copy — so the list, the active option and Enter always agree.
+  const outcome = useMemo(() => searchIndex(index, query), [index, query]);
   const { results } = outcome;
-  const found = results.findIndex((r) => r.entry.key === activeKey);
-  const active = results.length === 0 ? -1 : found >= 0 ? found : 0;
+  const active = activeIndex(results, activeKey);
   const optionId = (i: number) => `${id}-option-${i}`;
 
   useEffect(() => {
@@ -144,9 +162,13 @@ function SearchDialog({
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       move(e.key === "ArrowDown" ? 1 : -1);
-    } else if (e.key === "Enter" && active >= 0) {
+    } else if (e.key === "Enter") {
       e.preventDefault();
-      choose(results[active].entry);
+      // Re-derive from the input's live text at the moment of the keypress, so
+      // Enter can never act on a list rendered for an earlier query.
+      const live = searchIndex(index, e.currentTarget.value).results;
+      const i = activeIndex(live, activeKey);
+      if (i >= 0) choose(live[i].entry);
     }
   };
 
@@ -222,7 +244,7 @@ function SearchDialog({
                 id={optionId(i)}
                 result={r}
                 active={i === active}
-                showMatch={deferred.trim() !== ""}
+                showMatch={query.trim() !== ""}
                 duplicate={outcome.duplicateSymbols.has(r.entry.symbol?.toLowerCase() ?? "")}
                 onHover={() => setActiveKey(r.entry.key)}
                 onSelect={() => choose(r.entry)}
@@ -251,7 +273,15 @@ function SearchDialog({
               {results.length < outcome.total
                 ? `${results.length} OF ${outcome.total}`
                 : `${outcome.total} RESULT${outcome.total === 1 ? "" : "S"}`}{" "}
-              · {index.length} INDEXED
+              · {index.length} INDEXED ·{" "}
+              <span
+                data-testid="search-status"
+                className={
+                  status === "live" ? "text-(--gold)" : status === "offline" ? "text-(--down)" : ""
+                }
+              >
+                {status === "loading" ? "LOADING" : `UNIVERSE ${status.toUpperCase()}`}
+              </span>
             </span>
             <span className="hidden sm:inline">↑↓ SELECT · ↵ OPEN · ESC CLOSE</span>
           </div>
@@ -261,7 +291,7 @@ function SearchDialog({
   );
 }
 
-const SIGNAL_TONE: Record<NonNullable<SearchEntry["signal"]>, string> = {
+const SIGNAL_TONE: Record<RadarSignal, string> = {
   "EARLY MOMENTUM": "text-(--gold)",
   "LIQ REMOVED": "text-(--down)",
   "LIQ ADDED": "text-(--up)",
@@ -314,8 +344,13 @@ function ResultRow({
               {shortAddress(e.address)}
             </span>
           )}
-          {e.state !== "current" && <span>{e.state === "retained" ? "RETAINED" : "ID ONLY"}</span>}
+          <TemporalLabel entry={e} />
           {e.signal && <span className={SIGNAL_TONE[e.signal]}>{e.signal}</span>}
+          {e.lastSignal && (
+            // A signal carried by the stale fallback round: shown as history,
+            // untinted, never as a signal of the current round.
+            <span data-testid="last-signal">LAST SIGNAL {e.lastSignal}</span>
+          )}
           {showMatch && <span className="hidden sm:inline">{TIER_LABEL[result.tier]}</span>}
         </div>
       </div>
@@ -333,6 +368,26 @@ function ResultRow({
         </div>
       )}
     </li>
+  );
+}
+
+/** The row's temporal truth — the same states the Token Drawer reports. */
+function TemporalLabel({ entry }: { entry: SearchEntry }) {
+  const [text, tone] =
+    entry.state === "current"
+      ? entry.round === "degraded"
+        ? ["DEGRADED", "text-(--champagne)"]
+        : [null, ""]
+      : entry.state === "stale"
+        ? ["STALE", "text-(--champagne)"]
+        : entry.state === "retained"
+          ? ["NOT IN CURRENT UNIVERSE", ""]
+          : ["ID ONLY", ""];
+  if (!text) return null;
+  return (
+    <span data-testid="temporal" className={tone}>
+      {text}
+    </span>
   );
 }
 

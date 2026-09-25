@@ -128,33 +128,47 @@ export function useRealtimeQuery() {
   return useQuery<DataEnvelope<RealtimeRow[]>>(realtimeQueryOptions);
 }
 
+/** The parts of the universe query's state the radar status depends on. */
+export type UniverseQueryState = {
+  data: PairUniverse | undefined;
+  isPending: boolean;
+  isError: boolean;
+  fetchStatus: "fetching" | "paused" | "idle";
+  failureCount: number;
+};
+
 /**
- * Alpha Radar with its own aggregate status (see RadarStatus). When the whole
- * slow-lane round fails, react-query keeps the previous round: that is
- * reported as `stale`, or `offline` if there was none.
+ * Radar status from the universe query — the single temporal-truth rule shared
+ * by Alpha Radar, the Token Drawer and Global Search. When the whole slow-lane
+ * round fails, react-query keeps the previous round: that is `stale`, or
+ * `offline` if there was none. Otherwise the round's own status
+ * (live / degraded / stale fallback / offline).
  */
+export function resolveRadarStatus(q: UniverseQueryState): RadarStatus | "loading" {
+  const failing = q.isError || (q.fetchStatus === "paused" && q.failureCount > 0);
+  if (q.isPending && !q.data) return "loading";
+  if (!q.data) return "offline";
+  if (failing) return q.data.snapshots.length > 0 ? "stale" : "offline";
+  return q.data.radarInputs.status;
+}
+
+/** Alpha Radar with its own aggregate status (see resolveRadarStatus). */
 export function useRadar(): {
   status: RadarStatus | "loading";
   universe: PairUniverse | undefined;
   inputs: RadarInputs | undefined;
 } {
   const query = usePairUniverseQuery();
-  const failing =
-    query.isError || (query.fetchStatus === "paused" && (query.failureCount ?? 0) > 0);
-  if (query.isPending && !query.data)
-    return { status: "loading", universe: undefined, inputs: undefined };
-  if (!query.data) return { status: "offline", universe: undefined, inputs: undefined };
-  if (failing) {
-    const usable = query.data.snapshots.length > 0;
-    return {
-      status: usable ? "stale" : "offline",
-      universe: query.data,
-      inputs: query.data.radarInputs,
-    };
-  }
+  const status = resolveRadarStatus({
+    data: query.data,
+    isPending: query.isPending,
+    isError: query.isError,
+    fetchStatus: query.fetchStatus,
+    failureCount: query.failureCount ?? 0,
+  });
   return {
-    status: query.data.radarInputs.status,
+    status,
     universe: query.data,
-    inputs: query.data.radarInputs,
+    inputs: query.data?.radarInputs,
   };
 }
