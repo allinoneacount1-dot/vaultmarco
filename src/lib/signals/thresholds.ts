@@ -7,6 +7,10 @@
  * recalibrated later from recorded signal history without touching the rules.
  *
  * Nothing here is a score weight. There is no composite score.
+ *
+ * Signal History versions its records by these numbers AND by an explicit
+ * semantic revision: if you change what a rule MEANS (not just a number),
+ * bump `HISTORY_RULESET_REVISION` in `lib/history/constants.ts`.
  */
 
 /* ------------------------------------------------------------------ *

@@ -1,5 +1,5 @@
 import * as thresholds from "@/lib/signals/thresholds";
-import { ROUND_INTERVAL_MS } from "./constants";
+import { HISTORY_RULESET_REVISION, ROUND_INTERVAL_MS } from "./constants";
 import type { SignalType } from "./model";
 import { sha256Hex } from "./sha256";
 
@@ -19,20 +19,25 @@ export function roundKey(ms: number): string {
 }
 
 /**
- * Hash of every exported threshold constant (sorted by name). Any change to a
- * rule's numbers gives a new version, so episodes and events from different
+ * Persisted rules version: hash of the explicit semantic revision
+ * (`HISTORY_RULESET_REVISION`, bumped by hand when a rule's MEANING changes)
+ * and every exported numeric threshold constant (sorted by name, so any
+ * change to a rule's numbers also counts). Events and episodes from different
  * rule sets are never merged.
  */
 export function rulesVersion(): string {
   return rulesVersionOf(thresholds);
 }
 
-/** Version of an arbitrary set of numeric rule constants. */
-export function rulesVersionOf(constants: Record<string, unknown>): string {
+/** Version of an arbitrary set of numeric rule constants under a semantic revision. */
+export function rulesVersionOf(
+  constants: Record<string, unknown>,
+  revision: number = HISTORY_RULESET_REVISION,
+): string {
   const entries = Object.entries(constants)
     .filter(([, v]) => typeof v === "number")
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  return "rv_" + sha256Hex(JSON.stringify(entries)).slice(0, 16);
+  return "rv_" + sha256Hex(JSON.stringify({ revision, thresholds: entries })).slice(0, 16);
 }
 
 /** Event id: sha256(rulesVersion | assetKey | type | openedRound). */

@@ -7,46 +7,15 @@ import {
 } from "@/lib/history/constants";
 import { outcomeKey } from "@/lib/history/duePlanner";
 import { roundKey } from "@/lib/history/ids";
-import { MemoryRecorderStore } from "@/lib/history/memoryStore";
-import { runRound, type RecorderDeps } from "@/lib/history/recorder";
-import {
-  HONSE,
-  HONSE_KEY,
-  HONSE_PAIR,
-  MIN,
-  T0,
-  clock,
-  fixtureHttp,
-  noSleep,
-  type Scenario,
-} from "./helpers";
+import type { MemoryRecorderStore } from "@/lib/history/memoryStore";
+import { runRound } from "@/lib/history/recorder";
+import { HONSE, HONSE_KEY, HONSE_PAIR, MIN, T0, harness } from "./helpers";
 
 /**
  * Full recorder rounds through the EXISTING engine (fetchRealtimePairs →
  * fetchPairUniverse → radar) over recorded DexScreener fixtures, against the
  * in-memory store that enforces the same invariants as the planned schema.
  */
-
-function harness(initial: Scenario = {}) {
-  const store = new MemoryRecorderStore();
-  const c = clock();
-  let scenario: Scenario = initial;
-  const log: string[] = [];
-  let n = 0;
-  const deps = (): RecorderDeps => ({
-    store,
-    http: fixtureHttp(() => scenario, log),
-    now: c.now,
-    owner: `w${++n}`,
-    sleep: noSleep,
-  });
-  /** Run the round scheduled at minute m; the sample is taken `lagMs` into the minute (default 2 s). */
-  const at = async (m: number, lagMs = 2_000) => {
-    c.set(T0 + m * MIN + lagMs);
-    return runRound(T0 + m * MIN, deps());
-  };
-  return { store, clock: c, log, deps, at, set: (s: Scenario) => (scenario = s) };
-}
 
 const momentum = (store: MemoryRecorderStore) =>
   [...store.episodes.values()].filter(

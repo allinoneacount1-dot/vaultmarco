@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   EXIT_NEGATIVE_STREAK,
+  HISTORY_RULESET_REVISION,
   MAX_NEGATIVE_GAP_MS,
   OUTCOME_TOLERANCE_MS,
   ROUND_LEASE_MS,
@@ -51,6 +52,20 @@ describe("identities", () => {
     expect(rulesVersion()).toBe(rulesVersion());
     expect(rulesVersion()).toBe(rulesVersionOf({ ...thresholds }));
     expect(rulesVersionOf({ ...thresholds, VA_MIN: 3.1 })).not.toBe(rulesVersion());
+  });
+
+  it("rules version includes the explicit semantic revision", () => {
+    const r = HISTORY_RULESET_REVISION;
+    // Same revision + same thresholds → exactly the same version (and compact).
+    expect(rulesVersionOf({ ...thresholds }, r)).toBe(rulesVersion());
+    expect(rulesVersion()).toMatch(/^rv_[0-9a-f]{16}$/);
+    // Same revision, one threshold changed → different.
+    expect(rulesVersionOf({ ...thresholds, BP_MIN: 1.6 }, r)).not.toBe(rulesVersion());
+    // Identical thresholds, semantic revision changed → different.
+    expect(rulesVersionOf({ ...thresholds }, r + 1)).not.toBe(rulesVersion());
+    // Order of the constants never matters.
+    const reversed = Object.fromEntries(Object.entries(thresholds).reverse());
+    expect(rulesVersionOf(reversed, r)).toBe(rulesVersion());
   });
 });
 
