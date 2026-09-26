@@ -2,11 +2,25 @@ import { useEffect, useState, memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Home, Menu, X, ArrowLeft } from "lucide-react";
+import { useFocusAsset } from "@/hooks/useFocusAsset";
+import { Home, Menu, X, ArrowLeft, type LucideIcon } from "lucide-react";
 import { Logo } from "./Logo";
+import { INTELLIGENCE_FEATURES } from "./intelligence/features";
 import { DUR, EASE } from "@/lib/motion";
 
-const sidebarLinks = [{ label: "Overview", href: "/dashboard", icon: Home }];
+/**
+ * OVERVIEW, then the six intelligence views directly under it. The views
+ * carry the selected asset (?chain&address&pair) from one to the next.
+ */
+const sidebarLinks: { label: string; href: string; icon: LucideIcon; carriesFocus: boolean }[] = [
+  { label: "Overview", href: "/dashboard", icon: Home, carriesFocus: false },
+  ...INTELLIGENCE_FEATURES.map((f) => ({
+    label: f.label,
+    href: f.path,
+    icon: f.icon,
+    carriesFocus: true,
+  })),
+];
 
 /**
  * Icons sit on a fixed 26 px inset in both states, so collapsing (256 → 68 px)
@@ -28,6 +42,7 @@ function DashboardSidebarComponent({
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const { search: focusSearch } = useFocusAsset();
 
   // Escape closes the mobile drawer.
   useEffect(() => {
@@ -37,10 +52,11 @@ function DashboardSidebarComponent({
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileOpen]);
 
+  // OVERVIEW is active on /dashboard exactly; a view on its own path (or below it).
   const isActive = (href: string) =>
     href === "/dashboard"
       ? location.pathname === "/dashboard" || location.pathname === "/dashboard/"
-      : location.pathname.startsWith(href);
+      : location.pathname === href || location.pathname.startsWith(`${href}/`);
 
   return (
     <>
@@ -118,6 +134,10 @@ function DashboardSidebarComponent({
               <Link
                 key={l.href}
                 to={l.href}
+                search={l.carriesFocus ? focusSearch : undefined}
+                // The router's own active matching is fuzzy (/dashboard would stay
+                // "active" under every view); OVERVIEW matches its path exactly.
+                activeOptions={{ exact: l.href === "/dashboard", includeSearch: false }}
                 onClick={() => setMobileOpen(false)}
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? l.label : undefined}
