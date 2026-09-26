@@ -59,6 +59,25 @@ At the upper-bound load, the 500 MB Free database tier is **not appropriate** fo
 - **Not done:** the target was not met by removing audit evidence.
 - **Remaining legitimate savings are small.** For example, bigint surrogate keys for the child tables would save roughly 8%. That still does not reach 50%.
 
+## Mapping to the Step B schema (not re-measured)
+
+`supabase/migrations/20260926120000_signal_history_recorder.sql` is the production schema. It keeps
+this benchmark's layout (the same tables, keys, indexes and insert-only typed outcomes), with these
+differences:
+
+| Change in Step B | Approximate storage effect |
+|---|---|
+| `signal_event.opened_round` added (scheduled minute; `opened_at` is now the real observation time) | +8 B per event |
+| `signal_outcome.window_end_at` added | +40 B per event (5 outcomes) |
+| `signal_round.started_at`, `duration_ms` added | +12 B per round (≈ 0.5 MB per 30 days) |
+| `engine.snapshot_round.observed_at` renamed `scheduled_at` | none |
+| Real `rules_version` is 19 characters; this replay writes `'rv_bench'` (8) | +22 B per event, ≈ 0.5 MB per 30-day round log |
+| `ops.invocation_daily` (one row per day per result) | negligible |
+
+That is about 70 B per event (≈ 1.6%) plus about 1 MB of round log. The benchmark was not re-run for
+this, and its result above stands unchanged. It measures the **tables only**: the Supabase platform
+baseline (system schemas, extensions) is **not** included and is measured in B0.
+
 ## Run
 
 ```bash
