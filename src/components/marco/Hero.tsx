@@ -46,7 +46,7 @@ export function Hero() {
             operators who trade signal, not noise.
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <a
               href="https://t.me/DxmZone"
               target="_blank"
@@ -55,9 +55,11 @@ export function Hero() {
             >
               JOIN THE VAULT
             </a>
+            {/* Secondary: smoked optical glass over the 3D stage — quieter than
+                the solid chrome primary beside it. */}
             <Link
               to="/dashboard"
-              className="gold-hairline-b px-1 py-3.5 whitespace-nowrap font-mono text-[11px] tracking-[0.18em] text-(--bone) transition-colors duration-300 hover:text-(--gold)"
+              className="mv-glass mv-glass-float px-4 py-[13px] whitespace-nowrap sm:px-6 font-mono text-[11px] tracking-[0.18em] text-(--bone)"
             >
               OPEN DASHBOARD
             </Link>

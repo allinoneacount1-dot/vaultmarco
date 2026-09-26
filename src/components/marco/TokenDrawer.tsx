@@ -119,7 +119,7 @@ export function TokenDrawer() {
               : "inset-y-0 right-0 h-full w-full border-l border-(--hairline-strong) sm:max-w-md data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right"
           }`}
         >
-          <SheetClose className="absolute right-3 top-3 z-10 grid size-8 cursor-pointer place-items-center rounded-sm text-(--muted-2) transition-colors duration-(--dur-micro) hover:bg-(--panel-2) hover:text-(--bone) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)">
+          <SheetClose className="mv-glass-icon absolute right-3 top-3 z-10 grid size-8 place-items-center text-(--muted-2)">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </SheetClose>
@@ -575,11 +575,12 @@ function SourcesSection({ model }: { model: DrawerModel }) {
 }
 
 const ACTION_BASE =
-  "inline-flex min-h-9 items-center gap-1.5 rounded-sm px-3 font-mono text-[11px] tracking-[0.06em] transition-colors duration-(--dur-micro) ease-(--ease-snap) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)";
-/** Internal actions (state changes inside MARCOVAULT): solid hairline control. */
-const ACTION = `${ACTION_BASE} hairline text-muted-foreground hover:bg-(--panel-2) hover:text-(--bone)`;
+  "inline-flex min-h-9 items-center gap-1.5 px-3 font-mono text-[11px] tracking-[0.06em]";
+/** Internal actions (state changes inside MARCOVAULT): optical-glass control;
+    the engaged state (aria-pressed) takes the champagne edge from styles.css. */
+const ACTION = `${ACTION_BASE} mv-glass text-(--muted-2)`;
 /** External links (leave MARCOVAULT): quieter text link with an outbound mark. */
-const LINK = `${ACTION_BASE} text-(--muted-2) underline-offset-4 hover:text-(--gold) hover:underline`;
+const LINK = `${ACTION_BASE} rounded-sm text-(--muted-2) underline-offset-4 transition-colors duration-(--dur-micro) ease-(--ease-snap) hover:text-(--gold) hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)`;
 
 function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnapshot | null }) {
   const [copy, setCopy] = useState<"idle" | "copied" | "failed">("idle");
@@ -620,7 +621,7 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
           type="button"
           onClick={onWatch}
           aria-pressed={watched}
-          className={watched ? `${ACTION} border-(--gold)/40 text-(--gold)!` : ACTION}
+          className={watched ? `${ACTION} text-(--gold)!` : ACTION}
           data-testid="watch"
         >
           {watched ? (

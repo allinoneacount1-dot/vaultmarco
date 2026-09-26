@@ -91,6 +91,36 @@
   /* Machined top edge on base panels: a 1 px light catch, not a glow. */
   --panel-edge: inset 0 1px 0 rgba(232, 230, 225, 0.035);
 
+  /* Optical glass — an ACCENT material for interactive instruments only
+     (secondary CTAs, icon / utility controls, search, segmented rails, palette).
+     Smoked glass over black metal: a dark translucent body, a thin neutral edge,
+     one inner top catch, a dark contact shadow. Gold marks focus / selected
+     only. Never on panels, cards, rows, feeds or tables. Depth ladder:
+     void < panel < glass control < elevated glass (palette). */
+  --glass-bg: rgba(16, 17, 20, 0.62);
+  --glass-bg-hover: rgba(24, 25, 29, 0.7);
+  --glass-bg-press: rgba(10, 11, 13, 0.8);
+  --glass-bg-elevated: rgba(17, 18, 21, 0.92);
+  --glass-rail: rgba(5, 5, 6, 0.55); /* recessed segmented track */
+  --glass-key: #212226; /* solid selected segment */
+  --glass-border: rgba(232, 230, 225, 0.1);
+  --glass-border-hover: rgba(232, 230, 225, 0.17);
+  --glass-edge-selected: rgba(194, 168, 120, 0.55);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --glass-highlight-hover: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  --glass-inner: inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 14px -8px rgba(0, 0, 0, 0.7);
+  /* Specular: a thin light catch along the top edge; it travels a short way on
+     hover / focus only (background-position — no loop, no JS). */
+  --glass-specular: linear-gradient(
+    90deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 70%
+  );
+  --glass-blur: 14px;
+  --glass-blur-elevated: 18px;
+
   /* Chrome ramp — sampled from marcovault-logo.png, do not invent stops */
   --chrome-1: #ffffff;
   --chrome-2: #f8f6f0;
@@ -333,6 +363,160 @@
     border: 1px solid var(--hairline);
     box-shadow: var(--panel-edge);
   }
+  /* — Optical glass controls (tokens in :root) — */
+  /* Control: secondary CTA / utility / icon button. Material and state only —
+     layout stays in the component's classes. No backdrop blur by default: most
+     controls sit on solid metal, where blur buys nothing; add .mv-glass-float
+     only where live content (3D, scrolling data) is behind. */
+  .mv-glass,
+  .mv-glass-icon {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background:
+      var(--glass-specular) 25% 0 / 220% 1px no-repeat,
+      var(--glass-bg);
+    box-shadow: var(--glass-highlight), var(--glass-inner), var(--glass-shadow);
+    cursor: pointer;
+    transition:
+      color var(--dur-micro) var(--ease-snap),
+      background-color var(--dur-micro) var(--ease-snap),
+      border-color var(--dur-micro) var(--ease-snap),
+      box-shadow var(--dur-micro) var(--ease-snap),
+      background-position var(--dur-standard) var(--ease-snap),
+      transform 90ms var(--ease-snap);
+  }
+  /* Hover only where a real pointer hovers — touch never sticks in hover. */
+  @media (hover: hover) {
+    .mv-glass:hover,
+    .mv-glass-icon:hover {
+      background-color: var(--glass-bg-hover);
+      background-position: 55% 0;
+      border-color: var(--glass-border-hover);
+      box-shadow: var(--glass-highlight-hover), var(--glass-inner), var(--glass-shadow);
+      color: var(--bone);
+    }
+  }
+  /* Press: mechanically seated — denser, a hair smaller, no bounce. */
+  .mv-glass:active,
+  .mv-glass-icon:active {
+    background-color: var(--glass-bg-press);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.5),
+      var(--glass-inner);
+    color: var(--bone);
+    transform: scale(0.985);
+  }
+  /* Focus must never depend on transparency: gold edge + gold outline. */
+  .mv-glass:focus-visible,
+  .mv-glass-icon:focus-visible {
+    outline: 1px solid var(--gold);
+    outline-offset: 2px;
+    border-color: var(--glass-edge-selected);
+    background-position: 55% 0;
+    color: var(--bone);
+  }
+  /* Selected / engaged (e.g. WATCHING): champagne edge, no glow. */
+  .mv-glass[aria-pressed="true"] {
+    border-color: var(--glass-edge-selected);
+    box-shadow:
+      var(--glass-highlight),
+      inset 0 -1px 0 rgba(194, 168, 120, 0.22),
+      var(--glass-shadow);
+  }
+  .mv-glass:disabled,
+  .mv-glass[aria-disabled="true"],
+  .mv-glass-icon:disabled {
+    cursor: not-allowed;
+    background: var(--graphite);
+    border-color: var(--hairline);
+    box-shadow: none;
+    color: var(--faint);
+    transform: none;
+  }
+  /* Floating over live content (3D hero, scrolling feeds): smoke the backdrop. */
+  .mv-glass-float {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.05);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.05);
+  }
+  /* Segmented rail: a recessed glass track; the selected segment is a solid,
+     lifted metal key with a champagne base edge — readable at a glance. */
+  .mv-glass-rail {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background-color: var(--glass-rail);
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.55),
+      0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+  .mv-glass-seg {
+    border-radius: var(--radius-sm);
+    color: var(--muted-2);
+    transition:
+      color var(--dur-micro) var(--ease-snap),
+      background-color var(--dur-micro) var(--ease-snap),
+      box-shadow var(--dur-micro) var(--ease-snap),
+      transform 90ms var(--ease-snap);
+  }
+  @media (hover: hover) {
+    .mv-glass-seg:hover {
+      background-color: rgba(232, 230, 225, 0.04);
+      color: var(--bone);
+    }
+  }
+  .mv-glass-seg:active {
+    color: var(--bone);
+    transform: scale(0.985);
+  }
+  .mv-glass-seg[aria-pressed="true"] {
+    background-color: var(--glass-key);
+    color: var(--bone);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 var(--glass-edge-selected),
+      0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+  .mv-glass-seg:focus-visible {
+    outline: 1px solid var(--gold);
+    outline-offset: 1px;
+    color: var(--bone);
+  }
+  /* Elevated glass: the command palette. Denser than a control, lightly blurred
+     so the desk stays as context — text contrast never rides on the blur. */
+  .mv-glass-elevated {
+    background-color: var(--glass-bg-elevated);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      var(--shadow-elevated);
+    -webkit-backdrop-filter: blur(var(--glass-blur-elevated)) saturate(1.05);
+    backdrop-filter: blur(var(--glass-blur-elevated)) saturate(1.05);
+  }
+  /* No backdrop-filter: the material stays — only denser, so text keeps contrast. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .mv-glass-float {
+      background-color: rgba(16, 17, 20, 0.86);
+    }
+    .mv-glass-elevated {
+      background-color: var(--elevated);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* Keep the material and every state; drop the specular travel and press scale. */
+    .mv-glass,
+    .mv-glass-icon,
+    .mv-glass-seg {
+      transition-property: color, background-color, border-color, box-shadow;
+    }
+    .mv-glass:is(:hover, :focus-visible),
+    .mv-glass-icon:is(:hover, :focus-visible) {
+      background-position: 25% 0;
+    }
+    .mv-glass:active,
+    .mv-glass-icon:active,
+    .mv-glass-seg:active {
+      transform: none;
+    }
+  }
+
   /* Localized data-change feedback: the changed number only, color only, decays. */
   @keyframes mv-flash-up {
     from {

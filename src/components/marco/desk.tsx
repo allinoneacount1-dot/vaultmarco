@@ -33,7 +33,7 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={label}
-      className={`hairline inline-flex max-w-full gap-0.5 overflow-x-auto rounded-(--radius-md) p-0.5 ${className}`}
+      className={`mv-glass-rail inline-flex max-w-full gap-0.5 overflow-x-auto p-0.5 ${className}`}
     >
       {options.map((o) => {
         const active = o.id === value;
@@ -43,11 +43,8 @@ export function Segmented<T extends string>({
             type="button"
             onClick={() => onChange(o.id)}
             aria-pressed={active}
-            className={`min-h-9 shrink-0 cursor-pointer rounded-sm px-3 font-mono text-[10px] tracking-[0.14em] transition-[color,background-color] duration-(--dur-micro) ease-(--ease-snap) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold) lg:min-h-8 ${
-              active
-                ? "chrome-fill"
-                : "text-muted-foreground hover:bg-(--panel-2) hover:text-(--bone)"
-            }`}
+            // Glass rail + solid selected key: state reads from aria-pressed (styles.css).
+            className="mv-glass-seg min-h-9 shrink-0 cursor-pointer px-3 font-mono text-[10px] tracking-[0.14em] lg:min-h-8"
           >
             {o.label ?? o.id}
           </button>
