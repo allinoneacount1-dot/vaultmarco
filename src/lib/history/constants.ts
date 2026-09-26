@@ -10,6 +10,44 @@
 const MINUTE = 60_000;
 
 /* ------------------------------------------------------------------ *
+ * Ruleset revision (part of every persisted rulesVersion)
+ * ------------------------------------------------------------------ */
+
+/**
+ * SEMANTIC REVISION of the rules behind persisted Signal History.
+ *
+ * `rulesVersion` = hash(this revision + every numeric constant exported by
+ * `signals/thresholds.ts`, sorted by name). Threshold numbers alone cannot
+ * detect a change in what a rule MEANS, so this integer is bumped by hand.
+ * A new rulesVersion closes every open episode as RULES_CHANGED; a signal that
+ * still fires opens a new event under the new version in the same round.
+ *
+ * INCREMENT it in the same change whenever a production change can alter the
+ * meaning of a persisted event, episode or outcome without necessarily
+ * changing a threshold number, including changes to:
+ *   - EARLY MOMENTUM semantics; volume (VA) or transaction (TA) acceleration;
+ *     buy-pressure (BP); evidence evaluation
+ *   - liquidity event semantics; liquidity lookback selection
+ *   - signal qualification / gates
+ *   - FIRED / VALID_NEGATIVE / NO_DATA classification
+ *   - asset or signal identity (assetKey, event id inputs)
+ *   - observation-time semantics
+ *   - negative-streak continuity; SIGNAL_EXIT; TRACKING_LOST; RULES_CHANGED
+ *   - episode opening / re-entry
+ *   - any other rule whose change could make an existing event or episode
+ *     mean something different
+ *
+ * Do NOT bump it for CSS, UI layout, colours, copy, unrelated React
+ * components, docs-only or tests-only changes, or infrastructure / storage
+ * adapter work that preserves recorder semantics — a bump closes every open
+ * episode, so unrelated work must never cause one.
+ *
+ * Never derive it from a git SHA, branch, deployment id, package version or
+ * build time: those change for unrelated work.
+ */
+export const HISTORY_RULESET_REVISION = 1;
+
+/* ------------------------------------------------------------------ *
  * Episode lifecycle
  * ------------------------------------------------------------------ */
 

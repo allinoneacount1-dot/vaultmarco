@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { MemoryRecorderStore } from "@/lib/history/memoryStore";
+import { runRound, type RecorderDeps } from "@/lib/history/recorder";
 import type { RawHttp, RawResponse } from "@/lib/history/requests";
 
 /**
@@ -102,3 +104,25 @@ export function clock(start = T0) {
 }
 
 export const noSleep = async () => {};
+
+/** Recorder harness: in-memory store, fixture HTTP, controllable clock. */
+export function harness(initial: Scenario = {}) {
+  const store = new MemoryRecorderStore();
+  const c = clock();
+  let scenario: Scenario = initial;
+  const log: string[] = [];
+  let n = 0;
+  const deps = (): RecorderDeps => ({
+    store,
+    http: fixtureHttp(() => scenario, log),
+    now: c.now,
+    owner: `w${++n}`,
+    sleep: noSleep,
+  });
+  /** Run the round scheduled at minute m; the sample is taken `lagMs` into the minute (default 2 s). */
+  const at = async (m: number, lagMs = 2_000) => {
+    c.set(T0 + m * MIN + lagMs);
+    return runRound(T0 + m * MIN, deps());
+  };
+  return { store, clock: c, log, deps, at, set: (s: Scenario) => (scenario = s) };
+}
