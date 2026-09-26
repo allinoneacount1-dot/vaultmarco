@@ -51,13 +51,13 @@ export function Hero() {
               href="https://t.me/DxmZone"
               target="_blank"
               rel="noopener noreferrer"
-              className="chrome-fill px-6 py-3.5 font-mono text-[11px] font-semibold tracking-[0.18em] transition-[filter] duration-300 hover:brightness-110"
+              className="chrome-fill px-6 py-3.5 whitespace-nowrap font-mono text-[11px] font-semibold tracking-[0.18em] transition-[filter] duration-300 hover:brightness-110"
             >
               JOIN THE VAULT
             </a>
             <Link
               to="/dashboard"
-              className="gold-hairline-b px-1 py-3.5 font-mono text-[11px] tracking-[0.18em] text-(--bone) transition-colors duration-300 hover:text-(--gold)"
+              className="gold-hairline-b px-1 py-3.5 whitespace-nowrap font-mono text-[11px] tracking-[0.18em] text-(--bone) transition-colors duration-300 hover:text-(--gold)"
             >
               OPEN DASHBOARD
             </Link>
@@ -69,7 +69,10 @@ export function Hero() {
             aria-label="Scroll to content"
           >
             SCROLL
-            <span aria-hidden className="inline-block transition-transform duration-500 group-hover:translate-y-1">
+            <span
+              aria-hidden
+              className="inline-block transition-transform duration-500 group-hover:translate-y-1"
+            >
               ↓
             </span>
           </button>
