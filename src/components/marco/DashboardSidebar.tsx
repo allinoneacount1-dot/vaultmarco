@@ -47,7 +47,7 @@ function DashboardSidebarComponent({
       {/* mobile trigger */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="hairline fixed left-4 top-2 z-[55] grid size-10 place-items-center bg-(--graphite) transition-colors duration-(--dur-micro) hover:bg-(--panel-2) lg:hidden"
+        className="mv-glass-icon fixed left-4 top-2 z-[55] grid size-10 place-items-center text-(--bone) lg:hidden"
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
         aria-expanded={mobileOpen}
         aria-controls="dashboard-sidebar"
