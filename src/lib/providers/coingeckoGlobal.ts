@@ -10,12 +10,10 @@ import { fetchJson } from "./http";
  * value: a field that is missing or fails validation is `null` ("—" in the UI),
  * and a response whose root is unusable is a thrown `ProviderError`.
  *
- * UNVERIFIED: the `/global` field paths below (`total_market_cap.usd`,
- * `total_volume.usd`, `market_cap_change_percentage_24h_usd`,
- * `market_cap_percentage.btc`, `updated_at`) are the ones the dashboard already
- * read before this module existed. No live `/global` response could be captured
- * from the development sandbox, so the shape must be checked once against the
- * production provider.
+ * The `/global` field paths below (`total_market_cap.usd`, `total_volume.usd`,
+ * `market_cap_change_percentage_24h_usd`, `market_cap_percentage.btc`,
+ * `updated_at`) were independently checked against the live API during owner
+ * review. Validation stays strict regardless: the shape can change.
  */
 
 export const COINGECKO_GLOBAL_SOURCE = "coingecko";
@@ -123,11 +121,15 @@ export async function fetchFearGreed(deps: Deps = defaultDeps): Promise<DataEnve
     throw new ProviderError(FEAR_GREED_SOURCE, "SCHEMA_MISMATCH", "expected `{ data: [ … ] }`");
   }
   const row = root.data.data[0];
-  // The provider sends the index as a numeric string ("62").
-  const n =
-    typeof row?.value === "string" && /^\d+(\.\d+)?$/.test(row.value.trim())
-      ? Number(row.value)
-      : null;
+  // The provider sends the index as a numeric string ("62"). The index is
+  // defined on 0–100: anything else is unusable (null, degraded) — never clamped.
+  const parsed =
+    typeof row?.value === "number" && Number.isFinite(row.value)
+      ? row.value
+      : typeof row?.value === "string" && /^-?\d+(\.\d+)?$/.test(row.value.trim())
+        ? Number(row.value)
+        : null;
+  const n = parsed != null && parsed >= 0 && parsed <= 100 ? parsed : null;
   const label = typeof row?.value_classification === "string" ? row.value_classification : null;
   return liveEnvelope(FEAR_GREED_SOURCE, { value: n, label }, deps.now(), n == null ? 1 : 0);
 }

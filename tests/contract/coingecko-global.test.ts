@@ -14,11 +14,10 @@ import { quickStatsState } from "@/lib/deskState";
  *
  * No live CoinGecko `/global` or alternative.me `/fng` response could be
  * captured from the development sandbox (egress blocked). The bodies below are
- * hand-written in the shape the code already read before this change; the
- * numbers are arbitrary round test values. The live `/global` shape
+ * hand-written; the numbers are arbitrary round test values. The field paths
  * (total_volume.usd, total_market_cap.usd, market_cap_change_percentage_24h_usd,
- * market_cap_percentage.btc, updated_at) is UNVERIFIED and must be checked once
- * against production.
+ * market_cap_percentage.btc, updated_at) were independently checked against the
+ * live `/global` API during owner review; the values here are not from it.
  */
 const GLOBAL_TEST_BODY = {
   data: {
@@ -127,6 +126,25 @@ describe("CoinGecko /global — strict parse (schema-shaped test data)", () => {
     const bad = await fetchFearGreed(deps({ data: [{ value: "n/a" }] }));
     expect(bad.data.value).toBeNull();
     expect(bad.status).toBe("degraded");
+  });
+});
+
+describe("Fear & Greed range — the index is defined on 0–100", () => {
+  const read = (value: unknown) =>
+    fetchFearGreed(deps({ data: [{ value, value_classification: "x" }] }));
+  it("0 and 100 are valid", async () => {
+    for (const v of ["0", "100", 62]) {
+      const e = await read(v);
+      expect(e.data.value).toBe(Number(v));
+      expect(e.status).toBe("live");
+    }
+  });
+  it("-1, 101, 999 and non-numeric input → null + degraded, never clamped", async () => {
+    for (const v of ["-1", "101", "999", "abc", "", -1, 101, null]) {
+      const e = await read(v);
+      expect(e.data.value).toBeNull();
+      expect(e.status).toBe("degraded");
+    }
   });
 });
 

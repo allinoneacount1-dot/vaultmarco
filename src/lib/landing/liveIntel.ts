@@ -195,6 +195,15 @@ export function tickerRows(rows: readonly RealtimeRow[] | null | undefined): Tic
   });
 }
 
+/**
+ * A row is incomplete when it is unresolved OR any value it displays is
+ * unknown — a resolved pair can still lack priceUsd or priceChange.h24 (both
+ * optional at the provider). A real 0 is a value, not a gap.
+ */
+export function rowIncomplete(r: TickerRow): boolean {
+  return !r.resolved || r.priceUsd == null || r.change24h == null;
+}
+
 /* ------------------------------------------------------------------ *
  * The whole preview model
  * ------------------------------------------------------------------ */
@@ -287,7 +296,7 @@ export function previewModel(i: PreviewInput): PreviewModel {
   const answered = (s: DeskState) => s !== "loading" && s !== "offline";
   const missingValue =
     metrics.some((m) => answered(m.state) && (m.value == null || m.change === null)) ||
-    (answered(feeds.dexRealtime) && rows.some((r) => !r.resolved));
+    (answered(feeds.dexRealtime) && rows.some(rowIncomplete));
 
   const shown = [i.realtime, i.boosts, i.ads, i.global].map((f) =>
     f.envelope && f.envelope.status !== "offline" ? f.envelope.lastSuccessfulAt : null,

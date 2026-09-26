@@ -16,6 +16,7 @@ import {
   latestBoostCount,
   oldestSuccess,
   previewModel,
+  rowIncomplete,
   sectionState,
   tickerRows,
   type PreviewInput,
@@ -342,6 +343,41 @@ describe("landing intelligence — required cases", () => {
     expect(oldestSuccess([null, 5, 3, undefined])).toBe(3);
     // An offline envelope contributes no timestamp.
     expect(oldestSuccess([])).toBeNull();
+  });
+});
+
+describe("LIVE requires every displayed ticker value (review regression)", () => {
+  const patch = async (chain: string, over: Partial<RealtimeRow>) => {
+    const i = await allLive();
+    const rows = (await realtimeRows()).map((r) => (r.chainId === chain ? { ...r, ...over } : r));
+    i.realtime = { status: "live", envelope: env(rows, NOW - 5_000) };
+    return previewModel(i);
+  };
+
+  it("resolved pair with null priceUsd → —, PARTIAL, never LIVE", async () => {
+    const m = await patch("ethereum", { priceUsd: null });
+    const eth = m.rows.find((r) => r.chainId === "ethereum")!;
+    expect(eth.resolved).toBe(true);
+    expect(eth.priceUsd).toBeNull();
+    expect(rowIncomplete(eth)).toBe(true);
+    expect(m.state).toBe("degraded");
+  });
+
+  it("resolved pair with null change24h → —, PARTIAL, never LIVE", async () => {
+    const m = await patch("base", { change24h: null });
+    const base = m.rows.find((r) => r.chainId === "base")!;
+    expect(base.resolved).toBe(true);
+    expect(base.change24h).toBeNull();
+    expect(m.state).toBe("degraded");
+  });
+
+  it("priceUsd 0 and change24h 0 are values: the section may stay LIVE", async () => {
+    const m = await patch("hyperliquid", { priceUsd: 0, change24h: 0 });
+    const hl = m.rows.find((r) => r.chainId === "hyperliquid")!;
+    expect(hl.priceUsd).toBe(0);
+    expect(hl.change24h).toBe(0);
+    expect(rowIncomplete(hl)).toBe(false);
+    expect(m.state).toBe("live");
   });
 });
 

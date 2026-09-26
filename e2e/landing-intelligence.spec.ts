@@ -79,7 +79,15 @@ const CANONICAL = [
 ];
 
 type Mode = "live" | "down" | "hang" | "429";
-type Providers = { dex: Mode; gecko: Mode; fng: Mode; dropPair?: string };
+type PairPatch = (pair: Record<string, unknown>) => void;
+type Providers = {
+  dex: Mode;
+  gecko: Mode;
+  fng: Mode;
+  dropPair?: string;
+  /** Mutate the recorded pair payload for one chain (a copy; fixtures untouched). */
+  patch?: { chain: string; fn: PairPatch };
+};
 
 async function setup(page: Page, p: Providers) {
   const requests: string[] = [];
@@ -124,6 +132,11 @@ async function setup(page: Page, p: Providers) {
     if (u.includes("/latest/dex/pairs/")) {
       const chain = u.split("/latest/dex/pairs/")[1].split("/")[0];
       if (chain === p.dropPair) return json(r, { pairs: [] });
+      if (p.patch?.chain === chain) {
+        const copy = structuredClone(PAIRS[chain]) as { pairs: Record<string, unknown>[] };
+        p.patch.fn(copy.pairs[0]);
+        return json(r, copy);
+      }
       return json(r, PAIRS[chain] ?? { pairs: [] });
     }
     return r.abort();
@@ -228,6 +241,74 @@ test.describe("landing intelligence preview", () => {
     const dexFeed = page.locator('[data-testid="intel-feed"][data-feed="DEX REALTIME"]');
     await expect(dexFeed).toHaveAttribute("data-state", "degraded");
     await expectNoSamples(page);
+  });
+
+  // Review regressions: a RESOLVED pair can still lack a displayed value.
+  for (const [name, chain, fn] of [
+    [
+      "resolved pair without priceUsd",
+      "ethereum",
+      (x: Record<string, unknown>) => delete x.priceUsd,
+    ],
+    [
+      "resolved pair without priceChange.h24",
+      "base",
+      (x: Record<string, unknown>) => {
+        x.priceChange = { ...(x.priceChange as object), h24: undefined };
+      },
+    ],
+  ] as const) {
+    test(`${name} → —, PARTIAL, never LIVE`, async ({ page }) => {
+      await setup(page, { dex: "live", gecko: "live", fng: "live", patch: { chain, fn } });
+      const preview = await openSection(page);
+      await expect(preview).toHaveAttribute("data-state", "degraded", { timeout: 15_000 });
+      await expect(page.getByTestId("intel-status")).toContainText("PARTIAL");
+      const row = page.locator(`[data-testid="intel-row"][data-chain-id="${chain}"]`);
+      await expect(row).toHaveAttribute("data-resolved", "true");
+      await expect(row).toContainText("—");
+      await page.waitForTimeout(1500);
+      await expect(preview).not.toHaveAttribute("data-state", "live");
+    });
+  }
+
+  test("priceUsd 0 and h24 0 are values: the section stays LIVE", async ({ page }) => {
+    await setup(page, {
+      dex: "live",
+      gecko: "live",
+      fng: "live",
+      patch: {
+        chain: "hyperliquid",
+        fn: (x) => {
+          x.priceUsd = "0";
+          x.priceChange = { ...(x.priceChange as object), h24: 0 };
+        },
+      },
+    });
+    const preview = await openSection(page);
+    await expect(preview).toHaveAttribute("data-state", "live", { timeout: 15_000 });
+    const row = page.locator('[data-testid="intel-row"][data-chain-id="hyperliquid"]');
+    await expect(row).toContainText("$0.00");
+    await expect(row).toContainText("0.00%");
+  });
+
+  test("same base/quote but a different pool address → unresolved, no values", async ({ page }) => {
+    await setup(page, {
+      dex: "live",
+      gecko: "live",
+      fng: "live",
+      patch: {
+        chain: "solana",
+        fn: (x) => {
+          x.pairAddress = "7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm";
+        },
+      },
+    });
+    const preview = await openSection(page);
+    await expect(preview).toHaveAttribute("data-state", "degraded", { timeout: 15_000 });
+    const row = page.locator('[data-testid="intel-row"][data-chain-id="solana"]');
+    await expect(row).toHaveAttribute("data-resolved", "false");
+    await expect(row).toHaveAttribute("data-pair-address", CANONICAL[0].pair);
+    expect(await row.innerText()).not.toMatch(/\$\d/);
   });
 
   test("429 from CoinGecko → not retried aggressively, never LIVE", async ({ page }) => {
