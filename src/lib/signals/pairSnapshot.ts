@@ -36,6 +36,11 @@ export type PairSnapshot = {
   baseName: string | null;
   baseAddress: string;
   quoteSymbol: string | null;
+  /**
+   * Provider's original quote-token address. Optional and additive: read only
+   * by the intelligence suite, which keeps full pair identity on evidence.
+   */
+  quoteAddress?: string | null;
   /** Every source that referenced this pair this round, in UNIVERSE_SOURCES order. */
   sources: UniverseSource[];
 
@@ -89,6 +94,7 @@ export function toPairSnapshot(
     baseName: pair.baseToken.name ?? null,
     baseAddress: pair.baseToken.address,
     quoteSymbol: pair.quoteToken?.symbol ?? null,
+    quoteAddress: pair.quoteToken?.address ?? null,
     sources: UNIVERSE_SOURCES.filter((src) => sources.includes(src)),
     observedAt,
     pairCreatedAt: num(pair.pairCreatedAt),
