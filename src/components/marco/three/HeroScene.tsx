@@ -47,13 +47,13 @@ type Key = {
 
 /* hero rest pose (p = 0): the monogram sits just behind the type — a relief
    within one volume, not a logo on a far plane — as the keystone in the band
-   between the lines: its X interlocks behind ENTER, its legs end just above
-   THE VAULT, so no letter (the V least of all) ever borrows the monogram's
-   strokes to read. Tipped back ~1° so its flat caps catch the key light like a
+   between the lines, with clear black space above and below it: the T of
+   ENTER and the V of THE VAULT each end in air, so no letter ever merges
+   with or borrows the monogram's strokes. Tipped back ~1° so its flat caps catch the key light like a
    set crest instead of mirroring the dark horizon between the lines. Every
    later key is untouched. */
 const KF: Key[] = [
-  { p: 0.0, pos: [0, 0.29, -0.35], rot: [-0.02, 0, 0], s: 2.1, o: 1 },
+  { p: 0.0, pos: [0, 0.0, -0.35], rot: [-0.02, 0, 0], s: 1.55, o: 1 },
   { p: 0.05, pos: [0.6, 0.24, -1.9], rot: [0.02, 0.5, 0.02], s: 2.5, o: 0.8 },
   { p: 0.14, pos: [3.5, -0.1, -2.6], rot: [0.1, 1.2, 0.05], s: 1.55, o: 0.26 },
   { p: 0.36, pos: [-3.5, 0.05, -2.6], rot: [-0.05, 2.4, -0.04], s: 1.45, o: 0.24 },
@@ -152,6 +152,7 @@ function MonogramMesh() {
     geo.rotateX(Math.PI);
     return geo;
   }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
   return <mesh geometry={geometry} material={matMono} />;
 }
 
@@ -213,6 +214,7 @@ function useTypeGeometry(text: string) {
 
 function ChromeLine({ text, material }: { text: string; material: THREE.Material }) {
   const geometry = useTypeGeometry(text);
+  useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <>
       <mesh geometry={geometry} material={matTextDepth} renderOrder={RO_TEXT_DEPTH} />
@@ -222,11 +224,11 @@ function ChromeLine({ text, material }: { text: string; material: THREE.Material
 }
 
 /* hero composition (units at fit = 1) */
-const LINE_Y_A = 1.1; // ENTER centre
-const LINE_Y_B = -1.12; // THE VAULT centre
+const LINE_Y_A = 1.3; // ENTER centre
+const LINE_Y_B = -1.3; // THE VAULT centre
 const TYPE_Z = 0.35; // type centre; monogram rests at KF[0].z just behind
 const SCULPTURE_W = 9.7; // THE VAULT, the widest element
-const SCULPTURE_H = 3.3; // ENTER cap top → THE VAULT baseline incl. monogram overlap
+const SCULPTURE_H = 3.75; // ENTER cap top → THE VAULT baseline
 
 /* safe area around the sculpture, in CSS px (kicker above, CTA bar + ticker below) */
 const SAFE_TOP = 128;
@@ -234,6 +236,8 @@ const SAFE_BOTTOM = 190;
 
 /* hero exit: complete after this fraction of one viewport height of scroll */
 const EXIT_VH = 0.7;
+/* page-speed share the monogram core and the lower door ride during the exit */
+const CORE_RIDE = 0.5;
 
 /** Scale of the hero sculpture: it fits the stage between the kicker and the
  *  CTA bar — width-bound on most screens, height-bound on short ones — and
@@ -277,6 +281,12 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
 
     const exit = clamp01(y / (size.height * EXIT_VH));
     const e = heavy(exit);
+    // page travel in world units: the hero pieces ride up with the section at
+    // their own rates (1 = glued to the page)
+    const ride = (rate: number) => y * pxToWorld * rate;
+    // the core rides with the lower door until that door has cleared, then
+    // eases back onto its journey path (every keyframe is left as authored)
+    const coreRide = ride(CORE_RIDE) * (1 - smooth(clamp01((exit - 0.3) / 0.7)));
     const t = clock.elapsedTime;
 
     /* shared rig: the viewer moves around one installation. Strongest at the
@@ -294,7 +304,7 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
 
     if (mono.current) {
       const g = mono.current;
-      g.position.set(k.pos[0] * fit, k.pos[1] * fit, k.pos[2]);
+      g.position.set(k.pos[0] * fit, k.pos[1] * fit + coreRide, k.pos[2]);
       g.scale.setScalar(k.s * fit);
       // a whisper of secondary motion so the core feels set in, not glued on
       g.rotation.x = d(g.rotation.x, k.rot[0] - pointer.current.y * 0.008, 1.8);
@@ -305,27 +315,38 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
     }
 
     /* vault doors: ENTER and THE VAULT part laterally and swing inward a few
-       degrees while the monogram core recedes into its journey. The doors ride
-       up with the hero (0.8× the page — anchored, not floating over it), so the
-       lower door never meets the CTA bar or the manifesto; it clears first,
-       ENTER follows. Opacity trails the motion so the parting reads first. */
-    const fadeB = 1 - smooth(clamp01((exit - 0.1) / 0.5));
+       degrees while the monogram core recedes into its journey. Both doors
+       ride up with the hero (anchored, not floating over it). The lower door
+       rides at the core's rate and sinks away from it, so the gap between them
+       holds and then widens — it reveals the core instead of sliding across
+       it — and it has faded before the hero copy and CTAs (which it closes on
+       at half speed) could reach it. ENTER rises faster, away from the core, and fades last.
+       Opacity trails the motion so the parting reads first. */
+    // the lower door runs its whole move inside its own short window, so it
+    // visibly parts, swings and sinks while still solid, then fades
+    const eB = heavy(clamp01(exit / 0.32));
+    const fadeB = 1 - smooth(clamp01((exit - 0.04) / 0.23));
     const fadeA = 1 - smooth(clamp01((exit - 0.25) / 0.55));
     matTextA.opacity = fadeA;
     matTextB.opacity = fadeB;
-    if (doors.current) {
-      doors.current.position.y = y * pxToWorld * 0.8;
-      doors.current.visible = fadeA > 0.001;
-    }
+    if (doors.current) doors.current.visible = fadeA > 0.001;
     if (textA.current) {
       const g = textA.current;
-      g.position.set(-1.3 * e * fit, (LINE_Y_A + 0.25 * e) * fit, (TYPE_Z - 0.3 * e) * fit);
+      g.position.set(
+        -1.3 * e * fit,
+        (LINE_Y_A + 0.25 * e) * fit + ride(0.8),
+        (TYPE_Z - 0.3 * e) * fit,
+      );
       g.rotation.y = 0.18 * e;
     }
     if (textB.current) {
       const g = textB.current;
-      g.position.set(1.3 * e * fit, (LINE_Y_B - 0.25 * e) * fit, (TYPE_Z - 0.3 * e) * fit);
-      g.rotation.y = -0.18 * e;
+      g.position.set(
+        1.3 * eB * fit,
+        (LINE_Y_B - 0.3 * eB) * fit + ride(CORE_RIDE),
+        (TYPE_Z - 0.3 * eB) * fit,
+      );
+      g.rotation.y = -0.18 * eB;
       g.visible = fadeB > 0.001;
     }
 
@@ -358,8 +379,9 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
  * single elevation band of the environment, so one uniform white strip made
  * ENTER a blown-out white decal and a black gap made THE VAULT near-black —
  * two different-looking metals. One continuous gradient instead: bright key
- * falling to a dark horizon between the lines, then a warm champagne ground
- * bounce rising under THE VAULT — every letter carries a chrome gradient.
+ * falling to a dark horizon between the lines, then a silver ground bounce
+ * with only a breath of champagne rising under THE VAULT (the gold ring stays
+ * the one clear warm accent) — every letter carries a chrome gradient.
  * Rows map to height on a 16-unit-tall plane 8 units out (y = 8 − 16·row/H).
  * The lines' reflected band scales with the sculpture, so the inner stops
  * scale with it too (`k` = fit / FIT_REF): same chrome on every screen.
@@ -380,11 +402,11 @@ function useBackdropGradient(k: number) {
       [0.85, "rgb(150,152,156)"],
       [0.32, "rgb(52,53,55)"],
       [0.04, "rgb(9,9,9)"],
-      [-0.14, "rgb(22,22,21)"],
-      [-0.4, "rgb(78,75,68)"],
-      [-0.8, "rgb(128,121,107)"],
-      [-1.2, "rgb(150,142,126)"],
-      [-2.2, "rgb(100,98,94)"],
+      [-0.14, "rgb(22,22,22)"],
+      [-0.4, "rgb(82,82,82)"],
+      [-0.8, "rgb(134,133,131)"],
+      [-1.2, "rgb(160,158,154)"],
+      [-2.2, "rgb(104,103,101)"],
       [-8, "rgb(40,40,40)"],
     ];
     for (const [y, col] of stops) {
@@ -438,6 +460,20 @@ function Studio() {
         rotation-y={-Math.PI / 2}
         scale={[9, 6, 1]}
         color="#ceccc1"
+      />
+      {/*
+        Rear panel: the side walls of the type (and monogram) mirror the space
+        behind the sculpture. With nothing there they rendered black, and a dark
+        wall band plus the back arris read as a doubled outline beside E / THE.
+        A dim neutral panel gives the walls a dark-metal midtone: depth, not a
+        second edge.
+      */}
+      <Lightformer
+        form="rect"
+        intensity={0.55}
+        position={[0, 1, -7]}
+        scale={[22, 10, 1]}
+        color="#b9bbbe"
       />
       <Lightformer
         form="rect"

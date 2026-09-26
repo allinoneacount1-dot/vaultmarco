@@ -3,21 +3,27 @@ import { HeroStatic } from "./HeroStatic";
 
 const HeroScene = lazy(() => import("./HeroScene"));
 
+const WIDE = "(min-width: 768px)";
+const REDUCED = "(prefers-reduced-motion: reduce)";
+
 /** Cheap, synchronous part of the gate: viewport + motion preference. */
 function mayRun3D(): boolean {
   if (typeof window === "undefined") return false;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
-  return window.innerWidth >= 768;
+  return window.matchMedia(WIDE).matches && !window.matchMedia(REDUCED).matches;
 }
 
-function canRun3D(): boolean {
-  if (!mayRun3D()) return false;
-  try {
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch {
-    return false;
+/* WebGL support does not change during a visit: probe once, on first need */
+let webgl: boolean | undefined;
+function hasWebGL(): boolean {
+  if (webgl === undefined) {
+    try {
+      const c = document.createElement("canvas");
+      webgl = !!(c.getContext("webgl2") || c.getContext("webgl"));
+    } catch {
+      webgl = false;
+    }
   }
+  return webgl;
 }
 
 /**
@@ -27,6 +33,11 @@ function canRun3D(): boolean {
  * HeroScene) — showing the flat fallback first would flash one composition,
  * blank out while the canvas compiles, then pop in a different one. Where it
  * is not (small screen, reduced motion), the static hero renders immediately.
+ *
+ * The gate stays truthful for the whole visit: it listens to the width
+ * breakpoint and the motion preference (change events fire only when a query
+ * flips — no resize polling), so rotating a tablet, resizing across 768px or
+ * turning on reduced motion swaps modes without a reload.
  */
 export function HeroSceneLazy() {
   const [mode, setMode] = useState<"pending" | "3d" | "static">(() =>
@@ -34,11 +45,19 @@ export function HeroSceneLazy() {
   );
 
   useEffect(() => {
-    if (mode !== "pending") return;
-    // probe WebGL after first paint so the page never waits on three.js
-    const id = window.requestAnimationFrame(() => setMode(canRun3D() ? "3d" : "static"));
-    return () => window.cancelAnimationFrame(id);
-  }, [mode]);
+    const wide = window.matchMedia(WIDE);
+    const reduced = window.matchMedia(REDUCED);
+    const decide = () => setMode(mayRun3D() && hasWebGL() ? "3d" : "static");
+    // first decision after first paint so the page never waits on the probe
+    const id = window.requestAnimationFrame(decide);
+    wide.addEventListener("change", decide);
+    reduced.addEventListener("change", decide);
+    return () => {
+      window.cancelAnimationFrame(id);
+      wide.removeEventListener("change", decide);
+      reduced.removeEventListener("change", decide);
+    };
+  }, []);
 
   if (mode === "static") return <HeroStatic />;
   if (mode === "pending") return null;
