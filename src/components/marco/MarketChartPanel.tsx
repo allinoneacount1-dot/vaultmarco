@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CandlestickChart } from "lucide-react";
 import { Panel } from "./Panel";
 import { TradingViewChart } from "./TradingViewChart";
+import { Segmented } from "./desk";
 
 /** Binance USDT spot pairs — the most liquid feeds TradingView serves for free. */
 const ASSETS = [
@@ -29,29 +30,15 @@ export function MarketChartPanel() {
   const active = ASSETS.find((a) => a.id === asset) ?? ASSETS[0];
 
   return (
-    <Panel title={`MARKET CHART · ${asset}/USDT`} icon={CandlestickChart}>
-      <div className="space-y-5">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Select asset">
-          {ASSETS.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setAsset(a.id)}
-              aria-pressed={asset === a.id}
-              className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
-                asset === a.id
-                  ? "chrome-fill"
-                  : "hairline text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {a.id}
-            </button>
-          ))}
-        </div>
-
-        <div className="h-[320px] sm:h-[400px] lg:h-[480px] overflow-hidden rounded-md border border-(--hairline)">
-          {/* `key` forces a clean remount per symbol. */}
-          <TradingViewChart key={active.id} symbol={active.symbol} className="h-full" />
-        </div>
+    <Panel
+      title={`MARKET CHART · ${asset}/USDT`}
+      icon={CandlestickChart}
+      aside={<Segmented label="Select asset" options={ASSETS} value={asset} onChange={setAsset} />}
+    >
+      {/* Fixed height: a switch never shifts the page; TradingView stays dominant. */}
+      <div className="h-[320px] overflow-hidden rounded-sm border border-(--hairline) sm:h-[400px] lg:h-[480px]">
+        {/* `key` forces a clean remount per symbol. */}
+        <TradingViewChart key={active.id} symbol={active.symbol} className="h-full" />
       </div>
     </Panel>
   );

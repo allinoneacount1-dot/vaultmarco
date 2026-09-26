@@ -1,11 +1,16 @@
 import { useEffect, useRef } from "react";
+import { useRouterState } from "@tanstack/react-router";
 
 /** Signature cursor: a small gold ring with weighted follow.
- *  Grows over interactive elements; desktop fine-pointer only; honors reduced-motion. */
+ *  Grows over interactive elements; desktop fine-pointer only; honors reduced-motion.
+ *  Landing only: on the dashboard (a data desk) a lagging ring over prices and a
+ *  per-frame loop beside market rendering are noise, so it is not mounted there. */
 export function Cursor() {
   const ring = useRef<HTMLDivElement>(null);
+  const onDesk = useRouterState({ select: (s) => s.location.pathname.startsWith("/dashboard") });
 
   useEffect(() => {
+    if (onDesk) return;
     if (!window.matchMedia("(pointer: fine)").matches) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const el = ring.current;
@@ -23,7 +28,8 @@ export function Cursor() {
     let raf = 0;
 
     const isInteractive = (t: EventTarget | null) =>
-      t instanceof Element && !!t.closest("a, button, [role='button'], input, select, textarea, [data-cursor]");
+      t instanceof Element &&
+      !!t.closest("a, button, [role='button'], input, select, textarea, [data-cursor]");
 
     const onMove = (e: MouseEvent) => {
       tx = e.clientX;
@@ -54,8 +60,11 @@ export function Cursor() {
       window.removeEventListener("mousemove", onMove);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       document.documentElement.classList.remove("has-mv-cursor");
+      el.style.opacity = "0";
     };
-  }, []);
+  }, [onDesk]);
+
+  if (onDesk) return null;
 
   return (
     <div

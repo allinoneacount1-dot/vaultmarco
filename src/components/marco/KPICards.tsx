@@ -1,6 +1,7 @@
 import { TrendingUp, Zap, BarChart3, DollarSign } from "lucide-react";
 import { useMarketPrices } from "@/hooks/useMarketPrices";
 import { useTokenBoosts } from "@/hooks/useDexScreener";
+import { Tick } from "./desk";
 
 function compact(n: number): string {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
@@ -9,11 +10,36 @@ function compact(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
+type Tone = "neutral" | "warn" | "down" | "up";
+const TONE: Record<Tone, string> = {
+  neutral: "text-(--faint)",
+  warn: "text-(--champagne)",
+  down: "text-(--down)",
+  up: "text-(--up)",
+};
+
+/** Provider state line: what we know, from where — never "LIVE" before data exists. */
+function sourceLine(status: string, source: string): { text: string; tone: Tone } {
+  switch (status) {
+    case "loading":
+      return { text: `CONNECTING · ${source}`, tone: "neutral" };
+    case "stale":
+      return { text: `LAST KNOWN · ${source}`, tone: "warn" };
+    case "offline":
+      return { text: `UNAVAILABLE · ${source}`, tone: "down" };
+    case "degraded":
+      return { text: `PARTIAL · ${source}`, tone: "warn" };
+    default:
+      return { text: `LIVE · ${source}`, tone: "neutral" };
+  }
+}
+
 /**
  * Machined stat cells — totals derived from the top-20 tape + boost feed.
  *
  * Every cell reads "—" when its provider has no real data to report. A zero is
- * only ever shown when a provider actually reported zero.
+ * only ever shown when a provider actually reported zero. Sage / oxide are
+ * reserved for real price direction; provider state uses neutral / warn tones.
  */
 export function KPICards() {
   const { data: coins, providerStatus: marketStatus } = useMarketPrices();
@@ -25,69 +51,86 @@ export function KPICards() {
   const mcap = list.reduce((a, c) => a + (c.mc || 0), 0);
   const top = list.length ? [...list].sort((a, b) => b.ch - a.ch)[0] : null;
   const boostCount = boosts ? boosts.length : null;
+  const market = sourceLine(marketStatus, "COINGECKO");
 
-  const marketSub =
-    marketStatus === "stale"
-      ? "LAST KNOWN · COINGECKO"
-      : marketStatus === "offline"
-        ? "UNAVAILABLE · COINGECKO"
-        : "LIVE · COINGECKO";
-  const boostsSub =
-    boostsStatus === "stale"
-      ? "DEXSCREENER · LAST KNOWN"
-      : boostsStatus === "offline"
-        ? "DEXSCREENER · UNAVAILABLE"
-        : "DEXSCREENER FEED";
-
-  const kpis = [
+  const kpis: {
+    title: string;
+    value: string;
+    raw: number | null;
+    sub: string;
+    tone: Tone;
+    icon: typeof DollarSign;
+  }[] = [
     {
       title: "MARKET CAP · TOP 20",
       value: hasMarket ? compact(mcap) : "—",
-      sub: marketSub,
-      up: true,
+      raw: hasMarket ? mcap : null,
+      sub: market.text,
+      tone: market.tone,
       icon: DollarSign,
     },
     {
       title: "VOLUME · 24H",
       value: hasMarket ? compact(volume) : "—",
-      sub: "ACROSS THE TAPE",
-      up: true,
+      raw: hasMarket ? volume : null,
+      sub: hasMarket ? "ACROSS THE TAPE" : market.text,
+      tone: hasMarket ? "neutral" : market.tone,
       icon: BarChart3,
     },
     {
       title: "TOP GAINER · 24H",
       value: top ? top.sym : "—",
-      sub: top ? `${top.ch >= 0 ? "+" : ""}${top.ch.toFixed(1)}%` : "…",
-      up: (top?.ch ?? 0) >= 0,
+      raw: null,
+      sub: top ? `${top.ch >= 0 ? "+" : ""}${top.ch.toFixed(1)}%` : market.text,
+      tone: top ? (top.ch >= 0 ? "up" : "down") : market.tone,
       icon: TrendingUp,
     },
     {
       title: "ACTIVE BOOSTS",
       value: boostCount === null ? "—" : String(boostCount),
-      sub: boostsSub,
-      up: true,
+      raw: boostCount,
+      sub: sourceLine(boostsStatus, "DEXSCREENER").text,
+      tone: sourceLine(boostsStatus, "DEXSCREENER").tone,
       icon: Zap,
     },
   ];
 
   return (
-    <div className="hairline mb-8 grid grid-cols-1 bg-(--panel) md:grid-cols-2 lg:grid-cols-4">
+    <div className="hairline grid grid-cols-2 bg-(--panel) lg:grid-cols-4">
       {kpis.map((kpi, index) => {
         const Icon = kpi.icon;
         return (
           <div
-            key={index}
-            className="border-b border-(--hairline) p-6 last:border-b-0 md:[&:nth-child(odd)]:border-r lg:border-b-0 lg:[&:not(:last-child)]:border-r"
+            key={kpi.title}
+            className={`min-w-0 border-(--hairline) p-4 sm:p-6 ${index % 2 === 0 ? "border-r" : ""} ${
+              index < 2 ? "border-b lg:border-b-0" : ""
+            } ${index === 1 ? "lg:border-r" : ""}`}
           >
-            <div className="flex items-center justify-between">
-              <span className="mono-label text-[9px]!">{kpi.title}</span>
-              <Icon className="size-3.5 text-(--faint)" strokeWidth={1.8} />
+            <div className="flex items-start justify-between gap-2">
+              <span className="mono-label text-[9px]! tracking-[0.2em]! sm:tracking-[0.28em]!">
+                {kpi.title}
+              </span>
+              <Icon className="size-3.5 shrink-0 text-(--faint)" strokeWidth={1.8} />
             </div>
-            <div className="mono-data mt-4 text-[24px] font-medium leading-none text-(--bone)">
+            <Tick
+              value={kpi.raw}
+              className="mono-data mt-3 block truncate text-[20px] font-medium leading-none text-(--bone) sm:mt-4 sm:text-[24px]"
+            >
               {kpi.value}
-            </div>
-            <div className={`mono-data mt-2 text-[11px] ${kpi.up ? "text-(--up)" : "text-(--down)"}`}>
-              {kpi.sub}
+            </Tick>
+            {/* Mobile keeps the state word; the source name joins from sm up. */}
+            <div className={`mono-data mt-2 truncate text-[10px] sm:text-[11px] ${TONE[kpi.tone]}`}>
+              {kpi.sub.includes(" · ") ? (
+                <>
+                  {kpi.sub.split(" · ")[0]}
+                  <span className="hidden sm:inline">
+                    {" "}
+                    · {kpi.sub.split(" · ").slice(1).join(" · ")}
+                  </span>
+                </>
+              ) : (
+                kpi.sub
+              )}
             </div>
           </div>
         );

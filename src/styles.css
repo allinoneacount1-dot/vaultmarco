@@ -84,6 +84,13 @@
   --hairline: rgba(232, 230, 225, 0.08);
   --hairline-strong: rgba(232, 230, 225, 0.14);
 
+  /* Depth — tonal, not translucent: app (void) < panel < interactive (panel-2)
+     < elevated (drawer / palette / tooltip). Elevation also gets one shadow. */
+  --elevated: #141518;
+  --shadow-elevated: 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  /* Machined top edge on base panels: a 1 px light catch, not a glow. */
+  --panel-edge: inset 0 1px 0 rgba(232, 230, 225, 0.035);
+
   /* Chrome ramp — sampled from marcovault-logo.png, do not invent stops */
   --chrome-1: #ffffff;
   --chrome-2: #f8f6f0;
@@ -92,8 +99,18 @@
   --chrome-5: #383737;
   --chrome-6: #0f0f0e;
 
-  /* Motion */
-  --ease-vault: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Motion — one system for the whole desk (see src/lib/motion.ts).
+     micro: press / hover / icon / selection · standard: tabs, filters, row and
+     card state · structural: drawer, sidebar, sheet, layout. Motion carries
+     state, priority, change and context — never decoration. */
+  --ease-vault: cubic-bezier(0.16, 1, 0.3, 1); /* smooth-out: structural entry */
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1); /* fast-out: interaction response */
+  --ease-shift: cubic-bezier(0.4, 0, 0.2, 1); /* controlled in-out: layout change */
+  --dur-micro: 120ms;
+  --dur-standard: 200ms;
+  --dur-structural: 300ms;
+  --dur-exit: 180ms;
+  --dur-flash: 900ms; /* data-change decay (localized, color only) */
 
   /* Z-scale (spec §7) */
   --z-ticker: 20;
@@ -219,7 +236,12 @@
     color: transparent;
   }
   .chrome-fill {
-    background: linear-gradient(180deg, var(--chrome-2) 0%, var(--chrome-3) 55%, var(--chrome-2) 100%);
+    background: linear-gradient(
+      180deg,
+      var(--chrome-2) 0%,
+      var(--chrome-3) 55%,
+      var(--chrome-2) 100%
+    );
     color: var(--void);
   }
   .gold-hairline-b {
@@ -272,9 +294,93 @@
     animation-play-state: paused;
   }
 
+  /* — Desk primitives — */
+  /* Chip: the one tag shape (machined, not pill). */
+  .mv-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-sm);
+    padding: 1px 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    line-height: 14px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  @media (min-width: 1024px) {
+    .mv-chip {
+      font-size: 10px;
+    }
+  }
+  /* Tape row: a feed line separated by hairlines — not a card inside a card. */
+  .mv-tape > * + * {
+    border-top: 1px solid var(--hairline);
+  }
+  .mv-row {
+    transition: background-color var(--dur-micro) var(--ease-snap);
+  }
+  .mv-row:is(button, a):hover {
+    background-color: var(--panel-2);
+  }
+  /* Pressed: the row settles darker for a beat — a response, not an effect. */
+  .mv-row:is(button, a):active {
+    background-color: var(--graphite);
+  }
+  .mv-panel {
+    background-color: var(--panel);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--panel-edge);
+  }
+  /* Localized data-change feedback: the changed number only, color only, decays. */
+  @keyframes mv-flash-up {
+    from {
+      color: var(--up);
+    }
+  }
+  @keyframes mv-flash-down {
+    from {
+      color: var(--down);
+    }
+  }
+  .mv-flash-up {
+    animation: mv-flash-up var(--dur-flash) var(--ease-snap);
+  }
+  .mv-flash-down {
+    animation: mv-flash-down var(--dur-flash) var(--ease-snap);
+  }
+  /* A row that arrived after first paint: a brief tint that decays. */
+  @keyframes mv-row-new {
+    from {
+      background-color: rgba(194, 168, 120, 0.07);
+    }
+  }
+  .mv-row-new {
+    animation: mv-row-new 1400ms var(--ease-snap);
+  }
+  /* Grouped disclosure (drawer body, radar list): one short fade for the group. */
+  @keyframes mv-group-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  .mv-group-in {
+    animation: mv-group-in var(--dur-standard) var(--ease-vault) both;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-ticker {
       animation: none !important;
+    }
+    /* Desk surfaces: motion is enhancement only — state stays fully legible. */
+    .mv-desk *,
+    .mv-motion,
+    .mv-motion * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
     html {
       scroll-behavior: auto !important;

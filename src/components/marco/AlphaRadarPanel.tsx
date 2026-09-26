@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Radar } from "lucide-react";
 import { Panel } from "./Panel";
-import { formatNumber, formatPrice2 } from "./shared/helpers";
+import { TapeSkeleton } from "./Skeleton";
+import { Price, Segmented, StateDot } from "./desk";
+import { useArrivals } from "@/hooks/useArrivals";
+import { type DeskState } from "@/lib/deskState";
+import { formatNumber } from "./shared/helpers";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { radarHistory, useRadar } from "@/hooks/usePairUniverse";
 import { useTokenDrawerActions } from "@/hooks/useTokenDrawer";
@@ -84,97 +88,119 @@ export function AlphaRadarPanel() {
       ? watched.map((item) => resolveWatchRow(item, universe, status, radarHistory))
       : [];
 
+  const listKeys =
+    mode === "watchlist"
+      ? watchRows.map((r) => r.item.key)
+      : mode === "momentum"
+        ? momentum.map((m) => m.key)
+        : risk.map((e) => e.key);
+  const fresh = useArrivals(listKeys, !isLoading, mode);
+
   return (
-    <div className="space-y-5">
-      <div className="flex gap-2">
-        {(["momentum", "risk", "watchlist"] as const).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            aria-pressed={mode === m}
-            className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
-              mode === m ? "chrome-fill" : "hairline text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {m.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      <Panel
-        title={
-          mode === "watchlist"
-            ? `WATCHLIST · ${watched.length} ${watched.length === 1 ? "TOKEN" : "TOKENS"}`
-            : `ALPHA RADAR · ${mode.toUpperCase()}`
-        }
-        icon={Radar}
-      >
-        <div className="space-y-2 lg:space-y-3">
-          {statusLine && (
-            <div className="text-[11px] lg:text-[12px] text-muted-foreground">{statusLine}</div>
-          )}
-          {mode === "watchlist" ? (
-            watchRows.length === 0 ? (
-              <div className="text-[11px] lg:text-[12px] text-muted-foreground">
-                No watched tokens. Open any token and press WATCH.
-              </div>
-            ) : (
-              <>
-                {(showAll ? watchRows : watchRows.slice(0, limit)).map((r) => (
-                  <WatchlistRow key={r.item.key} row={r} />
-                ))}
-                {watchRows.length > limit && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAll((v) => !v)}
-                    className="text-[10px] font-mono text-(--faint) hover:text-foreground transition-colors"
-                  >
-                    {showAll ? "SHOW FEWER" : `SHOW ALL ${watchRows.length}`}
-                  </button>
-                )}
-              </>
-            )
-          ) : isLoading ? (
-            <div className="rounded-md border border-(--hairline) p-3">
-              <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
-              <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
-            </div>
-          ) : status === "offline" ? null : rows === 0 ? (
+    <Panel
+      title={
+        mode === "watchlist"
+          ? `WATCHLIST · ${watched.length} ${watched.length === 1 ? "TOKEN" : "TOKENS"}`
+          : `ALPHA RADAR · ${mode.toUpperCase()}`
+      }
+      icon={Radar}
+      aside={<Segmented label="Radar mode" options={MODES} value={mode} onChange={setMode} />}
+    >
+      {/* Stable container: switching modes swaps rows (one short group fade),
+          it never collapses the module. */}
+      <div key={mode} className="mv-group-in min-h-[96px] space-y-2 lg:min-h-[112px]">
+        {statusLine && (
+          <div className="text-[11px] lg:text-[12px] text-muted-foreground">{statusLine}</div>
+        )}
+        {mode === "watchlist" ? (
+          watchRows.length === 0 ? (
             <div className="text-[11px] lg:text-[12px] text-muted-foreground">
-              {emptyNotice(mode, radar?.universeSize ?? 0)}
+              No watched tokens. Open any token and press WATCH.
             </div>
-          ) : mode === "momentum" ? (
-            momentum.map((m) => <MomentumRow key={m.key} signal={m} snapshot={byKey.get(m.key)} />)
           ) : (
-            risk.map((e) => <RiskRow key={e.key} event={e} snapshot={byKey.get(e.key)} />)
-          )}
+            <>
+              <div className="mv-tape -mx-2">
+                {(showAll ? watchRows : watchRows.slice(0, limit)).map((r) => (
+                  <WatchlistRow key={r.item.key} row={r} fresh={fresh.has(r.item.key)} />
+                ))}
+              </div>
+              {watchRows.length > limit && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll((v) => !v)}
+                  aria-expanded={showAll}
+                  className="min-h-8 font-mono text-[10px] tracking-[0.14em] text-(--faint) transition-colors duration-(--dur-micro) hover:text-foreground"
+                >
+                  {showAll ? "SHOW FEWER" : `SHOW ALL ${watchRows.length}`}
+                </button>
+              )}
+            </>
+          )
+        ) : isLoading ? (
+          <TapeSkeleton rows={3} label="Loading Alpha Radar" />
+        ) : status === "offline" ? null : rows === 0 ? (
+          <div className="text-[11px] lg:text-[12px] text-muted-foreground">
+            {emptyNotice(mode, radar?.universeSize ?? 0)}
+          </div>
+        ) : (
+          <div className="mv-tape -mx-2">
+            {mode === "momentum"
+              ? momentum.map((m) => (
+                  <MomentumRow
+                    key={m.key}
+                    signal={m}
+                    snapshot={byKey.get(m.key)}
+                    fresh={fresh.has(m.key)}
+                  />
+                ))
+              : risk.map((e) => (
+                  <RiskRow
+                    key={e.key}
+                    event={e}
+                    snapshot={byKey.get(e.key)}
+                    fresh={fresh.has(e.key)}
+                  />
+                ))}
+          </div>
+        )}
 
-          {radar && !isLoading && status !== "offline" && mode !== "watchlist" && (
-            <div className="pt-1 text-[10px] font-mono text-(--faint)">
-              UNIVERSE {radar.universeSize} PAIRS · HISTORY SINCE{" "}
-              {radar.historySince != null ? clock(radar.historySince) : "—"} · RULES: VA≥3 TA≥2
-              B/S≥1.5 LIQ≥$25K AGE≥10M
-            </div>
-          )}
-        </div>
-      </Panel>
-    </div>
+        {radar && !isLoading && status !== "offline" && mode !== "watchlist" && (
+          <div className="pt-1 text-[10px] font-mono text-(--faint)">
+            UNIVERSE {radar.universeSize} PAIRS · HISTORY SINCE{" "}
+            {radar.historySince != null ? clock(radar.historySince) : "—"} · RULES: VA≥3 TA≥2
+            B/S≥1.5 LIQ≥$25K AGE≥10M
+          </div>
+        )}
+      </div>
+    </Panel>
   );
 }
 
+const MODES = [
+  { id: "momentum", label: "MOMENTUM" },
+  { id: "risk", label: "RISK" },
+  { id: "watchlist", label: "WATCHLIST" },
+] as const;
+
 function ChainChip({ chainId }: { chainId: string }) {
-  return (
-    <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[9px] lg:text-[10px] font-mono">
-      {normalizeChain(chainId).toUpperCase()}
-    </span>
-  );
+  return <span className="mv-chip text-(--gold)">{normalizeChain(chainId).toUpperCase()}</span>;
 }
 
 /** A radar row opens the Token Intelligence Drawer; provider links live inside it. */
-function RowShell({ tokenRef, children }: { tokenRef?: TokenRef; children: React.ReactNode }) {
+function RowShell({
+  tokenRef,
+  fresh = false,
+  children,
+}: {
+  tokenRef?: TokenRef;
+  /** Arrived after the list's first render: a brief tint that decays. */
+  fresh?: boolean;
+  children: React.ReactNode;
+}) {
   const { open } = useTokenDrawerActions();
-  const className =
-    "flex w-full items-center justify-between rounded-md border border-(--hairline) p-2 lg:p-3 text-left hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all";
+  const className = `mv-row flex w-full items-center justify-between gap-3 rounded-sm px-2 py-2.5 text-left ${
+    fresh ? "mv-row-new" : ""
+  }`;
   return tokenRef ? (
     <button
       type="button"
@@ -188,20 +214,24 @@ function RowShell({ tokenRef, children }: { tokenRef?: TokenRef; children: React
   );
 }
 
-function MomentumRow({ signal, snapshot }: { signal: MomentumSignal; snapshot?: PairSnapshot }) {
+function MomentumRow({
+  signal,
+  snapshot,
+  fresh,
+}: {
+  signal: MomentumSignal;
+  snapshot?: PairSnapshot;
+  fresh?: boolean;
+}) {
   const symbol = snapshot?.baseSymbol ?? signal.key;
   const priceM5 = snapshot?.priceChange.m5 ?? null;
   return (
-    <RowShell tokenRef={snapshot ? refFromSnapshot(snapshot) : undefined}>
+    <RowShell tokenRef={snapshot ? refFromSnapshot(snapshot) : undefined} fresh={fresh}>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[12px] font-mono text-(--bone) truncate">{symbol}</span>
           <ChainChip chainId={snapshot?.chainId ?? signal.key.split(":")[0]} />
-          <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--champagne) text-[9px] lg:text-[10px] font-mono">
-            {signal.label}
-          </span>
-          <span className="text-[11px] lg:text-[12px] font-mono text-foreground truncate">
-            {symbol}
-          </span>
+          <span className="mv-chip text-(--champagne)">{signal.label}</span>
         </div>
         <div className="text-[10px] lg:text-[11px] font-mono text-muted-foreground mt-1">
           VA {signal.va.ratio.toFixed(1)}× · TX {signal.ta.ratio.toFixed(1)}× · B/S{" "}
@@ -229,23 +259,27 @@ function MomentumRow({ signal, snapshot }: { signal: MomentumSignal; snapshot?: 
   );
 }
 
-function RiskRow({ event, snapshot }: { event: LiquidityEvent; snapshot?: PairSnapshot }) {
+function RiskRow({
+  event,
+  snapshot,
+  fresh,
+}: {
+  event: LiquidityEvent;
+  snapshot?: PairSnapshot;
+  fresh?: boolean;
+}) {
   const symbol = snapshot?.baseSymbol ?? event.key;
   const c = event.change;
   return (
-    <RowShell tokenRef={snapshot ? refFromSnapshot(snapshot) : undefined}>
+    <RowShell tokenRef={snapshot ? refFromSnapshot(snapshot) : undefined} fresh={fresh}>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[12px] font-mono text-(--bone) truncate">{symbol}</span>
           <ChainChip chainId={snapshot?.chainId ?? event.key.split(":")[0]} />
           <span
-            className={`px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-[9px] lg:text-[10px] font-mono ${
-              event.direction === "REMOVED" ? "text-(--down)" : "text-(--up)"
-            }`}
+            className={`mv-chip ${event.direction === "REMOVED" ? "text-(--down)" : "text-(--up)"}`}
           >
             LIQ {event.direction}
-          </span>
-          <span className="text-[11px] lg:text-[12px] font-mono text-foreground truncate">
-            {symbol}
           </span>
         </div>
         <div className="text-[10px] lg:text-[11px] font-mono text-muted-foreground mt-1">
@@ -254,9 +288,11 @@ function RiskRow({ event, snapshot }: { event: LiquidityEvent; snapshot?: PairSn
         </div>
       </div>
       <div className="text-right flex-shrink-0 pl-3">
+        {/* Severity reads by weight and word, not color alone. */}
         <div
-          className={`text-[11px] lg:text-[12px] font-mono ${
-            event.severity === "HIGH" ? "text-(--down)" : "text-(--champagne)"
+          data-severity={event.severity}
+          className={`text-[11px] lg:text-[12px] font-mono tracking-[0.08em] ${
+            event.severity === "HIGH" ? "font-semibold text-(--down)" : "text-(--champagne)"
           }`}
         >
           {event.severity}
@@ -295,28 +331,36 @@ const changeText = (n: number | null, window: string) =>
  * A watched token: identity from the watchlist, every market field from the
  * latest real observation (or none). State uses the drawer's temporal truth.
  */
-function WatchlistRow({ row }: { row: WatchRow }) {
+const STATE_DOT: Record<WatchState, DeskState> = {
+  LIVE: "live",
+  DEGRADED: "degraded",
+  STALE: "stale",
+  RETAINED: "stale",
+  "IDENTITY ONLY": "loading",
+};
+
+function WatchlistRow({ row, fresh }: { row: WatchRow; fresh?: boolean }) {
   const m5 = changeText(row.changeM5, "5m");
   const h1 = changeText(row.changeH1, "1h");
   return (
-    <RowShell tokenRef={row.ref}>
+    <RowShell tokenRef={row.ref} fresh={fresh}>
       <div className="min-w-0" data-testid="watch-row" data-key={row.item.key}>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <ChainChip chainId={row.item.chainId} />
-          <span className="text-[11px] lg:text-[12px] font-mono text-foreground truncate">
+          <span className="text-[12px] font-mono text-(--bone) truncate">
             {row.symbol ?? shortAddress(row.item.address)}
           </span>
+          <ChainChip chainId={row.item.chainId} />
           <span
-            className={`text-[9px] lg:text-[10px] font-mono tracking-[0.12em] ${STATE_TONE[row.state]}`}
-            data-testid="watch-state"
+            className={`flex items-center gap-1.5 text-[9px] lg:text-[10px] font-mono tracking-[0.12em] ${STATE_TONE[row.state]}`}
           >
-            {row.state}
+            <StateDot state={STATE_DOT[row.state]} />
+            <span data-testid="watch-state">{row.state}</span>
           </span>
         </div>
         <div className="text-[10px] lg:text-[11px] font-mono text-muted-foreground mt-1 flex flex-wrap gap-x-2">
           {row.priceUsd != null ? (
             <>
-              <span className="text-(--bone)">{formatPrice2(row.priceUsd)}</span>
+              <Price value={row.priceUsd} className="text-(--bone)" />
               {m5}
               {h1}
               <span>LIQ {row.liquidityUsd == null ? "—" : formatNumber(row.liquidityUsd)}</span>
@@ -330,13 +374,7 @@ function WatchlistRow({ row }: { row: WatchRow }) {
         </div>
       </div>
       <div className="text-right flex-shrink-0 pl-3 text-[10px] lg:text-[11px] font-mono">
-        {row.signal && (
-          <span
-            className={`px-1.5 py-0.5 rounded-full border border-(--hairline-strong) ${SIGNAL_TONE[row.signal]}`}
-          >
-            {row.signal}
-          </span>
-        )}
+        {row.signal && <span className={`mv-chip ${SIGNAL_TONE[row.signal]}`}>{row.signal}</span>}
         {row.lastSignal && (
           <span className="text-(--faint)" data-testid="watch-last-signal">
             LAST SIGNAL {row.lastSignal}

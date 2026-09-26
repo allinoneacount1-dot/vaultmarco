@@ -106,7 +106,7 @@ export function TradingViewChart({
             href="https://www.tradingview.com/"
             rel="noopener nofollow"
             target="_blank"
-            className="text-(--gold) hover:text-(--bone) transition-colors"
+            className="inline-flex h-8 items-center text-(--gold) transition-colors hover:text-(--bone)"
           >
             <span className="blue-text">Track all markets on TradingView</span>
           </a>

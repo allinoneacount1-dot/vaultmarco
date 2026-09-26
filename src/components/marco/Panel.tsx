@@ -1,25 +1,36 @@
 import { LucideIcon } from "lucide-react";
 
+/**
+ * A desk module. Panels are containers, not controls: they never take hover
+ * treatment — only the interactive rows inside them do.
+ */
 export function Panel({
   title,
   icon: Icon,
+  aside,
   children,
 }: {
   title: string;
   icon: LucideIcon;
+  /** Header controls (e.g. a segmented source / mode switch), right-aligned. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div className="hairline bg-(--panel) p-5">
-      <div className="hairline-b mb-3 flex items-center justify-between pb-3">
-        <span className="mono-label flex items-center gap-2.5">
-          <span className="size-1 rounded-full bg-(--gold)" />
-          {title}
+    <section className="mv-panel p-4 sm:p-5" aria-label={title}>
+      <div
+        className={`hairline-b mb-3 flex min-h-8 items-center justify-between gap-x-4 gap-y-2 pb-3 ${
+          aside ? "flex-wrap" : ""
+        }`}
+      >
+        <span className="mono-label flex min-w-0 items-center gap-2.5">
+          <span className="size-1 shrink-0 rounded-full bg-(--gold)" />
+          <span className="truncate">{title}</span>
         </span>
-        <Icon className="size-3.5 text-(--faint)" strokeWidth={1.8} />
+        {aside ?? <Icon className="size-3.5 shrink-0 text-(--faint)" strokeWidth={1.8} />}
       </div>
       <div className="space-y-2">{children}</div>
-    </div>
+    </section>
   );
 }
 
