@@ -12,9 +12,13 @@ import { toPairSnapshot } from "@/lib/signals/pairSnapshot";
  * observations. Outcome capture never depends on the token still being in the
  * discovery universe.
  *
- * Order of preference for a due outcome:
- *   1. the event's exact pair is in THIS round's snapshots  → reuse (no request)
- *   2. otherwise: multi-token batch  /tokens/v1/{chain}/{≤30 token addresses}
+ * Order for each pending outcome (exact):
+ *   1. locate the event; if its exact pair is in THIS round's snapshots and
+ *      that sample's real observedAt is inside [targetAt, windowEndAt]
+ *      → OBSERVED from the round (no request)
+ *   then, only if not observed: now > windowEndAt → UNAVAILABLE;
+ *   now < targetAt → not yet due; otherwise a targeted fetch:
+ *   2. multi-token batch  /tokens/v1/{chain}/{≤30 token addresses}
  *      and select the EXACT captured pairAddress from the returned pairs
  *   3. pair not in that response: /latest/dex/pairs/{chain}/{≤30 pair addresses}
  *   4. still not observed when the window closes → UNAVAILABLE
@@ -70,23 +74,29 @@ export function planDue(args: {
 
   const needByChain = new Map<string, Map<string, DueWant[]>>(); // chain → token address → wants
   for (const o of pending) {
+    const ev = events.get(o.eventId);
+    // 1. The event's exact pair in THIS round, judged by the sample's REAL
+    //    observedAt — before any expiry, so the recorder's processing clock
+    //    never invalidates a sample captured inside the legal window.
+    const own = ev && byPair.get(`${ev.chainId}|${canonicalAddressForKey(ev.pairAddress)}`);
+    const reused = ev && own ? acceptSample(o, ev, own, "ROUND", args.roundKey) : null;
+    if (reused) {
+      plan.fromRound.push(reused);
+      continue;
+    }
+    // 2. Only then: window elapsed with no accepted sample → UNAVAILABLE.
     const expired = expireIfElapsed(o, now);
     if (expired) {
       plan.expired.push(expired);
       continue;
     }
+    // 3. Target not reached yet.
     if (!isDue(o, now)) {
       plan.notYetDue++;
       continue;
     }
-    const ev = events.get(o.eventId);
     if (!ev) continue;
-    const own = byPair.get(`${ev.chainId}|${canonicalAddressForKey(ev.pairAddress)}`);
-    const reused = own ? acceptSample(o, ev, own, "ROUND", args.roundKey) : null;
-    if (reused) {
-      plan.fromRound.push(reused);
-      continue;
-    }
+    // 4. Targeted fetch for the exact pair.
     const tokens = needByChain.get(ev.chainId) ?? new Map<string, DueWant[]>();
     // Dedupe token addresses by identity (EVM case-folded, Base58 exact).
     const tokenKey = canonicalAddressForKey(ev.address);

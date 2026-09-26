@@ -1,13 +1,7 @@
 import { EXIT_NEGATIVE_STREAK, MAX_NEGATIVE_GAP_MS, TRACKING_LOST_MS } from "./constants";
 import { compactSnapshot } from "./compact";
 import { eventId } from "./ids";
-import type {
-  EpisodeState,
-  ObservationClass,
-  SignalEvent,
-  SignalEvidence,
-  SignalType,
-} from "./model";
+import type { EpisodeState, Observation, SignalEvent, SignalEvidence, SignalType } from "./model";
 import type { PairSnapshot } from "@/lib/signals/pairSnapshot";
 
 /**
@@ -22,8 +16,23 @@ import type { PairSnapshot } from "@/lib/signals/pairSnapshot";
  *   LOST      no valid observation for TRACKING_LOST_MS → CLOSED / TRACKING_LOST
  *   RULES     rules version changed → CLOSED / RULES_CHANGED
  *
+ * TIME. Every episode time is the REAL observation time the classifier
+ * returns (`Observation.observedAt`), never the scheduled minute. The round's
+ * scheduled time is used only as the round-order guard (`lastEvaluatedAt`),
+ * for RULES_CHANGED, and as the evaluation time of a NO_DATA round (which has
+ * no observation; the scheduled minute is never later than real time, so a
+ * loss is never declared early).
+ *
+ * TRACKING LOSS IS CHECKED FIRST. Before a new FIRED or VALID_NEGATIVE is
+ * attached, the gap since the previous `lastValidAt` is measured. If it is
+ * ≥ TRACKING_LOST_MS (e.g. the recorder was down), the episode closes as
+ * TRACKING_LOST at `lastValidAt + TRACKING_LOST_MS` and the new observation is
+ * NOT attached: a FIRED then opens a NEW episode in the same round; a
+ * VALID_NEGATIVE opens nothing.
+ *
  * Monotonic: a round at or before `lastEvaluatedAt` is ignored, so replaying
- * a round (or an older round after a newer one) is a no-op.
+ * a round (or an older round after a newer one) is a no-op. An observation not
+ * newer than `lastValidAt` is not new evidence and counts as NO_DATA.
  */
 
 export type FiredSignal = {
@@ -41,7 +50,7 @@ export type RoundInput = {
   at: number;
   rulesVersion: string;
   /** Only meaningful for usable rounds; non-usable rounds classify as NO_DATA. */
-  observe: (assetKey: string, type: SignalType) => ObservationClass;
+  observe: (assetKey: string, type: SignalType) => Observation;
   /** Signals the engine emitted this round (empty for non-usable rounds). */
   fired: readonly FiredSignal[];
 };
@@ -60,21 +69,38 @@ function maxOrNull(a: number | null, b: number | null): number | null {
   return Math.max(a, b);
 }
 
-/** Apply one observation to one open episode. Returns the new state, or null when unchanged. */
+/**
+ * Apply one observation to one open episode in the round scheduled at
+ * `roundAt`. Returns the new state, or null when the round is a replay.
+ */
 export function stepEpisode(
   ep: EpisodeState,
-  cls: ObservationClass,
-  at: number,
+  obs: Observation,
+  roundAt: number,
   fired: FiredSignal | undefined,
 ): EpisodeState | null {
-  if (ep.status !== "OPEN" || at <= ep.lastEvaluatedAt) return null;
-  let next: EpisodeState = { ...ep, lastEvaluatedAt: at };
+  if (ep.status !== "OPEN" || roundAt <= ep.lastEvaluatedAt) return null;
+  const next: EpisodeState = { ...ep, lastEvaluatedAt: roundAt };
+  const fresh = obs.observedAt != null && obs.observedAt > ep.lastValidAt;
+  const t = fresh ? obs.observedAt! : roundAt;
 
-  if (cls === "FIRED") {
-    next = {
+  // 1. Tracking loss, judged BEFORE the new observation may be attached.
+  if (t - ep.lastValidAt >= TRACKING_LOST_MS) {
+    return {
       ...next,
-      lastFiredAt: at,
-      lastValidAt: at,
+      status: "CLOSED",
+      closeReason: "TRACKING_LOST",
+      closedAt: ep.lastValidAt + TRACKING_LOST_MS,
+    };
+  }
+  if (!fresh) return next; // NO_DATA: nothing else changes
+
+  // 2. Attach the observation at its real time.
+  if (obs.class === "FIRED") {
+    return {
+      ...next,
+      lastFiredAt: t,
+      lastValidAt: t,
       roundsFired: ep.roundsFired + 1,
       negativeStreakCount: 0,
       negativeStreakStartedAt: null,
@@ -85,28 +111,23 @@ export function stepEpisode(
         fired?.absLiquidityDeltaUsd ?? null,
       ),
     };
-  } else if (cls === "VALID_NEGATIVE") {
-    const continuous =
-      ep.negativeStreakCount > 0 &&
-      ep.lastValidNegativeAt != null &&
-      at - ep.lastValidNegativeAt <= MAX_NEGATIVE_GAP_MS;
-    const count = continuous ? ep.negativeStreakCount + 1 : 1;
-    next = {
-      ...next,
-      lastValidAt: at,
-      negativeStreakCount: count,
-      negativeStreakStartedAt: continuous ? ep.negativeStreakStartedAt : at,
-      lastValidNegativeAt: at,
-    };
-    if (count >= EXIT_NEGATIVE_STREAK) {
-      return { ...next, status: "CLOSED", closeReason: "SIGNAL_EXIT", closedAt: at };
-    }
   }
-
-  if (at - next.lastValidAt >= TRACKING_LOST_MS) {
-    return { ...next, status: "CLOSED", closeReason: "TRACKING_LOST", closedAt: at };
+  const continuous =
+    ep.negativeStreakCount > 0 &&
+    ep.lastValidNegativeAt != null &&
+    t - ep.lastValidNegativeAt <= MAX_NEGATIVE_GAP_MS;
+  const count = continuous ? ep.negativeStreakCount + 1 : 1;
+  const negative: EpisodeState = {
+    ...next,
+    lastValidAt: t,
+    negativeStreakCount: count,
+    negativeStreakStartedAt: continuous ? ep.negativeStreakStartedAt : t,
+    lastValidNegativeAt: t,
+  };
+  if (count >= EXIT_NEGATIVE_STREAK) {
+    return { ...negative, status: "CLOSED", closeReason: "SIGNAL_EXIT", closedAt: t };
   }
-  return next;
+  return negative;
 }
 
 function newEpisode(
@@ -124,8 +145,8 @@ function newEpisode(
     type: f.type,
     severity: f.severity,
     rulesVersion: round.rulesVersion,
-    openedRound: round.key,
-    openedAt: round.at,
+    openedRound: round.key, // scheduler identity
+    openedAt: f.snapshot.observedAt, // real observation time
     evidence: f.evidence,
     openSnapshot: compactSnapshot(f.snapshot),
   };
@@ -137,8 +158,8 @@ function newEpisode(
     status: "OPEN",
     closeReason: null,
     closedAt: null,
-    lastFiredAt: round.at,
-    lastValidAt: round.at,
+    lastFiredAt: f.snapshot.observedAt,
+    lastValidAt: f.snapshot.observedAt,
     lastEvaluatedAt: round.at,
     negativeStreakCount: 0,
     negativeStreakStartedAt: null,
@@ -153,6 +174,8 @@ function newEpisode(
 /**
  * One round's transitions for every open episode plus every fired signal.
  * A signal whose pair has no pairAddress cannot anchor outcomes and is not opened.
+ * A signal whose previous episode closed this round (TRACKING_LOST or
+ * RULES_CHANGED) opens a new episode with a distinct event id (new openedRound).
  */
 export function applyRound(open: readonly EpisodeState[], round: RoundInput): EpisodeTransitions {
   const out: EpisodeTransitions = { opened: [], updated: [] };
@@ -180,11 +203,10 @@ export function applyRound(open: readonly EpisodeState[], round: RoundInput): Ep
     }
     const k = openKey(ep.assetKey, ep.type);
     const next = stepEpisode(ep, round.observe(ep.assetKey, ep.type), round.at, firedBy.get(k));
-    if (next) {
-      out.updated.push({ episode: next, expectedLastEvaluatedAt: ep.lastEvaluatedAt });
-      if (next.status === "OPEN") stillOpen.add(k);
-      else if (firedBy.has(k)) stillOpen.add(k); // closed this round cannot also re-open in it
-    }
+    if (next) out.updated.push({ episode: next, expectedLastEvaluatedAt: ep.lastEvaluatedAt });
+    // A FIRED can only close an episode as TRACKING_LOST (never SIGNAL_EXIT);
+    // it then opens the NEW episode below, in this same round.
+    if (!next || next.status === "OPEN") stillOpen.add(k);
   }
 
   for (const f of round.fired) {

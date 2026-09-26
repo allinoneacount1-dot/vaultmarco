@@ -8,7 +8,7 @@ import {
 } from "@/lib/history/constants";
 import { applyRound, stepEpisode, type FiredSignal } from "@/lib/history/episodes";
 import { eventId, roundKey, rulesVersion, rulesVersionOf } from "@/lib/history/ids";
-import type { EpisodeState, ObservationClass, SignalType } from "@/lib/history/model";
+import type { EpisodeState, Observation, ObservationClass, SignalType } from "@/lib/history/model";
 import {
   acceptSample,
   expireIfElapsed,
@@ -77,10 +77,15 @@ function openEp(at = T0): EpisodeState {
   };
 }
 
-/** Feed a sequence of (minute offset, class) into one episode. */
-function run(seq: Array<[number, ObservationClass]>, start = openEp()) {
+/** An observation of class `cls` captured at real time `at` (NO_DATA has no time). */
+const obs = (cls: ObservationClass, at: number): Observation =>
+  cls === "NO_DATA" ? { class: "NO_DATA", observedAt: null } : { class: cls, observedAt: at };
+
+/** Feed a sequence of (minute offset, class) into one episode; observed `lag` ms after the scheduled minute. */
+function run(seq: Array<[number, ObservationClass]>, start = openEp(), lag = 0) {
   let ep = start;
-  for (const [m, cls] of seq) ep = stepEpisode(ep, cls, T0 + m * MIN, undefined) ?? ep;
+  for (const [m, cls] of seq)
+    ep = stepEpisode(ep, obs(cls, T0 + m * MIN + lag), T0 + m * MIN, undefined) ?? ep;
   return ep;
 }
 
@@ -150,7 +155,8 @@ describe("episode state machine", () => {
 
   it("gap one millisecond over the limit restarts the streak", () => {
     let ep = run([[1, "VALID_NEGATIVE"]]);
-    ep = stepEpisode(ep, "VALID_NEGATIVE", T0 + MIN + MAX_NEGATIVE_GAP_MS + 1, undefined)!;
+    const t = T0 + MIN + MAX_NEGATIVE_GAP_MS + 1;
+    ep = stepEpisode(ep, obs("VALID_NEGATIVE", t), t, undefined)!;
     expect(ep.negativeStreakCount).toBe(1);
   });
 
@@ -169,10 +175,115 @@ describe("episode state machine", () => {
 
   it("a closed episode and replayed / older rounds are no-ops", () => {
     const ep = run([[1, "VALID_NEGATIVE"]]);
-    expect(stepEpisode(ep, "VALID_NEGATIVE", T0 + MIN, undefined)).toBeNull(); // same round
-    expect(stepEpisode(ep, "FIRED", T0, undefined)).toBeNull(); // older
+    const neg = obs("VALID_NEGATIVE", T0 + MIN + 5000);
+    expect(stepEpisode(ep, neg, T0 + MIN, undefined)).toBeNull(); // same round
+    expect(stepEpisode(ep, obs("FIRED", T0), T0, undefined)).toBeNull(); // older
     const closed = { ...ep, status: "CLOSED" as const };
-    expect(stepEpisode(closed, "FIRED", T0 + 9 * MIN, undefined)).toBeNull();
+    expect(stepEpisode(closed, obs("FIRED", T0 + 9 * MIN), T0 + 9 * MIN, undefined)).toBeNull();
+  });
+
+  it("an observation not newer than lastValidAt is not new evidence (counts as NO_DATA)", () => {
+    const ep = openEp(T0 + 30_000); // last valid observation at 00:00:30
+    const next = stepEpisode(ep, obs("VALID_NEGATIVE", T0 + 30_000), T0 + MIN, undefined)!;
+    expect([next.negativeStreakCount, next.lastValidAt, next.lastEvaluatedAt]).toEqual([
+      0,
+      T0 + 30_000,
+      T0 + MIN,
+    ]);
+  });
+});
+
+describe("episode time = REAL observation time, not the scheduled minute", () => {
+  const LAG = 40_000; // every round observed 40 s after its scheduled minute
+
+  it("FIRED and VALID_NEGATIVE record observedAt; lastEvaluatedAt stays the scheduled round", () => {
+    const ep = run(
+      [
+        [1, "VALID_NEGATIVE"],
+        [2, "FIRED"],
+        [3, "VALID_NEGATIVE"],
+      ],
+      openEp(),
+      LAG,
+    );
+    expect(ep.lastFiredAt).toBe(T0 + 2 * MIN + LAG);
+    expect(ep.lastValidAt).toBe(T0 + 3 * MIN + LAG);
+    expect(ep.negativeStreakStartedAt).toBe(T0 + 3 * MIN + LAG);
+    expect(ep.lastValidNegativeAt).toBe(T0 + 3 * MIN + LAG);
+    expect(ep.lastEvaluatedAt).toBe(T0 + 3 * MIN);
+  });
+
+  it("SIGNAL_EXIT closes at the real time of the fifth negative", () => {
+    const ep = run(
+      [1, 2, 3, 4, 5].map((m) => [m, "VALID_NEGATIVE"] as [number, ObservationClass]),
+      openEp(),
+      LAG,
+    );
+    expect([ep.closeReason, ep.closedAt]).toEqual(["SIGNAL_EXIT", T0 + 5 * MIN + LAG]);
+  });
+
+  it("negative continuity is measured between REAL observation times", () => {
+    // Scheduled 1 min apart, but observed 5 min + 1 ms apart → not continuous.
+    let ep = openEp();
+    ep = stepEpisode(ep, obs("VALID_NEGATIVE", T0 + MIN), T0 + MIN, undefined)!;
+    ep = stepEpisode(
+      ep,
+      obs("VALID_NEGATIVE", T0 + MIN + MAX_NEGATIVE_GAP_MS + 1),
+      T0 + 2 * MIN,
+      undefined,
+    )!;
+    expect(ep.negativeStreakCount).toBe(1);
+  });
+});
+
+describe("tracking loss is judged BEFORE a new observation is attached", () => {
+  const LOST = TRACKING_LOST_MS;
+
+  it("FIRED → >60 min without rounds → FIRED: TRACKING_LOST at lastValidAt + 60 min, observation not attached", () => {
+    const ep = openEp(T0 + 2000);
+    const next = stepEpisode(ep, obs("FIRED", T0 + 61 * MIN + 2000), T0 + 61 * MIN, undefined)!;
+    expect([next.status, next.closeReason, next.closedAt]).toEqual([
+      "CLOSED",
+      "TRACKING_LOST",
+      T0 + 2000 + LOST,
+    ]);
+    expect([next.lastFiredAt, next.lastValidAt, next.roundsFired]).toEqual([
+      T0 + 2000,
+      T0 + 2000,
+      1,
+    ]);
+  });
+
+  it("FIRED → >60 min without rounds → VALID_NEGATIVE: TRACKING_LOST, streak untouched", () => {
+    const ep = openEp(T0);
+    const next = stepEpisode(ep, obs("VALID_NEGATIVE", T0 + 61 * MIN), T0 + 61 * MIN, undefined)!;
+    expect([next.closeReason, next.closedAt, next.negativeStreakCount]).toEqual([
+      "TRACKING_LOST",
+      T0 + LOST,
+      0,
+    ]);
+  });
+
+  it("exact boundary: a valid observation at lastValidAt + 60 min is lost; 1 ms earlier it attaches", () => {
+    const ep = openEp(T0);
+    const at = stepEpisode(ep, obs("FIRED", T0 + LOST), T0 + 60 * MIN, undefined)!;
+    expect([at.closeReason, at.closedAt]).toEqual(["TRACKING_LOST", T0 + LOST]);
+    const before = stepEpisode(ep, obs("FIRED", T0 + LOST - 1), T0 + 59 * MIN, undefined)!;
+    expect([before.status, before.lastValidAt, before.roundsFired]).toEqual([
+      "OPEN",
+      T0 + LOST - 1,
+      2,
+    ]);
+    const neg = stepEpisode(ep, obs("VALID_NEGATIVE", T0 + LOST), T0 + 60 * MIN, undefined)!;
+    expect(neg.closeReason).toBe("TRACKING_LOST");
+  });
+
+  it("NO_DATA rounds close at lastValidAt + 60 min even when the loss is detected later", () => {
+    const ep = openEp(T0 + 40_000);
+    const early = stepEpisode(ep, obs("NO_DATA", 0), T0 + 60 * MIN, undefined)!;
+    expect(early.status).toBe("OPEN"); // 59 min 20 s since the last valid observation
+    const late = stepEpisode(early, obs("NO_DATA", 0), T0 + 61 * MIN, undefined)!;
+    expect([late.closeReason, late.closedAt]).toEqual(["TRACKING_LOST", T0 + 40_000 + LOST]);
   });
 });
 
@@ -191,13 +302,18 @@ describe("applyRound — open / dedupe / re-entry / rules change", () => {
     vaRatio: 4,
     absLiquidityDeltaUsd: null,
   });
-  const round = (m: number, obs: ObservationClass, f: FiredSignal[] = [], rules = "rv") => ({
+  const round = (m: number, cls: ObservationClass, f: FiredSignal[] = [], rules = "rv") => ({
     key: roundKey(T0 + m * MIN),
     at: T0 + m * MIN,
     rulesVersion: rules,
-    observe: () => obs,
+    observe: () => obs(cls, T0 + m * MIN),
     fired: f,
   });
+  const firedAt = (m: number, lag = 0): FiredSignal => {
+    const f = fired();
+    f.snapshot = { ...f.snapshot, observedAt: T0 + m * MIN + lag };
+    return f;
+  };
 
   it("FIRED opens exactly one episode; repeated FIRED does not duplicate", () => {
     const r1 = applyRound([], round(0, "FIRED", [fired(), fired()]));
@@ -238,6 +354,41 @@ describe("applyRound — open / dedupe / re-entry / rules change", () => {
     expect(r.updated[0].episode.closeReason).toBe("RULES_CHANGED");
     expect(r.opened).toHaveLength(1);
     expect(r.opened[0].event.rulesVersion).toBe("rv2");
+  });
+
+  it("openedRound is the scheduled minute; openedAt and episode times are the snapshot's real observedAt", () => {
+    const r = applyRound([], round(0, "FIRED", [firedAt(0, 40_000)]));
+    const { event, episode } = r.opened[0];
+    expect([event.openedRound, event.openedAt]).toEqual(["2026-09-26T00:00Z", T0 + 40_000]);
+    expect([episode.lastFiredAt, episode.lastValidAt, episode.lastEvaluatedAt]).toEqual([
+      T0 + 40_000,
+      T0 + 40_000,
+      T0,
+    ]);
+    expect(event.id).toBe(eventId("rv", HONSE_KEY, "EARLY_MOMENTUM", "2026-09-26T00:00Z"));
+  });
+
+  it("recorder downtime: TRACKING_LOST closes the old episode and the current FIRED opens a NEW one in the same round", () => {
+    const first = applyRound([], round(0, "FIRED", [firedAt(0)])).opened[0];
+    const r = applyRound([first.episode], round(61, "FIRED", [firedAt(61)]));
+    expect(r.updated).toHaveLength(1);
+    expect(r.updated[0].episode).toMatchObject({
+      eventId: first.event.id,
+      status: "CLOSED",
+      closeReason: "TRACKING_LOST",
+      closedAt: T0 + TRACKING_LOST_MS,
+    });
+    expect(r.opened).toHaveLength(1);
+    expect(r.opened[0].event.id).not.toBe(first.event.id);
+    expect(r.opened[0].event.openedRound).toBe("2026-09-26T01:01Z");
+    expect(r.opened[0].episode.status).toBe("OPEN");
+  });
+
+  it("recorder downtime then VALID_NEGATIVE: TRACKING_LOST and nothing opens", () => {
+    const first = applyRound([], round(0, "FIRED", [firedAt(0)])).opened[0];
+    const r = applyRound([first.episode], round(61, "VALID_NEGATIVE"));
+    expect(r.updated[0].episode.closeReason).toBe("TRACKING_LOST");
+    expect(r.opened).toHaveLength(0);
   });
 
   it("a signal with no pair address cannot anchor outcomes and is not opened", () => {

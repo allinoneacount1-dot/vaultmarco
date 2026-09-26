@@ -171,6 +171,65 @@ describe("due outcome planner", () => {
     expect(plan.notYetDue).toBe(4);
   });
 
+  describe("expiry ordering: a sample captured inside the window wins over the processing clock", () => {
+    const e = ev(1, "solana", HONSE, HONSE_PAIR);
+    const o = due15(e);
+    const T = o.windowEndAt;
+    const plan = (observedAt: number) =>
+      planDue({
+        now: T + 1, // recorder processing clock is already past the window
+        pending: [o],
+        events: new Map([[e.id, e]]),
+        roundSnapshots: [
+          snapshot({ key: HONSE_KEY, chainId: "solana", pairAddress: HONSE_PAIR, observedAt }),
+        ],
+        roundKey: "k",
+      });
+
+    it("windowEndAt = T, round sample observed T − 1 ms, now = T + 1 ms → OBSERVED", () => {
+      const p = plan(T - 1);
+      expect(p.expired).toEqual([]);
+      expect(p.fromRound).toHaveLength(1);
+      expect(p.fromRound[0]).toMatchObject({
+        availability: "OBSERVED",
+        source: "ROUND",
+        observedAt: T - 1,
+      });
+    });
+
+    it("sample observed exactly at windowEndAt (inclusive) → OBSERVED", () => {
+      expect(plan(T).fromRound[0]?.availability).toBe("OBSERVED");
+    });
+
+    it("round sample observed T + 1 ms, now = T + 1 ms → UNAVAILABLE", () => {
+      const p = plan(T + 1);
+      expect(p.fromRound).toEqual([]);
+      expect(p.expired.map((x) => [x.availability, x.unavailableReason])).toEqual([
+        ["UNAVAILABLE", "WINDOW_ELAPSED"],
+      ]);
+      expect(p.tokenBatches).toEqual([]);
+    });
+
+    it("a round sample BEFORE targetAt is never accepted, however close", () => {
+      const p = planDue({
+        now: o.targetAt + 1,
+        pending: [o],
+        events: new Map([[e.id, e]]),
+        roundSnapshots: [
+          snapshot({
+            key: HONSE_KEY,
+            chainId: "solana",
+            pairAddress: HONSE_PAIR,
+            observedAt: o.targetAt - 1,
+          }),
+        ],
+        roundKey: "k",
+      });
+      expect(p.fromRound).toEqual([]);
+      expect(p.tokenBatches).toHaveLength(1); // still due → targeted fetch
+    });
+  });
+
   it("exact pairAddress selection among several pools; missing pair → fallback plan", () => {
     const e = ev(1, "solana", HONSE, HONSE_PAIR);
     const o = due15(e);

@@ -2,7 +2,7 @@ import type { PairUniverse, RadarStatus } from "@/lib/providers/universe";
 import type { SnapshotHistory } from "@/lib/signals/history";
 import { liquidityChange } from "@/lib/signals/liquidity";
 import { LIQUIDITY_EVENT_LOOKBACK_MINUTES } from "@/lib/signals/thresholds";
-import type { ObservationClass, SignalType } from "./model";
+import type { Observation, SignalType } from "./model";
 
 /**
  * ROUND CLASSIFICATION — what one round tells us about one (asset, type).
@@ -17,6 +17,11 @@ import type { ObservationClass, SignalType } from "./model";
  *   FIRED           the engine emitted the signal this round
  *   VALID_NEGATIVE  the rule was fully evaluable on this round's data and did not fire
  *   NO_DATA         anything else: non-usable round, pair absent, inputs insufficient
+ *
+ * Each FIRED / VALID_NEGATIVE carries the REAL time of the evidence the engine
+ * evaluated, read from the engine's own output — never the scheduled minute:
+ *   momentum   the evaluated snapshot's `observedAt` (MomentumSignal / PairIntelligence)
+ *   liquidity  the comparison's `currentObservedAt` (LiquidityEvent / liquidityChange)
  */
 
 /** Rounds whose observations may move an episode. */
@@ -30,33 +35,40 @@ export type RoundView = {
   history: SnapshotHistory;
 };
 
-export function classify(round: RoundView, assetKey: string, type: SignalType): ObservationClass {
+const NO_DATA: Observation = { class: "NO_DATA", observedAt: null };
+const fired = (observedAt: number): Observation => ({ class: "FIRED", observedAt });
+const negative = (observedAt: number): Observation => ({ class: "VALID_NEGATIVE", observedAt });
+
+export function classify(round: RoundView, assetKey: string, type: SignalType): Observation {
   const u = round.universe;
-  if (!isUsableRound(round.status) || !u) return "NO_DATA";
+  if (!isUsableRound(round.status) || !u) return NO_DATA;
 
   if (type === "EARLY_MOMENTUM") {
-    if (u.radar.momentum.some((m) => m.key === assetKey)) return "FIRED";
+    const m = u.radar.momentum.find((s) => s.key === assetKey);
+    if (m) return fired(m.observedAt);
   } else {
     const direction = type === "LIQUIDITY_ADDED" ? "ADDED" : "REMOVED";
-    if (u.radar.risk.some((e) => e.key === assetKey && e.direction === direction)) return "FIRED";
+    const e = u.radar.risk.find((r) => r.key === assetKey && r.direction === direction);
+    if (e) return fired(e.change.currentObservedAt);
   }
 
   const intel = u.intelligence[assetKey];
-  if (!intel) return "NO_DATA"; // pair not observed this round
+  if (!intel) return NO_DATA; // pair not observed this round
 
   if (type === "EARLY_MOMENTUM") {
+    const at = intel.snapshot.observedAt;
     const { liquidity, age } = intel.gates;
     // A gate that failed on a REAL value is a decided negative.
-    if (liquidity.value != null && !liquidity.passed) return "VALID_NEGATIVE";
-    if (age.value != null && !age.passed) return "VALID_NEGATIVE";
+    if (liquidity.value != null && !liquidity.passed) return negative(at);
+    if (age.value != null && !age.passed) return negative(at);
     // Gates unknown → the rule could not be evaluated.
-    if (liquidity.value == null || age.value == null) return "NO_DATA";
+    if (liquidity.value == null || age.value == null) return NO_DATA;
     // Every required rule input must have been computable.
-    if (!intel.va.ok || !intel.ta.ok || !intel.bp.ok) return "NO_DATA";
-    return "VALID_NEGATIVE";
+    if (!intel.va.ok || !intel.ta.ok || !intel.bp.ok) return NO_DATA;
+    return negative(at);
   }
 
   // Liquidity events: evaluable exactly when the engine's own comparison exists.
   const change = liquidityChange(round.history.get(assetKey), LIQUIDITY_EVENT_LOOKBACK_MINUTES);
-  return change ? "VALID_NEGATIVE" : "NO_DATA";
+  return change ? negative(change.currentObservedAt) : NO_DATA;
 }

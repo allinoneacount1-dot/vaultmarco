@@ -3,6 +3,7 @@ import {
   ENGINE_RETENTION_MS,
   ROUND_LEASE_MS,
   ROUND_REQUEST_CEILING,
+  TRACKING_LOST_MS,
 } from "@/lib/history/constants";
 import { outcomeKey } from "@/lib/history/duePlanner";
 import { roundKey } from "@/lib/history/ids";
@@ -39,9 +40,9 @@ function harness(initial: Scenario = {}) {
     owner: `w${++n}`,
     sleep: noSleep,
   });
-  /** Run the round scheduled at minute m (sample taken 2 s into the minute). */
-  const at = async (m: number) => {
-    c.set(T0 + m * MIN + 2_000);
+  /** Run the round scheduled at minute m; the sample is taken `lagMs` into the minute (default 2 s). */
+  const at = async (m: number, lagMs = 2_000) => {
+    c.set(T0 + m * MIN + lagMs);
     return runRound(T0 + m * MIN, deps());
   };
   return { store, clock: c, log, deps, at, set: (s: Scenario) => (scenario = s) };
@@ -104,7 +105,7 @@ describe("recorder — episode lifecycle on real engine output", () => {
     expect(momentum(h.store)[0]).toMatchObject({
       status: "CLOSED",
       closeReason: "SIGNAL_EXIT",
-      closedAt: T0 + 7 * MIN,
+      closedAt: T0 + 7 * MIN + 2_000, // real time of the fifth negative observation
     });
 
     h.set({ honse: "signal" });
@@ -118,10 +119,15 @@ describe("recorder — episode lifecycle on real engine output", () => {
     const h = harness({ honse: "signal" });
     await h.at(0);
     h.set({ honse: "lowsample" }); // buy-pressure sample below the engine's minimum → not evaluable
-    for (let m = 1; m < 60; m++) await h.at(m);
+    // Last valid observation 00:00:02 → the round at 01:00 is 59 min 58 s later: still open.
+    for (let m = 1; m <= 60; m++) await h.at(m);
     expect(momentum(h.store)[0]).toMatchObject({ status: "OPEN", negativeStreakCount: 0 });
-    await h.at(60);
-    expect(momentum(h.store)[0]).toMatchObject({ status: "CLOSED", closeReason: "TRACKING_LOST" });
+    await h.at(61);
+    expect(momentum(h.store)[0]).toMatchObject({
+      status: "CLOSED",
+      closeReason: "TRACKING_LOST",
+      closedAt: T0 + 2_000 + TRACKING_LOST_MS,
+    });
   });
 
   it("a full provider outage: rounds recorded offline, no transitions, no negatives", async () => {
@@ -133,10 +139,72 @@ describe("recorder — episode lifecycle on real engine output", () => {
     expect(momentum(h.store)[0]).toMatchObject({
       status: "OPEN",
       negativeStreakCount: 0,
-      lastValidAt: T0,
+      lastValidAt: T0 + 2_000,
     });
     expect(h.store.engine.has(roundKey(T0 + MIN))).toBe(false); // nothing observed, nothing stored
     expect(r.requests).toBeLessThanOrEqual(ROUND_REQUEST_CEILING);
+  });
+
+  it("recorder down > 60 min, then FIRED: old episode TRACKING_LOST (not SIGNAL_EXIT), NEW episode with a distinct id, GAP rows stay GAP", async () => {
+    const h = harness({ honse: "signal" });
+    await h.at(0);
+    const [first] = momentum(h.store);
+    const r = await h.at(61); // minutes 1–60 never ran
+    expect(r).toMatchObject({ result: "COMPLETED", opened: 1, gaps: 60 });
+    expect(r.closed).toEqual({ SIGNAL_EXIT: 0, TRACKING_LOST: 1, RULES_CHANGED: 0 });
+    const eps = momentum(h.store);
+    expect(eps).toHaveLength(2);
+    const old = h.store.episodes.get(first.eventId)!;
+    expect(old).toMatchObject({
+      status: "CLOSED",
+      closeReason: "TRACKING_LOST",
+      closedAt: T0 + 2_000 + TRACKING_LOST_MS,
+      lastValidAt: T0 + 2_000, // the minute-61 observation was NOT attached
+      roundsFired: 1,
+    });
+    const fresh = eps.find((e) => e.eventId !== first.eventId)!;
+    expect(fresh).toMatchObject({ status: "OPEN", lastValidAt: T0 + 61 * MIN + 2_000 });
+    expect(h.store.eventsById.get(fresh.eventId)).toMatchObject({
+      openedRound: "2026-09-26T01:01Z",
+      openedAt: T0 + 61 * MIN + 2_000,
+    });
+    await h.at(62);
+    for (let m = 1; m <= 60; m++) {
+      expect(h.store.rounds.get(roundKey(T0 + m * MIN))).toMatchObject({
+        state: "GAP",
+        dataStatus: null,
+        requests: null,
+      });
+    }
+  });
+
+  it("recorder down > 60 min, then VALID_NEGATIVE: old episode TRACKING_LOST, nothing replaces it", async () => {
+    const h = harness({ honse: "signal" });
+    await h.at(0);
+    h.set({ honse: "negative" });
+    const r = await h.at(61);
+    expect(r.opened).toBe(0);
+    expect(r.closed.TRACKING_LOST).toBe(1);
+    const eps = momentum(h.store);
+    expect(eps).toHaveLength(1);
+    expect(eps[0]).toMatchObject({
+      closeReason: "TRACKING_LOST",
+      closedAt: T0 + 2_000 + TRACKING_LOST_MS,
+      negativeStreakCount: 0,
+    });
+  });
+
+  it("exact boundary on the recorder clock: valid observation exactly 60 min after lastValidAt is lost; 1 ms earlier it attaches", async () => {
+    const lost = harness({ honse: "signal" });
+    await lost.at(0, 0); // lastValidAt = 00:00:00.000
+    await lost.at(60, 0); // observed 01:00:00.000 = lastValidAt + 60 min
+    expect(momentum(lost.store).map((e) => e.closeReason)).toEqual(["TRACKING_LOST", null]);
+
+    const kept = harness({ honse: "signal" });
+    await kept.at(0, 1); // lastValidAt = 00:00:00.001
+    await kept.at(60, 0); // 59 min 59.999 s later
+    expect(momentum(kept.store)).toHaveLength(1);
+    expect(momentum(kept.store)[0]).toMatchObject({ status: "OPEN", roundsFired: 2 });
   });
 
   it("liquidity drain on the recorded pool fires LIQUIDITY_REMOVED from the engine's own rule", async () => {
@@ -253,7 +321,35 @@ describe("recorder — outcomes", () => {
       source: "ROUND",
       pairAddress: HONSE_PAIR,
       observedAt: T0 + 5 * MIN + 2_000,
-      delaySeconds: 2,
+      delaySeconds: 0, // target = openedAt (00:00:02) + 5 min
+    });
+  });
+
+  it("delayed round: scheduled 00:00:00, observed 00:00:40 → +5m target 00:05:40; an earlier sample never counts", async () => {
+    const h = harness({ honse: "signal" });
+    await h.at(0, 40_000);
+    const ev = [...h.store.eventsById.values()][0];
+    expect([ev.openedRound, ev.openedAt]).toEqual(["2026-09-26T00:00Z", T0 + 40_000]);
+    expect(momentum(h.store)[0]).toMatchObject({
+      lastFiredAt: T0 + 40_000,
+      lastValidAt: T0 + 40_000,
+      lastEvaluatedAt: T0,
+    });
+    const o5 = () => h.store.outcomes.get(outcomeKey(ev.id, 5))!;
+    expect([o5().targetAt, o5().windowEndAt]).toEqual([
+      T0 + 5 * MIN + 40_000,
+      T0 + 7 * MIN + 40_000,
+    ]);
+    for (let m = 1; m <= 5; m++) await h.at(m);
+    // Round 5 sampled the exact pair at 00:05:02 — before the 00:05:40 target.
+    expect(o5()).toMatchObject({ availability: "PENDING", observedAt: null });
+    expect(h.log.some((u) => u.includes(`/tokens/v1/solana/${HONSE}`))).toBe(false); // not due yet
+    await h.at(6);
+    expect(o5()).toMatchObject({
+      availability: "OBSERVED",
+      source: "ROUND",
+      observedAt: T0 + 6 * MIN + 2_000,
+      delaySeconds: 22,
     });
   });
 

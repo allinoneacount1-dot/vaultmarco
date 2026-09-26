@@ -38,9 +38,11 @@ import { SnapshotHistory } from "@/lib/signals/history";
  *   6. due outcomes: reuse this round, else targeted batches for the exact pair
  *   7. ONE atomic commit that re-verifies the claim
  *
- * Episode and outcome times use the scheduled minute (`roundStart`), so an
- * outcome's target lines up with a future round; each stored sample keeps its
- * real `observedAt`.
+ * Time model: the scheduled minute (`roundStart`) is the round's IDENTITY
+ * (round key, `openedRound`, claim/gap log, round-order guard). Every signal
+ * time — `openedAt`, `lastFiredAt`, `lastValidAt`, negative continuity, exit
+ * time, and therefore outcome targets — is the REAL `observedAt` of the
+ * snapshot the engine evaluated.
  */
 
 const API = "https://api.dexscreener.com";

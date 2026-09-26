@@ -17,6 +17,15 @@ export type SignalType = "EARLY_MOMENTUM" | "LIQUIDITY_ADDED" | "LIQUIDITY_REMOV
 /** What one usable round tells us about one (asset, signal type). */
 export type ObservationClass = "FIRED" | "VALID_NEGATIVE" | "NO_DATA";
 
+/**
+ * A classified observation with the REAL time the evidence was captured
+ * (the snapshot / liquidity comparison the engine evaluated) — never the
+ * scheduled minute. NO_DATA has no observation, so no time.
+ */
+export type Observation =
+  | { class: "FIRED" | "VALID_NEGATIVE"; observedAt: number }
+  | { class: "NO_DATA"; observedAt: null };
+
 /** Selected real PairSnapshot fields kept with an event or outcome — no full provider blobs. */
 export type CompactSnapshot = {
   observedAt: number;
@@ -58,8 +67,9 @@ export type SignalEvent = {
   type: SignalType;
   severity: "MEDIUM" | "HIGH" | null;
   rulesVersion: string;
-  /** Round key and time of the round the signal first fired in. */
+  /** Scheduler identity: key of the round (scheduled UTC minute) the signal first fired in. */
   openedRound: string;
+  /** REAL observation time of the snapshot that fired (`snapshot.observedAt`). Outcome targets derive from it. */
   openedAt: number;
   evidence: SignalEvidence;
   openSnapshot: CompactSnapshot;
@@ -81,11 +91,20 @@ export type EpisodeState = {
   rulesVersion: string;
   status: "OPEN" | "CLOSED";
   closeReason: EpisodeCloseReason | null;
+  /**
+   * SIGNAL_EXIT: real time of the observation completing the negative streak.
+   * TRACKING_LOST: lastValidAt + TRACKING_LOST_MS (the moment tracking was lost).
+   * RULES_CHANGED: scheduled time of the round that ran the new rules.
+   */
   closedAt: number | null;
+  /** Real observation time of the last FIRED observation. */
   lastFiredAt: number;
-  /** Last FIRED or VALID_NEGATIVE observation. */
+  /** Real observation time of the last FIRED or VALID_NEGATIVE observation. */
   lastValidAt: number;
-  /** Monotonic guard: rounds at or before this are ignored. */
+  /**
+   * Round-order guard only (scheduled minute of the last round applied):
+   * rounds at or before this are ignored. Never an observation time.
+   */
   lastEvaluatedAt: number;
   negativeStreakCount: number;
   negativeStreakStartedAt: number | null;
