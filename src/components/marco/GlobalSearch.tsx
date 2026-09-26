@@ -175,7 +175,7 @@ function SearchDialog({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-[var(--z-modal)] bg-(--void)/80" />
+        <DialogPrimitive.Overlay className="mv-motion fixed inset-0 z-[var(--z-modal)] bg-(--void)/70 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-(--dur-micro) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-(--dur-micro)" />
         <DialogPrimitive.Content
           data-testid="global-search"
           onOpenAutoFocus={() => {
@@ -199,7 +199,9 @@ function SearchDialog({
                 : trigger.current;
             target?.focus();
           }}
-          className="fixed inset-x-0 top-0 z-[var(--z-modal)] flex max-h-[85dvh] flex-col border-b border-(--hairline-strong) bg-(--graphite) shadow-lg sm:inset-x-auto sm:left-1/2 sm:top-[12vh] sm:max-h-[70vh] sm:w-[min(640px,calc(100vw-32px))] sm:-translate-x-1/2 sm:rounded-md sm:border"
+          // Command palette: a short fade + 4 px drop (micro), no blur. The input
+          // is focused at mount, so typing is never delayed by the animation.
+          className="mv-motion fixed inset-x-0 top-0 z-[var(--z-modal)] flex max-h-[85dvh] flex-col border-b border-(--hairline-strong) bg-(--elevated) shadow-(--shadow-elevated) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-1 data-[state=open]:duration-(--dur-micro) data-[state=open]:ease-(--ease-snap) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-(--dur-micro) sm:inset-x-auto sm:left-1/2 sm:top-[12vh] sm:max-h-[70vh] sm:w-[min(640px,calc(100vw-32px))] sm:-translate-x-1/2 sm:rounded-(--radius-md) sm:border"
         >
           <DialogPrimitive.Title className="sr-only">Global search</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
@@ -326,11 +328,11 @@ function ResultRow({
       data-key={e.key}
       onMouseMove={active ? undefined : onHover}
       onClick={onSelect}
-      className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2 aria-selected:border-(--hairline-strong) aria-selected:bg-(--panel-2)"
+      className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-sm border border-transparent px-3 py-2 aria-selected:border-(--hairline-strong) aria-selected:bg-(--panel-2) aria-selected:shadow-[inset_2px_0_0_var(--gold)]"
     >
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="shrink-0 rounded-full border border-(--hairline-strong) px-1.5 py-0.5 font-mono text-[9px] text-(--gold)">
+          <span className="mv-chip shrink-0 text-(--gold)">
             {normalizeChain(e.chainId).toUpperCase()}
           </span>
           <span className="shrink-0 font-mono text-[12px] font-semibold text-(--bone)">

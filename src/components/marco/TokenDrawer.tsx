@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formatNumber, formatPrice2 } from "./shared/helpers";
+import { formatNumber } from "./shared/helpers";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { radarHistory, useRadar } from "@/hooks/usePairUniverse";
 import { type OpenToken, useOpenToken, useTokenDrawerActions } from "@/hooks/useTokenDrawer";
@@ -7,6 +7,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import { shortAddress } from "@/lib/search";
 import { WATCHLIST_MAX_ITEMS } from "@/lib/watchlist";
+import { Pct, Price } from "./desk";
 import type { PairIntelligence } from "@/lib/signals/intelligence";
 import type { Evidence } from "@/lib/signals/momentum";
 import type { PairSnapshot, TxnWindow, UniverseSource } from "@/lib/signals/pairSnapshot";
@@ -20,7 +21,7 @@ import {
   resolveDrawerModel,
 } from "@/lib/tokenDrawer";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { ArrowUpRight, Bookmark, BookmarkCheck, Check, Copy, X } from "lucide-react";
 import {
   Sheet,
   SheetClose,
@@ -36,7 +37,6 @@ import {
  * ------------------------------------------------------------------ */
 
 const usd = (n: number | null) => (n == null ? "—" : formatNumber(n));
-const priceText = (n: number | null) => (n == null ? "—" : formatPrice2(n));
 const pctText = (n: number | null) => (n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`);
 const mins = (n: number) => (n < 60 ? `${Math.round(n)}m` : `${(n / 60).toFixed(1)}h`);
 const clock = (ms: number) =>
@@ -97,7 +97,7 @@ export function TokenDrawer() {
           overlay and the panel sit on the design system's modal layer
           (--z-modal), above the dashboard's fixed nav and mobile menu button. */}
       <SheetPortal>
-        <SheetOverlay className="z-[var(--z-modal)]" />
+        <SheetOverlay className="mv-motion z-[var(--z-modal)] bg-(--void)/60! duration-(--dur-standard)" />
         <SheetPrimitive.Content
           data-testid="token-drawer"
           data-key={ref?.key}
@@ -111,17 +111,24 @@ export function TokenDrawer() {
               trigger.focus();
             }
           }}
-          className={`fixed z-[var(--z-modal)] bg-(--graphite) shadow-lg overflow-y-auto overscroll-contain transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out ${
+          // Structural motion: 300 ms smooth-out in, 180 ms out. The page behind
+          // stays visible under a light scrim — the drawer is context, not a takeover.
+          className={`mv-motion fixed z-[var(--z-modal)] overflow-y-auto overscroll-contain bg-(--elevated) shadow-(--shadow-elevated) data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-(--dur-structural) data-[state=closed]:duration-(--dur-exit) data-[state=open]:ease-(--ease-vault) data-[state=closed]:ease-(--ease-snap) ${
             isMobile
-              ? "inset-x-0 bottom-0 h-[85vh] border-t border-(--hairline) data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom"
-              : "inset-y-0 right-0 h-full w-full sm:max-w-md border-l border-(--hairline) data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right"
+              ? "inset-x-0 bottom-0 h-[92dvh] rounded-t-(--radius-xl) border-t border-(--hairline-strong) data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom"
+              : "inset-y-0 right-0 h-full w-full border-l border-(--hairline-strong) sm:max-w-md data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right"
           }`}
         >
-          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 cursor-pointer transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+          <SheetClose className="absolute right-3 top-3 z-10 grid size-8 cursor-pointer place-items-center rounded-sm text-(--muted-2) transition-colors duration-(--dur-micro) hover:bg-(--panel-2) hover:text-(--bone) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </SheetClose>
-          {model && <DrawerBody model={model} />}
+          {/* Grouped disclosure: the body fades in once per token, not per metric. */}
+          {model && (
+            <div key={model.ref.key} className="mv-group-in">
+              <DrawerBody model={model} />
+            </div>
+          )}
         </SheetPrimitive.Content>
       </SheetPortal>
     </Sheet>
@@ -138,9 +145,7 @@ function DrawerBody({ model }: { model: DrawerModel }) {
     <>
       <SheetHeader className="hairline-b px-5 pt-5 pb-4 text-left space-y-2">
         <div className="flex items-center gap-2 flex-wrap pr-8">
-          <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono">
-            {normalizeChain(ref.chainId).toUpperCase()}
-          </span>
+          <span className="mv-chip text-(--gold)">{normalizeChain(ref.chainId).toUpperCase()}</span>
           <SheetTitle className="font-mono text-[15px] font-semibold text-(--bone) break-all">
             {symbol ?? shortAddress(ref.address)}
           </SheetTitle>
@@ -158,20 +163,25 @@ function DrawerBody({ model }: { model: DrawerModel }) {
         </SheetDescription>
       </SheetHeader>
 
+      {/* Hierarchy: identity (header) → current market state → signal and
+          evidence → activity → identity detail and sources → actions. */}
       <div className="px-5 py-4 space-y-5">
-        <SignalSection model={model} />
         {model.kind === "identity" ? (
-          <Section title="MARKET DATA">
-            <p className="text-[11px] text-muted-foreground">
-              No retained market data for this token — it has not been observed in the pair universe
-              during the last 60 minutes. Only its verified identity is shown.
-            </p>
-          </Section>
+          <>
+            <Section title="MARKET DATA">
+              <p className="text-[11px] text-muted-foreground">
+                No retained market data for this token — it has not been observed in the pair
+                universe during the last 60 minutes. Only its verified identity is shown.
+              </p>
+            </Section>
+            <SignalSection model={model} />
+          </>
         ) : (
           <>
+            <MarketSection intel={model.intel} />
+            <SignalSection model={model} />
             <EvidenceSection intel={model.intel} />
             <ActivitySection s={model.intel.snapshot} />
-            <MarketSection intel={model.intel} />
           </>
         )}
         <IdentitySection ref_={ref} intel={model.kind === "identity" ? null : model.intel} />
@@ -260,9 +270,7 @@ function SignalSection({ model }: { model: DrawerModel }) {
       {momentum && (
         <div className="space-y-1" data-testid="signal-momentum">
           <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono">
-            <span className="px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-(--champagne) text-[10px]">
-              {momentum.label}
-            </span>
+            <span className="mv-chip text-(--champagne)">{momentum.label}</span>
             <span className="text-(--bone)">
               EVIDENCE {momentum.evidence.passed}/{momentum.evidence.total}
             </span>
@@ -274,13 +282,15 @@ function SignalSection({ model }: { model: DrawerModel }) {
         <div className="space-y-1" data-testid="signal-risk">
           <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono">
             <span
-              className={`px-1.5 py-0.5 rounded-full border border-(--hairline-strong) text-[10px] ${
-                risk.direction === "REMOVED" ? "text-(--down)" : "text-(--up)"
-              }`}
+              className={`mv-chip ${risk.direction === "REMOVED" ? "text-(--down)" : "text-(--up)"}`}
             >
               LIQ {risk.direction}
             </span>
-            <span className={risk.severity === "HIGH" ? "text-(--down)" : "text-(--champagne)"}>
+            <span
+              className={
+                risk.severity === "HIGH" ? "font-semibold text-(--down)" : "text-(--champagne)"
+              }
+            >
               {risk.severity}
             </span>
           </div>
@@ -449,7 +459,7 @@ function ActivitySection({ s }: { s: PairSnapshot }) {
       {/* Small mobile: a readable 2×2 of windows. */}
       <div className="grid sm:hidden grid-cols-2 gap-2" data-testid="activity-cards">
         {WINDOWS.map((w) => (
-          <div key={w} className="rounded-md border border-(--hairline) p-2.5 space-y-1">
+          <div key={w} className="rounded-sm border border-(--hairline) p-2.5 space-y-1">
             <div className="text-[10px] font-mono text-(--faint) uppercase">{w}</div>
             {rows.map((r) => (
               <div key={r.label} className="flex justify-between gap-2 text-[11px] font-mono">
@@ -487,8 +497,19 @@ function MarketSection({ intel }: { intel: PairIntelligence }) {
   const s = intel.snapshot;
   return (
     <Section title="MARKET">
+      {/* Current market state first: the price, then its real changes. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 pb-1">
+        <Price
+          value={s.priceUsd}
+          className="text-[22px] font-medium leading-none tracking-[-0.01em] text-(--bone)"
+        />
+        <div className="flex gap-3 text-[11px]" data-testid="price-changes">
+          <Pct value={s.priceChange.m5} suffix="5M" />
+          <Pct value={s.priceChange.h1} suffix="1H" />
+          <Pct value={s.priceChange.h24} suffix="24H" />
+        </div>
+      </div>
       <div className="space-y-1.5">
-        <KV label="PRICE">{priceText(s.priceUsd)}</KV>
         <KV label="LIQUIDITY">{usd(s.liquidityUsd)}</KV>
         <KV label="MARKET CAP">{usd(s.marketCap)}</KV>
         <KV label="FDV">{usd(s.fdv)}</KV>
@@ -542,10 +563,7 @@ function SourcesSection({ model }: { model: DrawerModel }) {
       ) : (
         <div className="flex flex-wrap gap-2" data-testid="sources">
           {sources.map((src) => (
-            <span
-              key={src.source}
-              className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold) text-[10px] font-mono"
-            >
+            <span key={src.source} className="mv-chip text-(--gold)">
               {SOURCE_LABEL[src.source]}
               {src.detail && <span className="text-muted-foreground"> · {src.detail}</span>}
             </span>
@@ -556,8 +574,12 @@ function SourcesSection({ model }: { model: DrawerModel }) {
   );
 }
 
-const ACTION =
-  "px-4 py-2 rounded-full text-[11px] font-mono transition-all hairline text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)";
+const ACTION_BASE =
+  "inline-flex min-h-9 items-center gap-1.5 rounded-sm px-3 font-mono text-[11px] tracking-[0.06em] transition-colors duration-(--dur-micro) ease-(--ease-snap) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)";
+/** Internal actions (state changes inside MARCOVAULT): solid hairline control. */
+const ACTION = `${ACTION_BASE} hairline text-muted-foreground hover:bg-(--panel-2) hover:text-(--bone)`;
+/** External links (leave MARCOVAULT): quieter text link with an outbound mark. */
+const LINK = `${ACTION_BASE} text-(--muted-2) underline-offset-4 hover:text-(--gold) hover:underline`;
 
 function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnapshot | null }) {
   const [copy, setCopy] = useState<"idle" | "copied" | "failed">("idle");
@@ -598,35 +620,53 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
           type="button"
           onClick={onWatch}
           aria-pressed={watched}
-          className={watched ? `${ACTION} text-(--gold)!` : ACTION}
+          className={watched ? `${ACTION} border-(--gold)/40 text-(--gold)!` : ACTION}
           data-testid="watch"
         >
+          {watched ? (
+            <BookmarkCheck aria-hidden className="size-3.5" strokeWidth={1.8} />
+          ) : (
+            <Bookmark aria-hidden className="size-3.5" strokeWidth={1.8} />
+          )}
           {watched ? "UNWATCH" : "WATCH"}
         </button>
         <button type="button" onClick={onCopy} className={ACTION} data-testid="copy-ca">
+          {copy === "copied" ? (
+            <Check aria-hidden className="size-3.5 text-(--up)" strokeWidth={2} />
+          ) : (
+            <Copy aria-hidden className="size-3.5" strokeWidth={1.8} />
+          )}
           {copy === "copied" ? "COPIED" : "COPY CA"}
         </button>
         <a
           href={dexScreenerUrl(ref_, snapshot)}
           target="_blank"
           rel="noopener noreferrer"
-          className={ACTION}
+          className={LINK}
           data-testid="open-dexscreener"
         >
-          OPEN DEXSCREENER
+          DEXSCREENER
+          <ArrowUpRight aria-hidden className="size-3.5" strokeWidth={1.8} />
+          <span className="sr-only">(opens in a new tab)</span>
         </a>
         {explorer && (
           <a
             href={explorer}
             target="_blank"
             rel="noopener noreferrer"
-            className={ACTION}
+            className={LINK}
             data-testid="open-explorer"
           >
             EXPLORER
+            <ArrowUpRight aria-hidden className="size-3.5" strokeWidth={1.8} />
+            <span className="sr-only">(opens in a new tab)</span>
           </a>
         )}
       </div>
+      {/* Announce copy / watch results to assistive tech without moving focus. */}
+      <p className="sr-only" aria-live="polite">
+        {copy === "copied" ? "Contract address copied." : copy === "failed" ? "Copy failed." : ""}
+      </p>
       {full && (
         <p className="text-[10px] text-muted-foreground">
           Watchlist is full ({WATCHLIST_MAX_ITEMS}) — unwatch a token first.

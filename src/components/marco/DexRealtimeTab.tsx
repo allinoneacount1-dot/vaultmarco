@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Activity, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Eye } from "lucide-react";
 import { Panel } from "./Panel";
-import { motion } from "framer-motion";
-import { fadeUp, staggerContainer } from "./SectionHeader";
+import { TapeSkeleton } from "./Skeleton";
+import { Pct, Price, Segmented } from "./desk";
+import { useArrivals } from "@/hooks/useArrivals";
+import { feedState } from "@/lib/deskState";
 import { formatNumber } from "./shared/helpers";
 import {
   CANONICAL_PAIRS,
@@ -34,16 +36,6 @@ const IDENTITY_ROWS: RealtimeRow[] = CANONICAL_PAIRS.map((p) => ({
 
 const money = (n: number | null) => (n == null ? "—" : formatNumber(n));
 
-function price(n: number | null): string {
-  if (n == null) return "—";
-  return `$${n < 0.001 ? n.toFixed(8) : n < 1 ? n.toFixed(4) : n.toFixed(2)}`;
-}
-
-function changeText(n: number | null): string {
-  if (n == null) return "—";
-  return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
-}
-
 function useRealtimePairs() {
   // Fast lane (30 s); the pair universe reads the same cache entry.
   const query = useRealtimeQuery();
@@ -72,8 +64,17 @@ function notice(status: FeedStatus, unresolved: number): string | null {
   return null;
 }
 
+const SOURCES = [
+  { id: "screener", label: "DEXSCREENER" },
+  { id: "dextools", label: "DEXTOOLS" },
+] as const;
+
+/**
+ * DEX REALTIME — one module: the source switch lives in its header, rows are
+ * market tape (hairline-separated), and every row is visible at first paint.
+ */
 export function DexRealtimeTab() {
-  const [dexSource, setDexSource] = useState("screener"); // screener or dextools
+  const [dexSource, setDexSource] = useState<"screener" | "dextools">("screener");
   const { open: openToken } = useTokenDrawerActions();
   const { rows, status } = useRealtimePairs();
 
@@ -86,121 +87,95 @@ export function DexRealtimeTab() {
   const message = isDexTools
     ? "DexTools publishes no public market API — open the explorer for live values."
     : notice(status, unresolved);
+  const fresh = useArrivals(
+    data.map((r) => r.key),
+    !isLoading,
+    dexSource,
+  );
 
   return (
-    <div className="space-y-5">
-      <div className="flex gap-2">
-        <button
-          onClick={() => setDexSource("screener")}
-          className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
-            dexSource === "screener"
-              ? "chrome-fill"
-              : "hairline text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          DEXSCREENER
-        </button>
-        <button
-          onClick={() => setDexSource("dextools")}
-          className={`px-4 py-2 rounded-full text-[11px] font-mono transition-all ${
-            dexSource === "dextools"
-              ? "chrome-fill"
-              : "hairline text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          DEXTOOLS
-        </button>
-      </div>
-
-      <Panel title={`DEX REALTIME · ${dexSource.toUpperCase()}`} icon={Activity}>
-        <div className="space-y-3">
-          {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-md border border-(--hairline) p-3"
-              >
-                <div className="h-4 w-24 bg-(--panel-2) rounded animate-pulse mb-2" />
-                <div className="h-3 w-48 bg-(--panel-2) rounded animate-pulse" />
-              </motion.div>
-            ))
-          ) : (
-            <motion.div
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="whileInView"
-              viewport={{ once: true, margin: "-100px" }}
-              className="space-y-3"
-            >
-              {message && <div className="text-[11px] text-muted-foreground">{message}</div>}
-              {data.map((p) => {
-                const rowClass =
-                  "flex items-center justify-between rounded-md border border-(--hairline) p-3 hover:bg-(--panel-2) hover:border-(--hairline-strong) transition-all group";
-                const content = (
-                  <>
-                    <div>
-                      <div className="flex items-center gap-2 text-[12px] font-mono text-foreground">
-                        <span className="px-2 py-0.5 rounded-full border border-(--hairline-strong) text-(--gold)">
-                          {p.chainId.toUpperCase()}
-                        </span>
+    <Panel
+      title={
+        isDexTools ? "DEX REALTIME · DEXTOOLS · IDENTITY" : `DEX REALTIME · ${feedState(status)}`
+      }
+      icon={Eye}
+      aside={
+        <Segmented
+          label="Select DEX source"
+          options={SOURCES}
+          value={dexSource}
+          onChange={setDexSource}
+        />
+      }
+    >
+      {isLoading ? (
+        <TapeSkeleton rows={4} label="Loading DEX realtime pairs" />
+      ) : (
+        <div className="space-y-2">
+          {message && <div className="text-[11px] text-muted-foreground">{message}</div>}
+          <div className="mv-tape -mx-2">
+            {data.map((p) => {
+              const rowClass = `mv-row group flex w-full items-center justify-between gap-3 rounded-sm px-2 py-2.5 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold) ${
+                fresh.has(p.key) ? "mv-row-new" : ""
+              }`;
+              const content = (
+                <>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 font-mono text-[12px] text-(--bone)">
+                      <span className="truncate">
                         {p.baseSymbol}/{p.quoteSymbol}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-1">
-                        Vol: {money(p.volume24h)}• Liq: {money(p.liquidityUsd)}
-                      </div>
+                      </span>
+                      <span className="mv-chip text-(--gold)">{p.chainId.toUpperCase()}</span>
                     </div>
-                    <div className="text-right flex items-center gap-2">
-                      <div>
-                        <div className="text-[12px] font-mono text-foreground">
-                          {price(p.priceUsd)}
-                        </div>
-                        <div
-                          className={`text-[11px] font-mono mt-1 ${
-                            p.change24h != null && p.change24h < 0 ? "text-(--down)" : "text-(--up)"
-                          }`}
-                        >
-                          {changeText(p.change24h)}
-                        </div>
-                      </div>
-                      <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-(--gold) transition-all opacity-0 group-hover:opacity-100" />
+                    <div className="mono-data mt-1 truncate text-[10px] text-muted-foreground lg:text-[11px]">
+                      VOL {money(p.volume24h)} · LIQ {money(p.liquidityUsd)}
                     </div>
-                  </>
-                );
-                // DEXTOOLS has no market API: its rows stay external explorer links.
-                if (isDexTools) {
-                  return (
-                    <motion.a
-                      key={p.key}
-                      variants={fadeUp}
-                      href={dexToolsUrl(p)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={rowClass}
-                    >
-                      {content}
-                    </motion.a>
-                  );
-                }
-                // DEXSCREENER rows open the Token Intelligence Drawer; the
-                // provider link is one tap away inside it.
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2 text-right">
+                    <div>
+                      <Price value={p.priceUsd} className="block text-[12px] text-(--bone)" />
+                      <Pct value={p.change24h} className="mt-1 block text-[10px] lg:text-[11px]" />
+                    </div>
+                    {isDexTools && (
+                      <ArrowUpRight
+                        aria-hidden
+                        className="size-3.5 text-(--faint) transition-colors duration-(--dur-micro) group-hover:text-(--gold)"
+                      />
+                    )}
+                  </div>
+                </>
+              );
+              // DEXTOOLS has no market API: its rows stay external explorer links.
+              if (isDexTools) {
                 return (
-                  <motion.button
+                  <a
                     key={p.key}
-                    variants={fadeUp}
-                    type="button"
-                    onClick={(e) => openToken(refFromRealtime(p), e.currentTarget)}
-                    className={`${rowClass} w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)`}
+                    href={dexToolsUrl(p)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={rowClass}
                   >
                     {content}
-                  </motion.button>
+                    <span className="sr-only">(opens DexTools in a new tab)</span>
+                  </a>
                 );
-              })}
-            </motion.div>
-          )}
+              }
+              // DEXSCREENER rows open the Token Intelligence Drawer; the
+              // provider link is one tap away inside it.
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={(e) => openToken(refFromRealtime(p), e.currentTarget)}
+                  className={`${rowClass} cursor-pointer`}
+                >
+                  {content}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </Panel>
-    </div>
+      )}
+    </Panel>
   );
 }
