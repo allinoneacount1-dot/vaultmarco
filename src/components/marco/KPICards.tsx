@@ -2,6 +2,7 @@ import { TrendingUp, Zap, BarChart3, DollarSign } from "lucide-react";
 import { useMarketPrices } from "@/hooks/useMarketPrices";
 import { useTokenBoosts } from "@/hooks/useDexScreener";
 import { Tick } from "./desk";
+import { providerLine, type Tone } from "@/lib/deskState";
 
 function compact(n: number): string {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
@@ -10,29 +11,13 @@ function compact(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
-type Tone = "neutral" | "warn" | "down" | "up";
-const TONE: Record<Tone, string> = {
+type KpiTone = Tone | "up";
+const TONE: Record<KpiTone, string> = {
   neutral: "text-(--faint)",
   warn: "text-(--champagne)",
   down: "text-(--down)",
   up: "text-(--up)",
 };
-
-/** Provider state line: what we know, from where — never "LIVE" before data exists. */
-function sourceLine(status: string, source: string): { text: string; tone: Tone } {
-  switch (status) {
-    case "loading":
-      return { text: `CONNECTING · ${source}`, tone: "neutral" };
-    case "stale":
-      return { text: `LAST KNOWN · ${source}`, tone: "warn" };
-    case "offline":
-      return { text: `UNAVAILABLE · ${source}`, tone: "down" };
-    case "degraded":
-      return { text: `PARTIAL · ${source}`, tone: "warn" };
-    default:
-      return { text: `LIVE · ${source}`, tone: "neutral" };
-  }
-}
 
 /**
  * Machined stat cells — totals derived from the top-20 tape + boost feed.
@@ -51,14 +36,14 @@ export function KPICards() {
   const mcap = list.reduce((a, c) => a + (c.mc || 0), 0);
   const top = list.length ? [...list].sort((a, b) => b.ch - a.ch)[0] : null;
   const boostCount = boosts ? boosts.length : null;
-  const market = sourceLine(marketStatus, "COINGECKO");
+  const market = providerLine(marketStatus, "COINGECKO");
 
   const kpis: {
     title: string;
     value: string;
     raw: number | null;
     sub: string;
-    tone: Tone;
+    tone: KpiTone;
     icon: typeof DollarSign;
   }[] = [
     {
@@ -89,8 +74,8 @@ export function KPICards() {
       title: "ACTIVE BOOSTS",
       value: boostCount === null ? "—" : String(boostCount),
       raw: boostCount,
-      sub: sourceLine(boostsStatus, "DEXSCREENER").text,
-      tone: sourceLine(boostsStatus, "DEXSCREENER").tone,
+      sub: providerLine(boostsStatus, "DEXSCREENER").text,
+      tone: providerLine(boostsStatus, "DEXSCREENER").tone,
       icon: Zap,
     },
   ];

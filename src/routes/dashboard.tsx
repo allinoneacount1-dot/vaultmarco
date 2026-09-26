@@ -23,7 +23,7 @@ import { TapeSkeleton } from "@/components/marco/Skeleton";
 import { Pct, Price, StateDot, Tick, Zone } from "@/components/marco/desk";
 import { useRadar } from "@/hooks/usePairUniverse";
 import { useArrivals } from "@/hooks/useArrivals";
-import { STATE_TEXT, feedState, type DeskState } from "@/lib/deskState";
+import { QUICK_STATS_WORD, feedState, quickStatsState, type DeskState } from "@/lib/deskState";
 import type { TokenRef } from "@/lib/tokenDrawer";
 import { enterGroup } from "@/lib/motion";
 
@@ -136,7 +136,7 @@ function DeskSummary() {
             state={state}
             className={state === "live" ? "text-(--gold)" : "text-(--champagne)"}
           />
-          {clock(universe.observedAt)} · {STATE_TEXT[state]}
+          {clock(universe.observedAt)} · {feedState(state)}
         </span>
       ) : state === "loading" ? (
         "WAITING FOR FIRST ROUND"
@@ -244,7 +244,9 @@ const DashboardIndex = memo(function DashboardIndex() {
         ),
     },
   ];
-  const statsUnavailable = !gsPending && quickStats.every((q) => q.raw == null);
+  // Two independent providers (Promise.allSettled): LIVE / PARTIAL / OFFLINE.
+  const stats = quickStatsState(gs ?? null, gsPending);
+  const statsWord = QUICK_STATS_WORD[stats.state];
 
   return (
     <div className="space-y-8 lg:space-y-10">
@@ -260,15 +262,15 @@ const DashboardIndex = memo(function DashboardIndex() {
       <motion.div {...enterGroup(1)}>
         <Zone index="02" label="FLOW" meta="BOOSTS · ADS · GLOBAL">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">
-            <Panel title={`BOOST FEED · ${feedState(boostsStatus as DeskState)}`} icon={Zap}>
+            <Panel title={`BOOST FEED · ${feedState(boostsStatus)}`} icon={Zap}>
               <Tape items={boostItems} status={boostsStatus} label="boost feed" />
             </Panel>
-            <Panel title={`ADS FEED · ${feedState(adsStatus as DeskState)}`} icon={TrendingUp}>
+            <Panel title={`ADS FEED · ${feedState(adsStatus)}`} icon={TrendingUp}>
               <Tape items={adItems} status={adsStatus} label="ads feed" />
             </Panel>
             <div className="md:col-span-2 xl:col-span-1">
               <Panel
-                title={statsUnavailable ? "QUICK STATS · OFFLINE" : "QUICK STATS"}
+                title={statsWord ? `QUICK STATS · ${statsWord}` : "QUICK STATS"}
                 icon={Activity}
               >
                 <div className="mv-tape">
@@ -284,9 +286,15 @@ const DashboardIndex = memo(function DashboardIndex() {
                     </div>
                   ))}
                 </div>
-                {statsUnavailable && (
-                  <p className="pt-1 text-[11px] text-muted-foreground">
-                    CoinGecko / alternative.me did not answer — no global figures are shown.
+                {stats.missing.length > 0 && stats.state !== "loading" && (
+                  <p
+                    className="pt-1 text-[11px] text-muted-foreground"
+                    data-testid="quick-stats-note"
+                  >
+                    {stats.missing.join(" and ")} did not answer —{" "}
+                    {stats.state === "offline"
+                      ? "no global figures are shown."
+                      : "its figures show “—”, not zero."}
                   </p>
                 )}
               </Panel>

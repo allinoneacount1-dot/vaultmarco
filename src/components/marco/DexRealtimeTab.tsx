@@ -4,7 +4,7 @@ import { Panel } from "./Panel";
 import { TapeSkeleton } from "./Skeleton";
 import { Pct, Price, Segmented } from "./desk";
 import { useArrivals } from "@/hooks/useArrivals";
-import { feedState, type DeskState } from "@/lib/deskState";
+import { feedState } from "@/lib/deskState";
 import { formatNumber } from "./shared/helpers";
 import {
   CANONICAL_PAIRS,
@@ -96,9 +96,7 @@ export function DexRealtimeTab() {
   return (
     <Panel
       title={
-        isDexTools
-          ? "DEX REALTIME · DEXTOOLS · IDENTITY"
-          : `DEX REALTIME · ${feedState(status as DeskState)}`
+        isDexTools ? "DEX REALTIME · DEXTOOLS · IDENTITY" : `DEX REALTIME · ${feedState(status)}`
       }
       icon={Eye}
       aside={

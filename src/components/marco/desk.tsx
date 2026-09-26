@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRadar } from "@/hooks/usePairUniverse";
 import { DUR, EASE } from "@/lib/motion";
-import { STATE_TEXT, type DeskState } from "@/lib/deskState";
+import { UNIVERSE_HELP, known, universeLabel, type DeskState } from "@/lib/deskState";
 import { changeTone, priceParts, signedPct } from "@/lib/format";
 
 /**
@@ -104,14 +104,6 @@ const STATE_TONE: Record<DeskState, string> = {
   offline: "text-(--down)!",
 };
 
-const STATE_HELP: Record<DeskState, string> = {
-  loading: "Waiting for the first DexScreener round",
-  live: "Every DexScreener source answered this round",
-  degraded: "Some DexScreener sources failed this round — partial universe",
-  stale: "DexScreener is not responding — showing the last verified round",
-  offline: "DexScreener could not be reached — no current data",
-};
-
 /** solid = live · half = partial · ring = last known · hollow = connecting. */
 export function StateDot({ state, className = "" }: { state: DeskState; className?: string }) {
   const shape =
@@ -128,24 +120,26 @@ export function StateDot({ state, className = "" }: { state: DeskState; classNam
 }
 
 /**
- * Persistent desk status in the topbar: the aggregate DexScreener universe
- * status (the same temporal-truth rule as Alpha Radar), not a decorative LIVE.
- * No pulsing; a change of state is a short crossfade and is announced.
+ * Persistent status in the topbar. Its scope is the PAIR UNIVERSE round
+ * (DexScreener; the same temporal-truth rule as Alpha Radar) and the label says
+ * so — "UNIVERSE LIVE" — because other panels (CoinGecko, Fear & Greed) report
+ * their own state. No pulsing; a change of state is a short crossfade and is
+ * announced.
  */
 export function DeskStatus() {
   const { status } = useRadar();
   const state: DeskState = status;
   return (
-    <DeskTip tip={STATE_HELP[state]}>
+    <DeskTip tip={UNIVERSE_HELP[known(state) ?? "loading"]}>
       <span
         role="status"
         aria-live="polite"
         tabIndex={0}
-        className={`mono-label flex min-w-[92px] cursor-default items-center justify-end gap-2 text-[9px]! focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold) ${STATE_TONE[state]}`}
+        className={`mono-label flex min-w-[128px] cursor-default items-center justify-end gap-2 text-[9px]! focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold) ${STATE_TONE[known(state) ?? "loading"]}`}
         data-testid="desk-status"
         data-state={state}
       >
-        <span className="sr-only">Desk status: </span>
+        <span className="sr-only">Pair universe status: </span>
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={state}
@@ -156,7 +150,7 @@ export function DeskStatus() {
             transition={{ duration: DUR.micro, ease: EASE.snap }}
           >
             <StateDot state={state} />
-            {STATE_TEXT[state]}
+            {universeLabel(state)}
           </motion.span>
         </AnimatePresence>
       </span>
