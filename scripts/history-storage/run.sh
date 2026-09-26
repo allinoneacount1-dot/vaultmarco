@@ -18,9 +18,15 @@ esac
 
 npx vite-node scripts/history-storage/export-fixtures.ts "$OUT"
 psql -v ON_ERROR_STOP=1 -q -f scripts/history-storage/schema.sql
-psql -v ON_ERROR_STOP=1 -q -v rounds="$ROUNDS" -v sleep="$SLEEP" -v dir="$OUT" -f scripts/history-storage/replay.sql
+psql -v ON_ERROR_STOP=1 -q -v dir="$OUT" -f scripts/history-storage/replay.sql
+# One client statement per round (backend idle in between, like production).
+for ((i = 0; i < ROUNDS; i++)); do
+  echo "call bench.round($i);"
+  if ((SLEEP > 0)); then echo "select pg_sleep($SLEEP);"; fi
+  if (((i + 1) % 60 == 0)); then echo "call bench.take_sample($((i + 1)));"; fi
+done | psql -v ON_ERROR_STOP=1 -q -o /dev/null
 echo "== report (as replayed, autovacuum only)"
 psql -q -f scripts/history-storage/report.sql
-psql -q -c "vacuum (analyze) history.signal_round, history.signal_event, history.signal_episode, history.signal_outcome, engine.snapshot_round"
+psql -q -c "vacuum (analyze) history.signal_round, history.signal_event, history.signal_episode, history.signal_outcome, engine.snapshot_round, engine.pending_outcome"
 echo "== after VACUUM (ANALYZE)"
 psql -q -f scripts/history-storage/report.sql | sed -n '/Final footprint/,$p'

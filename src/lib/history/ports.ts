@@ -12,6 +12,11 @@ import type {
  * the in-memory store used in tests. The recorder never sees SQL, SDKs or
  * connection details.
  *
+ * Storage mapping (Step B, chosen from the local benchmark): PENDING outcomes
+ * are temporary engine bookkeeping; a resolved (OBSERVED / UNAVAILABLE)
+ * outcome is inserted once into durable history and its pending row deleted.
+ * `pendingOutcomes()` therefore reads engine state, never product history.
+ *
  * Transaction boundary (Step B): `claim` is its own short write; provider I/O
  * happens with NO transaction open; `commit` is one short transaction that
  * re-verifies the claim and applies everything atomically — or nothing.

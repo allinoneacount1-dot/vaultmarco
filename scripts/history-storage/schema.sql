@@ -1,6 +1,10 @@
 -- LOCAL STORAGE BENCHMARK ONLY — NOT A PRODUCTION MIGRATION.
--- Mirrors the approved Phase 3 Revision 2 design so its real Postgres
--- footprint (tables, TOAST, indexes, dead tuples, churn) can be measured.
+-- Mirrors the approved Phase 3 design (immutable event + narrow episode +
+-- outcomes + round/gap log + temporary engine state) with the storage layout
+-- chosen from measurement (see README):
+--   • durable outcomes are INSERT-ONLY with typed columns; PENDING bookkeeping
+--     is temporary engine state, deleted on resolution
+--   • round accounting is a compact counter array
 
 drop schema if exists history cascade;
 drop schema if exists engine cascade;
@@ -20,8 +24,9 @@ create table history.signal_round (
   data_status    text check (data_status in ('live','degraded','stale','offline')),
   rules_version  text,
   universe_size  smallint,
-  issues         jsonb not null default '[]',
-  requests       jsonb,                          -- per-endpoint accounting
+  issues         text[],
+  -- per endpoint (fixed ENDPOINTS order) × [attempts, ok, failed, rateLimited, skipped]
+  requests       smallint[],
   finished_at    timestamptz
 );
 
@@ -40,7 +45,19 @@ create table engine.provider_cooldown (
   consecutive_429  smallint not null
 );
 
--- IMMUTABLE signal event.
+-- PENDING outcome bookkeeping — temporary; the row is deleted when the outcome resolves.
+create table engine.pending_outcome (
+  event_id         text not null,
+  horizon_minutes  smallint not null,
+  target_at        timestamptz not null,
+  window_end_at    timestamptz not null,
+  last_failure     text,
+  attempts         smallint not null default 0,
+  primary key (event_id, horizon_minutes)
+) with (autovacuum_vacuum_scale_factor = 0, autovacuum_vacuum_threshold = 20);
+create index pending_outcome_target on engine.pending_outcome (target_at);
+
+-- IMMUTABLE signal event. Evidence is the engine's own rule object, stored whole.
 create table history.signal_event (
   id             text primary key,
   asset_key      text not null,
@@ -51,10 +68,9 @@ create table history.signal_event (
   type           text not null check (type in ('EARLY_MOMENTUM','LIQUIDITY_ADDED','LIQUIDITY_REMOVED')),
   severity       text check (severity in ('MEDIUM','HIGH')),
   rules_version  text not null,
-  opened_round   text not null,
-  opened_at      timestamptz not null,
-  evidence       jsonb not null,                 -- the engine's own rule object
-  open_snapshot  jsonb not null                  -- compact selected fields
+  opened_at      timestamptz not null,           -- round identity = this minute
+  evidence       jsonb not null,
+  open_snapshot  jsonb not null
 );
 create index signal_event_feed  on history.signal_event (opened_at desc);
 create index signal_event_asset on history.signal_event (asset_key, opened_at desc);
@@ -80,25 +96,30 @@ create table history.signal_episode (
 ) with (fillfactor = 70);
 create unique index signal_episode_one_open on history.signal_episode (asset_key, type) where status = 'OPEN';
 
--- Outcome observations: unique (event_id, horizon).
+-- Resolved outcome observations: INSERT-ONLY, unique (event_id, horizon).
 create table history.signal_outcome (
   event_id            text not null references history.signal_event on delete cascade,
   horizon_minutes     smallint not null check (horizon_minutes in (5, 15, 60, 240, 1440)),
-  target_at           timestamptz not null,
-  window_end_at       timestamptz not null,
-  availability        text not null check (availability in ('PENDING','OBSERVED','UNAVAILABLE')),
+  availability        text not null check (availability in ('OBSERVED','UNAVAILABLE')),
   unavailable_reason  text,
-  last_failure        text,
-  observed_at         timestamptz,
+  target_at           timestamptz not null,
+  observed_at         timestamptz,              -- the real sample time
   delay_seconds       int,
-  source              text,
-  pair_address        text,
-  round_key           text,
-  market              jsonb,                       -- compact selected real fields
-  attempts            smallint not null default 0,
+  source              text check (source in ('ROUND','DUE_TOKEN_BATCH','PAIR_FALLBACK')),
+  round_at            timestamptz,              -- set when source = ROUND
+  pair_address        text,                     -- audit: equals the event's pair
+  price_usd           double precision,
+  liquidity_usd       double precision,
+  fdv                 double precision,
+  market_cap          double precision,
+  volume_h1           double precision,
+  volume_h24          double precision,
+  txns_h1_buys        int,
+  txns_h1_sells       int,
+  price_change_h1     double precision,
+  attempts            smallint not null,
   primary key (event_id, horizon_minutes)
-) with (fillfactor = 90);
-create index signal_outcome_due on history.signal_outcome (target_at) where availability = 'PENDING';
+);
 
 -- Benchmark sampling.
 create table bench.sample (
@@ -112,5 +133,6 @@ create table bench.sample (
   dead_tup     bigint,
   hot_upd      bigint,
   upd          bigint,
+  autovacuums  bigint,
   primary key (round_no, relation)
 );
