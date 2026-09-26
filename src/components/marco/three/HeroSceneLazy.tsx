@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { HeroStatic } from "./HeroStatic";
+import { setSceneState } from "./sceneStore";
 
 const HeroScene = lazy(() => import("./HeroScene"));
 
@@ -43,6 +44,9 @@ export function HeroSceneLazy() {
   const [mode, setMode] = useState<"pending" | "3d" | "static">(() =>
     mayRun3D() ? "pending" : "static",
   );
+
+  // the statement section follows the same gate (3D inscription or flat type)
+  useEffect(() => setSceneState({ mode }), [mode]);
 
   useEffect(() => {
     const wide = window.matchMedia(WIDE);

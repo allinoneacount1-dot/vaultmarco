@@ -1,11 +1,13 @@
-import { Suspense, useMemo, useRef, useState, useEffect } from "react";
+import { Suspense, useMemo, useRef, useState, useEffect, type Ref } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
-import { FontLoader, SVGLoader, toCreasedNormals } from "three-stdlib";
+import { SVGLoader } from "three-stdlib";
 import { createChromeMaterial, createGoldMaterial, damp } from "./chrome";
 import monogramSvgRaw from "@/assets/monogram.svg?raw";
-import typeface from "@/assets/unbounded-bold.typeface.json";
+import { createChromeTypeGeometry } from "./type";
+import { setSceneState, statementStage } from "./sceneStore";
+import { StatementInscription } from "./StatementInscription";
 
 /* ═══════════════════════════════════════════════════════════════
    VAULT JOURNEY — one persistent canvas for the whole page.
@@ -156,17 +158,22 @@ function MonogramMesh() {
   return <mesh geometry={geometry} material={matMono} />;
 }
 
-function OrbitRing({ radius = 0.62 }: { radius?: number }) {
+function OrbitRing({ radius = 0.62, ring }: { radius?: number; ring?: Ref<THREE.Group> }) {
   const dot = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime * 0.28;
     // the torus lies in this group's XY plane — the dot must ride that plane.
     // (It used XZ, which the group's tilt turns near-vertical: the dot left the
     // ring and swept down through THE VAULT like a stray full stop.)
-    if (dot.current) dot.current.position.set(Math.cos(t) * radius, Math.sin(t) * radius, 0);
+    if (dot.current) {
+      dot.current.position.set(Math.cos(t) * radius, Math.sin(t) * radius, 0);
+      // the statement opens the ring out in its own plane: keep the dot round
+      const g = dot.current.parent!.scale;
+      dot.current.scale.set(1 / g.x, 1 / g.y, 1 / g.z);
+    }
   });
   return (
-    <group rotation={[1.47, 0, -0.14]}>
+    <group ref={ring} rotation={[1.47, 0, -0.14]}>
       <mesh material={matGold}>
         <torusGeometry args={[radius, 0.004, 12, 160]} />
       </mesh>
@@ -177,38 +184,21 @@ function OrbitRing({ radius = 0.62 }: { radius?: number }) {
   );
 }
 
-const font = new FontLoader().parse(typeface as never);
-
 /* display type: same cap height on both lines, one inscription */
 const TYPE_SIZE = 0.98;
-/**
- * One line of extruded chrome type, built once and centred in the geometry
- * itself (no layout-effect centring, so the very first frame is already in
- * place). The bevel is inset by its own size (bevelOffset), so a heavier,
- * rounder chamfer — closer to the monogram's edge language — does not
- * embolden the letters or close their spacing. Crease-angle normals: hard at
- * the cap/bevel/wall breaks, smooth along curves.
- */
+/** Hero type: deep, monumental extrusion with a rounded chamfer close to the
+ *  monogram's edge language (see createChromeTypeGeometry). */
 function useTypeGeometry(text: string) {
   return useMemo(() => {
     const size = TYPE_SIZE;
-    const bevelSize = size * 0.024;
-    const raw = new THREE.ExtrudeGeometry(font.generateShapes(text, size), {
+    return createChromeTypeGeometry(text, {
+      size,
       depth: size * 0.3,
       curveSegments: 12,
-      bevelEnabled: true,
       bevelThickness: size * 0.04,
-      bevelSize,
-      bevelOffset: -bevelSize,
+      bevelSize: size * 0.024,
       bevelSegments: 4,
     });
-    const geo = toCreasedNormals(raw, THREE.MathUtils.degToRad(15));
-    raw.dispose();
-    geo.computeBoundingBox();
-    const c = new THREE.Vector3();
-    geo.boundingBox!.getCenter(c);
-    geo.translate(-c.x, -c.y, -c.z);
-    return geo;
   }, [text]);
 }
 
@@ -258,6 +248,7 @@ const FIT_REF = 0.7;
 function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
   const rig = useRef<THREE.Group>(null);
   const mono = useRef<THREE.Group>(null);
+  const ring = useRef<THREE.Group>(null);
   const doors = useRef<THREE.Group>(null);
   const textA = useRef<THREE.Group>(null);
   const textB = useRef<THREE.Group>(null);
@@ -291,9 +282,13 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
 
     /* shared rig: the viewer moves around one installation. Strongest at the
        hero, settling to a quieter residue once the monogram travels alone. */
+    // the statement further down borrows the monogram for its own composition
+    const st = statementStage.w;
+
     if (rig.current) {
       const g = rig.current;
-      const w = 1 - 0.6 * e;
+      // near-still at the statement: its inscription does not ride this rig
+      const w = (1 - 0.6 * e) * (1 - 0.9 * st);
       const idle = Math.sin(t * 0.12) * 0.012;
       g.rotation.y = d(g.rotation.y, (pointer.current.x * 0.06 + idle) * w, 1.8);
       // pitch stays small: flat caps mirror a band 2× the tilt, so more than
@@ -302,7 +297,45 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
       g.position.y = stageLift * (1 - e);
     }
 
-    if (mono.current) {
+    if (mono.current && st > 0) {
+      /* statement: blend from the journey path onto the pose the inscription
+         asks for (anchored to it, so both ride the page together) */
+      const g = mono.current;
+      const S = statementStage;
+      const L = (a: number, b: number) => a + (b - a) * st;
+      g.position.set(
+        L(k.pos[0] * fit, S.pos[0]),
+        L(k.pos[1] * fit + coreRide, S.pos[1]),
+        L(k.pos[2], S.pos[2]),
+      );
+      g.scale.setScalar(L(k.s * fit, S.s));
+      // the journey's inertia hands over to the statement's exact pose
+      const lambda = 1.8 / (1 - 0.99 * st);
+      g.rotation.x = d(
+        g.rotation.x,
+        L(k.rot[0], S.rot[0]) - pointer.current.y * 0.008 * (1 - st),
+        lambda,
+      );
+      g.rotation.y = d(
+        g.rotation.y,
+        L(k.rot[1], S.rot[1]) + pointer.current.x * 0.025 * (1 - st),
+        lambda,
+      );
+      g.rotation.z = L(k.rot[2], S.rot[2]);
+      // opened out in its own plane (last on the way in, first on the way
+      // out); the tube keeps a hairline weight
+      const open = st * st * st;
+      if (ring.current) {
+        ring.current.scale.set(
+          1 + (S.ring - 1) * open,
+          1 + (S.ring - 1) * open,
+          1 + (S.ringZ - 1) * open,
+        );
+      }
+      const o = L(k.o, S.o);
+      matMono.opacity = d(matMono.opacity, o, 4);
+      matGold.opacity = d(matGold.opacity, Math.min(1, o + 0.15), 4);
+    } else if (mono.current) {
       const g = mono.current;
       g.position.set(k.pos[0] * fit, k.pos[1] * fit + coreRide, k.pos[2]);
       g.scale.setScalar(k.s * fit);
@@ -310,6 +343,7 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
       g.rotation.x = d(g.rotation.x, k.rot[0] - pointer.current.y * 0.008, 1.8);
       g.rotation.y = d(g.rotation.y, k.rot[1] + pointer.current.x * 0.025, 1.8);
       g.rotation.z = k.rot[2];
+      if (ring.current && ring.current.scale.x !== 1) ring.current.scale.setScalar(1);
       matMono.opacity = d(matMono.opacity, k.o, 4);
       matGold.opacity = d(matGold.opacity, Math.min(1, k.o + 0.15), 4);
     }
@@ -360,7 +394,7 @@ function Journey({ onFirstFrame }: { onFirstFrame?: () => void }) {
     <group ref={rig}>
       <group ref={mono}>
         <MonogramMesh />
-        <OrbitRing />
+        <OrbitRing ring={ring} />
       </group>
       <group ref={doors}>
         <group ref={textA} scale={fit}>
@@ -492,6 +526,12 @@ export default function HeroScene() {
   const [active, setActive] = useState(true);
   const [ready, setReady] = useState(false);
 
+  // the statement hides its flat DOM type once the 3D inscription can show
+  useEffect(() => {
+    setSceneState({ ready });
+    return () => setSceneState({ ready: false });
+  }, [ready]);
+
   useEffect(() => {
     const onVis = () => setActive(!document.hidden);
     document.addEventListener("visibilitychange", onVis);
@@ -530,6 +570,8 @@ export default function HeroScene() {
       >
         <Suspense fallback={null}>
           <Studio />
+          {/* before the journey: its frame publishes the monogram pose the journey reads */}
+          <StatementInscription />
           <Journey onFirstFrame={() => setReady(true)} />
         </Suspense>
       </Canvas>
