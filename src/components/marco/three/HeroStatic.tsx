@@ -1,23 +1,26 @@
 import logoDark from "@/assets/marcovault-logo-dark.png";
 
 /** Static hero visual — WebGL-less / reduced-motion / small-screen fallback.
- *  Same composition as the 3D scene: type + monogram, one metal. */
+ *  Same composition as the 3D scene, drawn flat: two lines of one inscription
+ *  with the monogram set in the band between them, the type in front.
+ *  Sizes are in em of the display type, so the proportions hold at every width
+ *  (monogram ≈ 1.8em wide, ≈ 1 cap-height of band between the lines). */
 export function HeroStatic() {
   return (
     <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex flex-col items-center gap-[0.62em] font-display font-extrabold leading-[0.8] tracking-[0.01em] text-[clamp(44px,11vw,150px)]">
         <img
           src={logoDark}
           alt=""
-          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[46vmin] max-w-[420px] -translate-x-1/2 -translate-y-1/2 opacity-90 drop-shadow-[0_30px_60px_rgba(0,0,0,0.85)]"
+          // the logo file carries a pin-and-arc crown the 3D monogram does not
+          // (there the gold orbit ring plays that part) — clip it off so the
+          // flat composition matches the sculpture instead of sprouting a spike
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[2.9em] max-w-none -translate-x-1/2 -translate-y-[54%] [clip-path:inset(27%_0_0_0)] drop-shadow-[0_30px_60px_rgba(0,0,0,0.85)]"
           loading="eager"
           decoding="async"
         />
-        <span className="chrome-text relative font-display font-extrabold leading-[0.98] tracking-[0.01em] text-[clamp(52px,11vw,150px)] text-center">
-          ENTER
-          <br />
-          THE&nbsp;VAULT
-        </span>
+        <span className="chrome-text relative text-center">ENTER</span>
+        <span className="chrome-text relative text-center">THE&nbsp;VAULT</span>
       </div>
     </div>
   );
