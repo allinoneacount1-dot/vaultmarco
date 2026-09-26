@@ -14,6 +14,12 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardTraceRouteImport } from './routes/dashboard.trace'
+import { Route as DashboardMomentRouteImport } from './routes/dashboard.moment'
+import { Route as DashboardEdgeClockRouteImport } from './routes/dashboard.edge-clock'
+import { Route as DashboardDivergenceRouteImport } from './routes/dashboard.divergence'
+import { Route as DashboardCollisionRouteImport } from './routes/dashboard.collision'
+import { Route as DashboardChangeQueueRouteImport } from './routes/dashboard.change-queue'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -40,18 +46,72 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardTraceRoute = DashboardTraceRouteImport.update({
+  id: '/trace',
+  path: '/trace',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard.trace.lazy').then((d) => d.Route),
+)
+const DashboardMomentRoute = DashboardMomentRouteImport.update({
+  id: '/moment',
+  path: '/moment',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard.moment.lazy').then((d) => d.Route),
+)
+const DashboardEdgeClockRoute = DashboardEdgeClockRouteImport.update({
+  id: '/edge-clock',
+  path: '/edge-clock',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard.edge-clock.lazy').then((d) => d.Route),
+)
+const DashboardDivergenceRoute = DashboardDivergenceRouteImport.update({
+  id: '/divergence',
+  path: '/divergence',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard.divergence.lazy').then((d) => d.Route),
+)
+const DashboardCollisionRoute = DashboardCollisionRouteImport.update({
+  id: '/collision',
+  path: '/collision',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard.collision.lazy').then((d) => d.Route),
+)
+const DashboardChangeQueueRoute = DashboardChangeQueueRouteImport.update({
+  id: '/change-queue',
+  path: '/change-queue',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard.change-queue.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/change-queue': typeof DashboardChangeQueueRoute
+  '/dashboard/collision': typeof DashboardCollisionRoute
+  '/dashboard/divergence': typeof DashboardDivergenceRoute
+  '/dashboard/edge-clock': typeof DashboardEdgeClockRoute
+  '/dashboard/moment': typeof DashboardMomentRoute
+  '/dashboard/trace': typeof DashboardTraceRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/change-queue': typeof DashboardChangeQueueRoute
+  '/dashboard/collision': typeof DashboardCollisionRoute
+  '/dashboard/divergence': typeof DashboardDivergenceRoute
+  '/dashboard/edge-clock': typeof DashboardEdgeClockRoute
+  '/dashboard/moment': typeof DashboardMomentRoute
+  '/dashboard/trace': typeof DashboardTraceRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -60,14 +120,53 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/change-queue': typeof DashboardChangeQueueRoute
+  '/dashboard/collision': typeof DashboardCollisionRoute
+  '/dashboard/divergence': typeof DashboardDivergenceRoute
+  '/dashboard/edge-clock': typeof DashboardEdgeClockRoute
+  '/dashboard/moment': typeof DashboardMomentRoute
+  '/dashboard/trace': typeof DashboardTraceRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/sitemap.xml' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/sitemap.xml'
+    | '/dashboard/change-queue'
+    | '/dashboard/collision'
+    | '/dashboard/divergence'
+    | '/dashboard/edge-clock'
+    | '/dashboard/moment'
+    | '/dashboard/trace'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/sitemap.xml' | '/dashboard'
-  id: '__root__' | '/' | '/auth' | '/dashboard' | '/sitemap.xml' | '/dashboard/'
+  to:
+    | '/'
+    | '/auth'
+    | '/sitemap.xml'
+    | '/dashboard/change-queue'
+    | '/dashboard/collision'
+    | '/dashboard/divergence'
+    | '/dashboard/edge-clock'
+    | '/dashboard/moment'
+    | '/dashboard/trace'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/sitemap.xml'
+    | '/dashboard/change-queue'
+    | '/dashboard/collision'
+    | '/dashboard/divergence'
+    | '/dashboard/edge-clock'
+    | '/dashboard/moment'
+    | '/dashboard/trace'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -114,14 +213,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/trace': {
+      id: '/dashboard/trace'
+      path: '/trace'
+      fullPath: '/dashboard/trace'
+      preLoaderRoute: typeof DashboardTraceRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/moment': {
+      id: '/dashboard/moment'
+      path: '/moment'
+      fullPath: '/dashboard/moment'
+      preLoaderRoute: typeof DashboardMomentRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/edge-clock': {
+      id: '/dashboard/edge-clock'
+      path: '/edge-clock'
+      fullPath: '/dashboard/edge-clock'
+      preLoaderRoute: typeof DashboardEdgeClockRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/divergence': {
+      id: '/dashboard/divergence'
+      path: '/divergence'
+      fullPath: '/dashboard/divergence'
+      preLoaderRoute: typeof DashboardDivergenceRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/collision': {
+      id: '/dashboard/collision'
+      path: '/collision'
+      fullPath: '/dashboard/collision'
+      preLoaderRoute: typeof DashboardCollisionRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/change-queue': {
+      id: '/dashboard/change-queue'
+      path: '/change-queue'
+      fullPath: '/dashboard/change-queue'
+      preLoaderRoute: typeof DashboardChangeQueueRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardChangeQueueRoute: typeof DashboardChangeQueueRoute
+  DashboardCollisionRoute: typeof DashboardCollisionRoute
+  DashboardDivergenceRoute: typeof DashboardDivergenceRoute
+  DashboardEdgeClockRoute: typeof DashboardEdgeClockRoute
+  DashboardMomentRoute: typeof DashboardMomentRoute
+  DashboardTraceRoute: typeof DashboardTraceRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardChangeQueueRoute: DashboardChangeQueueRoute,
+  DashboardCollisionRoute: DashboardCollisionRoute,
+  DashboardDivergenceRoute: DashboardDivergenceRoute,
+  DashboardEdgeClockRoute: DashboardEdgeClockRoute,
+  DashboardMomentRoute: DashboardMomentRoute,
+  DashboardTraceRoute: DashboardTraceRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
