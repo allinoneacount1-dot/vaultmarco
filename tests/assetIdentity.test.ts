@@ -147,6 +147,7 @@ describe("canonical DEX Realtime validation follows the identity rule", () => {
     const want = CANONICAL_PAIRS.find((p) => p.chainId === "ethereum")!;
     const pair = {
       chainId: "ethereum",
+      pairAddress: want.pairAddress.toLowerCase(),
       baseToken: { address: want.baseAddress.toLowerCase() },
       quoteToken: { address: want.quoteAddress.toUpperCase().replace("0X", "0x") },
     };

@@ -118,6 +118,53 @@ describe("NO_SYNTHETIC_MARKET_DATA_IN_PRODUCTION", () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * 11 · The landing preview (VAULT://INTELLIGENCE) once rendered these sample
+   * values as live data. None may survive in the preview or its data modules.
+   * (15 · the preview names no chain count: "MULTI-CHAIN", never "14+".)
+   */
+  it("the landing intelligence preview carries no sample market values", () => {
+    const landing = FILES.filter(
+      (f) =>
+        rel(f) === "src/components/marco/Features.tsx" ||
+        rel(f).startsWith("src/lib/landing/") ||
+        rel(f) === "src/hooks/useLandingIntel.ts",
+    );
+    expect(landing.map(rel).sort()).toEqual([
+      "src/components/marco/Features.tsx",
+      "src/hooks/useLandingIntel.ts",
+      "src/lib/landing/liveIntel.ts",
+    ]);
+    const samples = [
+      /124\.5/,
+      /18\.2\b/,
+      /["'`\s]127["'`\s]/,
+      /[+−-]\s*12\.5/,
+      /"12\.5"/,
+      /2\.4T/,
+      /[+−-]\s*3\.1\b/,
+      /176\.26/,
+      /4\.05/,
+      /3,?620/,
+      /1\.90\b/,
+      /1\.2140/,
+      /2\.31\b/,
+      /0\.8620/,
+      /6\.42/,
+      /PREVIEW_ROWS/,
+      /\bJUP\b/,
+      /14\+/,
+      /ACTIVE BOOSTS/,
+    ];
+    const offenders: string[] = [];
+    for (const file of landing) {
+      const body = read(file);
+      for (const re of samples) if (re.test(body)) offenders.push(`${rel(file)} :: ${re}`);
+    }
+    expect(offenders).toEqual([]);
+    expect(read(join(SRC, "components/marco/Features.tsx"))).toContain("MULTI-CHAIN");
+  });
+
   it("`memo` is imported from react, never from framer-motion", () => {
     // framer-motion exports a one-shot value cache also called `memo`; importing
     // it froze the dashboard on its first render.

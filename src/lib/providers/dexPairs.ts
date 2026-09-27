@@ -118,13 +118,17 @@ const num = (v: number | undefined | null): number | null =>
 /**
  * INVARIANT — NO_SILENT_PAIR_SUBSTITUTION
  *
- * A candidate is accepted only when chain, base address and quote address all
- * match the canonical entry. A mismatch is reported as unresolved; it is never
- * swapped for a different asset, no matter how much liquidity it carries.
+ * A candidate is accepted only when chain, pair address, base address and
+ * quote address all match the canonical entry (addresses under the asset
+ * identity rule: EVM hex case-insensitive, everything else case-sensitive). A
+ * missing provider pair address is never taken as evidence. A mismatch is
+ * reported as unresolved; it is never swapped for a different pool or asset,
+ * no matter how much liquidity it carries.
  */
 export function validateCandidate(want: CanonicalPair, got: DexPair): boolean {
   return (
     sameChain(got.chainId, want.chainId) &&
+    sameAddress(got.pairAddress, want.pairAddress) &&
     sameAddress(got.baseToken?.address, want.baseAddress) &&
     sameAddress(got.quoteToken?.address, want.quoteAddress)
   );
@@ -171,7 +175,8 @@ async function resolveOne(want: CanonicalPair, deps: Deps): Promise<RealtimeRow>
     return {
       key: want.key,
       chainId: want.chainId,
-      pairAddress: want.pairAddress,
+      // The provider's own (validated) pair address — equal to the canonical one.
+      pairAddress: pair.pairAddress as string,
       // Symbols come from the provider once identity is proven, so the row
       // shows what the chain actually calls the asset.
       baseSymbol: pair.baseToken?.symbol ?? want.baseSymbol,
