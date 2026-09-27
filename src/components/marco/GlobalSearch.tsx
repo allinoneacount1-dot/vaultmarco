@@ -57,7 +57,7 @@ export function GlobalSearch() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-keyshortcuts="Meta+K Control+K"
-        className="flex h-8 items-center gap-2 rounded-md border border-(--hairline) px-2 sm:px-3 text-muted-foreground cursor-pointer transition-colors hover:border-(--hairline-strong) hover:text-(--bone) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)"
+        className="mv-glass flex h-8 items-center gap-2 px-2 text-(--muted-2) sm:px-3"
       >
         <Search className="size-3.5" aria-hidden />
         <span className="mono-label hidden text-[9px]! sm:inline">SEARCH</span>
@@ -199,9 +199,10 @@ function SearchDialog({
                 : trigger.current;
             target?.focus();
           }}
-          // Command palette: a short fade + 4 px drop (micro), no blur. The input
+          // Command palette: a short fade + 4 px drop (micro). Elevated smoked glass
+          // (a light backdrop blur on the palette only; the scrim stays a plain dim). The input
           // is focused at mount, so typing is never delayed by the animation.
-          className="mv-motion fixed inset-x-0 top-0 z-[var(--z-modal)] flex max-h-[85dvh] flex-col border-b border-(--hairline-strong) bg-(--elevated) shadow-(--shadow-elevated) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-1 data-[state=open]:duration-(--dur-micro) data-[state=open]:ease-(--ease-snap) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-(--dur-micro) sm:inset-x-auto sm:left-1/2 sm:top-[12vh] sm:max-h-[70vh] sm:w-[min(640px,calc(100vw-32px))] sm:-translate-x-1/2 sm:rounded-(--radius-md) sm:border"
+          className="mv-motion fixed inset-x-0 top-0 z-[var(--z-modal)] flex max-h-[85dvh] flex-col mv-glass-elevated border-b border-(--hairline-strong) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-1 data-[state=open]:duration-(--dur-micro) data-[state=open]:ease-(--ease-snap) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-(--dur-micro) sm:inset-x-auto sm:left-1/2 sm:top-[12vh] sm:max-h-[70vh] sm:w-[min(640px,calc(100vw-32px))] sm:-translate-x-1/2 sm:rounded-(--radius-md) sm:border"
         >
           <DialogPrimitive.Title className="sr-only">Global search</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
@@ -229,7 +230,7 @@ function SearchDialog({
               spellCheck={false}
               className="h-12 w-full min-w-0 bg-transparent font-mono text-[13px] text-(--bone) outline-none placeholder:text-(--faint)"
             />
-            <DialogPrimitive.Close className="mono-label shrink-0 cursor-pointer rounded-sm px-1.5 py-1 text-[9px]! hover:text-(--bone)! focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)">
+            <DialogPrimitive.Close className="mv-glass mono-label shrink-0 px-1.5 py-1 text-[9px]!">
               ESC
               <span className="sr-only"> — close search</span>
             </DialogPrimitive.Close>
