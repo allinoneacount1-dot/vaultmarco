@@ -171,6 +171,7 @@ test.describe("Intelligence suite navigation", () => {
     await drawer.getByTestId("open-moment").click();
     await expect(drawer).toHaveCount(0);
     await expect(page).toHaveURL(new RegExp(`/dashboard/moment\\?.*address=${HONSE}`));
+    expect(page.url()).not.toContain("pair=");
     await expect(page.getByTestId("intel-question")).toHaveText("What just changed?");
     const bar = page.getByTestId("asset-bar");
     await expect(bar).toHaveAttribute("data-key", `solana:${HONSE}`);
@@ -197,6 +198,25 @@ test.describe("Intelligence suite navigation", () => {
     expect(problems).toEqual([]);
   });
 
+  test("focus URL is chain + address only: a legacy pair param is ignored and dropped on navigation", async ({
+    page,
+  }) => {
+    const { problems } = await setup(
+      page,
+      `/dashboard/moment?chain=ethereum&address=${WETH}&pair=0x11b815efB8f581194ae79006d24E0d814B7697F6`,
+    );
+    const bar = page.getByTestId("asset-bar");
+    await expect(bar).toHaveAttribute("data-key", `ethereum:${WETH.toLowerCase()}`);
+    // The pool is shown as evidence of the latest observation, not as URL scope.
+    await expect(page.getByTestId("observed-pool")).toContainText("OBSERVED POOL");
+    await openNav(page);
+    await navLink(page, "Vault Trace").click();
+    await expect(page).toHaveURL(/\/dashboard\/trace\?/);
+    expect(page.url()).not.toContain("pair=");
+    await expect(bar).toHaveAttribute("data-key", `ethereum:${WETH.toLowerCase()}`);
+    expect(problems).toEqual([]);
+  });
+
   test("a symbol in the URL is rejected; an unobserved address is NOT IN OBSERVED UNIVERSE", async ({
     page,
   }) => {
@@ -209,49 +229,79 @@ test.describe("Intelligence suite navigation", () => {
     expect(problems).toEqual([]);
   });
 
-  test("request budget: an intelligence view adds no request beyond the Overview's own lanes", async ({
+  test("request budget: no new/duplicate provider loop; intelligence routes keep the existing dashboard lanes active", async ({
     page,
   }, info) => {
     test.skip(info.project.name !== "desktop", "measured once");
     test.setTimeout(300_000);
     const { requests } = await setup(page);
-    const kinds = (list: string[]) => ({
-      pairs: list.filter((u) => u.includes("/latest/dex/pairs/")).length,
-      boosts: list.filter((u) => u.includes("/token-boosts/")).length,
-      ads: list.filter((u) => u.includes("/ads/")).length,
-      tokens: list.filter((u) => u.includes("/tokens/v1/")).length,
-    });
-    /** Advance page time by `minutes`, letting responses settle; return requests made meanwhile. */
-    const window = async (minutes: number) => {
-      await page.waitForTimeout(1_000);
-      const from = requests.length;
-      // Jump 30 s at a time (due timers fire once, as in a real waiting tab).
-      for (let i = 0; i < minutes * 2; i++) {
-        await page.clock.fastForward(30_000);
-        await page.waitForTimeout(600);
+    const SOURCES = {
+      pairs: "/latest/dex/pairs/",
+      boosts: "/token-boosts/",
+      ads: "/ads/",
+      tokens: "/tokens/v1/",
+    } as const;
+    const kinds = (list: string[]) =>
+      Object.fromEntries(
+        Object.entries(SOURCES).map(([k, part]) => [
+          k,
+          list.filter((u) => u.includes(part)).length,
+        ]),
+      ) as Record<keyof typeof SOURCES, number>;
+    /** Let in-flight work settle, then return the request count to measure from. */
+    const settle = async () => {
+      let seen = -1;
+      while (seen !== requests.length) {
+        seen = requests.length;
+        await page.waitForTimeout(800);
       }
-      await page.waitForTimeout(1_000);
-      return kinds(requests.slice(from));
+      return requests.length;
+    };
+    /**
+     * A deterministic window: from a settled point, jump the fake clock in
+     * whole 30 s ticks (the fast lane's cadence; the slow lane's is 2 ticks),
+     * letting responses settle after each jump.
+     */
+    const window = async (ticks: number) => {
+      const from = await settle();
+      for (let i = 0; i < ticks; i++) {
+        await page.clock.fastForward(30_000);
+        await settle();
+      }
+      const list = requests.slice(from);
+      return { counts: kinds(list), urls: new Set(list.map((u) => u.split("?")[0])) };
     };
 
-    const overview = await window(3);
-    const perView: Record<string, ReturnType<typeof kinds>> = {};
+    const overview = await window(6);
+    const perView: Record<string, Record<string, number>> = {};
+    const navRequests: Record<string, number> = {};
     for (const v of VIEWS) {
+      const before = await settle();
       await openNav(page);
       await navLink(page, v.label).click();
       await expect(page.getByTestId("intel-question")).toHaveText(v.question);
-      perView[v.path] = await window(3);
+      navRequests[v.path] = (await settle()) - before;
+      const w = await window(6);
+      perView[v.path] = w.counts;
+      // No request unique to an intelligence route: every URL was already requested by the Overview.
+      expect(
+        [...w.urls].filter((u) => !overview.urls.has(u)),
+        v.path,
+      ).toEqual([]);
     }
     await openNav(page);
     await navLink(page, "Overview").click();
     await expectOverview(page);
-    const back = await window(3);
-    console.log(`REQUEST-BUDGET ${JSON.stringify({ overview, perView, backOnOverview: back })}`);
+    const back = await window(6);
+    console.log(
+      `REQUEST-BUDGET ${JSON.stringify({ overview: overview.counts, perView, navRequests, backOnOverview: back.counts })}`,
+    );
 
-    for (const counts of [...Object.values(perView), back]) {
-      for (const k of ["pairs", "boosts", "ads", "tokens"] as const) {
-        expect(counts[k], k).toBeLessThanOrEqual(overview[k] + (k === "pairs" ? 4 : 1));
-      }
+    // Exact equality per source vs the Overview, and zero requests caused by entering a view.
+    for (const v of VIEWS) {
+      expect(perView[v.path], v.path).toEqual(overview.counts);
+      expect(navRequests[v.path], `${v.path} navigation`).toBe(0);
     }
+    expect(back.counts).toEqual(overview.counts);
   });
 });

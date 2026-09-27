@@ -8,19 +8,18 @@ import { SOL_PAIR, START, T0, WETH_PAIR, batch, obs } from "./helpers";
 const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const HONSE = "46vV3ZpFNLZn1CDRYnAvqPsdW5ejEYn9GK9kPcZFpump";
 
-const roundTrip = (a: { chainId: string; address: string; pairAddress?: string | null }) =>
+const roundTrip = (a: { chainId: string; address: string }) =>
   decodeFocus(encodeFocus(a) as Record<string, unknown>);
 
 describe("focus-asset URL codec", () => {
   it("EVM: mixed-case input normalises to the lowercase canonical identity", () => {
-    const r = decodeFocus({ chain: "Ethereum", address: WETH, pair: WETH_PAIR.pairAddress });
+    const r = decodeFocus({ chain: "Ethereum", address: WETH });
     expect(r).toEqual({
       ok: true,
       asset: {
         assetKey: assetKey("ethereum", WETH),
         chainId: "ethereum",
         address: WETH.toLowerCase(),
-        pairAddress: WETH_PAIR.pairAddress!.toLowerCase(),
       },
     });
     expect(encodeFocus({ chainId: "ethereum", address: WETH })).toEqual({
@@ -30,9 +29,8 @@ describe("focus-asset URL codec", () => {
   });
 
   it("Base58: case preserved exactly through a round trip; a case variant is a different asset", () => {
-    const r = roundTrip({ chainId: "solana", address: HONSE, pairAddress: SOL_PAIR.pairAddress });
+    const r = roundTrip({ chainId: "solana", address: HONSE });
     expect(r.ok && r.asset.address).toBe(HONSE);
-    expect(r.ok && r.asset.pairAddress).toBe(SOL_PAIR.pairAddress);
     const variant = decodeFocus({ chain: "solana", address: HONSE.toLowerCase() });
     expect(variant.ok && variant.asset.assetKey).not.toBe(r.ok && r.asset.assetKey);
   });
@@ -63,10 +61,6 @@ describe("focus-asset URL codec", () => {
     });
     expect(decodeFocus({ address: HONSE })).toEqual({ ok: false, reason: "MISSING_CHAIN" });
     expect(decodeFocus({ chain: "solana" })).toEqual({ ok: false, reason: "MISSING_ADDRESS" });
-    expect(decodeFocus({ chain: "solana", address: HONSE, pair: "SOL/USDC" })).toEqual({
-      ok: false,
-      reason: "INVALID_PAIR",
-    });
     expect(decodeFocus({})).toEqual({ ok: false, reason: "EMPTY" });
     expect(decodeFocus(null)).toEqual({ ok: false, reason: "EMPTY" });
   });
@@ -87,6 +81,28 @@ describe("focus-asset URL codec", () => {
     const track = r.ok ? (s.assets.get(r.asset.assetKey) ?? null) : null;
     expect(track).toBeNull();
     expect(assetFreshness(track, s.lanes, T0).state).toBe("unobserved");
+  });
+
+  it("the focus URL is chain + address only: a legacy `pair` is ignored and stripped", () => {
+    const legacy = { chain: "ethereum", address: WETH, pair: WETH_PAIR.pairAddress };
+    const r = decodeFocus(legacy);
+    expect(r).toEqual({
+      ok: true,
+      asset: {
+        assetKey: assetKey("ethereum", WETH),
+        chainId: "ethereum",
+        address: WETH.toLowerCase(),
+      },
+    });
+    // Even a garbage pair never invalidates or scopes the asset.
+    expect(decodeFocus({ ...legacy, pair: "SOL/USDC" })).toEqual(r);
+    expect(pickFocusSearch(legacy)).toEqual({ chain: "ethereum", address: WETH });
+    expect(Object.keys(encodeFocus({ chainId: "ethereum", address: WETH }))).toEqual([
+      "chain",
+      "address",
+    ]);
+    // A pair alone is not an identity.
+    expect(decodeFocus({ pair: WETH_PAIR.pairAddress })).toEqual({ ok: false, reason: "EMPTY" });
   });
 
   it("pickFocusSearch keeps only focus keys", () => {

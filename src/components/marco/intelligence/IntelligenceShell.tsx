@@ -82,7 +82,6 @@ const INVALID_TEXT: Record<string, string> = {
   MISSING_ADDRESS: "missing address",
   INVALID_CHAIN: "invalid chain",
   INVALID_ADDRESS: "not a contract address (symbols are not identities)",
-  INVALID_PAIR: "invalid pair address",
 };
 
 /** The selected asset: identity, SELECT ASSET, and its evidence freshness. */
@@ -94,7 +93,9 @@ function AssetBar() {
   const symbol = latest?.snapshot.baseSymbol ?? null;
   // Display the provider's original address when observed; else the URL's.
   const address = latest?.address ?? focus?.address ?? null;
-  const pair = focus?.pairAddress ?? latest?.pairAddress ?? null;
+  // Pool = evidence of the latest observation, never a scope from the URL.
+  const pool = latest?.pairAddress ?? null;
+  const dex = latest?.snapshot.dexId ?? null;
 
   return (
     <section
@@ -120,9 +121,14 @@ function AssetBar() {
                 {shortAddress(address)}
               </span>
             )}
-            {pair && (
-              <span className="font-mono text-[10px] text-(--faint)" title={pair}>
-                PAIR {shortAddress(pair)}
+            {pool && (
+              <span
+                className="font-mono text-[10px] text-(--faint)"
+                title={`Observed pool ${pool} — the provider's pool for this asset in the latest observation; it may change between rounds.`}
+                data-testid="observed-pool"
+              >
+                OBSERVED POOL {shortAddress(pool)}
+                {dex ? ` · ${dex.toUpperCase()}` : ""}
               </span>
             )}
           </div>
@@ -140,9 +146,7 @@ function AssetBar() {
         <SessionLine />
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <AssetPicker
-          onPick={(chainId, addr, pairAddress) => setFocus({ chainId, address: addr, pairAddress })}
-        />
+        <AssetPicker onPick={(chainId, addr) => setFocus({ chainId, address: addr })} />
         {focus && (
           <button
             type="button"
@@ -193,11 +197,7 @@ function FreshnessLine({ fresh, lanes }: { fresh: AssetFreshness; lanes: string[
 }
 
 /** SELECT ASSET — Global Search's own index and ranking, used as a picker. */
-function AssetPicker({
-  onPick,
-}: {
-  onPick: (chainId: string, address: string, pairAddress: string | null) => void;
-}) {
+function AssetPicker({ onPick }: { onPick: (chainId: string, address: string) => void }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   return (
@@ -218,9 +218,7 @@ function AssetPicker({
         onOpenChange={setOpen}
         trigger={trigger}
         description="Select an asset MARCOVAULT currently holds, by symbol, name, contract address, chain or source. The selection is kept in the page address by chain and contract."
-        onChoose={(entry) =>
-          onPick(entry.chainId, entry.address, entry.snapshot?.pairAddress ?? null)
-        }
+        onChoose={(entry) => onPick(entry.chainId, entry.address)}
       />
     </>
   );

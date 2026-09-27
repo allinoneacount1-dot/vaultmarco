@@ -27,12 +27,22 @@ import {
  * observations is one event, stamped with the observation where it was
  * first seen (`observedAt`), extended by `lastObservedAt` while it holds.
  * A missing field is unknown — it never counts as true, false or zero — and
- * ends a run, as do a gap longer than RUN_MAX_GAP_MS and a change of pair.
+ * ends a run, as do a gap longer than RUN_MAX_GAP_MS and a change of pair
+ * (pool). Feed assets are observed on the provider's deepest pool for the
+ * token, which can change between rounds: a pool switch always breaks
+ * continuity, and session deltas are computed within one pool only.
  *
  * `onset` says how much we actually saw:
- *   OBSERVED                   a real earlier observation (within the run
- *                              gap) showed the condition false — the change
- *                              itself happened between two observations.
+ *   OBSERVED                   the previous consecutive real observation
+ *                              (same pair, within the run gap) showed the
+ *                              condition false, or true in the OTHER direction
+ *                              (a contiguous reversal, e.g. UP → DOWN,
+ *                              BUY → SELL, ADDED → REMOVED) — the change itself
+ *                              happened between two observations.
+ * Directional types: PRICE_EXPANSION (UP/DOWN), BUY_SELL_IMBALANCE (BUY/SELL),
+ * LIQUIDITY_CHANGE (ADDED/REMOVED), BOOST_CHANGE (UP/DOWN), RISK_FIRED
+ * (ADDED/REMOVED). VOLUME_ACCELERATION, TXN_ACCELERATION and MOMENTUM_FIRED
+ * are one-directional (UP).
  *   IN_PROGRESS_WHEN_OBSERVED  the condition was already true the first time
  *                              it could be evaluated; it may have begun
  *                              before. Never an origin for the Edge Clock.
@@ -124,6 +134,8 @@ export type EvidenceEvent = {
   pairAddress: string | null;
   baseAddress: string;
   quoteAddress: string | null;
+  /** Provider DEX id of the observed pool, when reported. */
+  dexId: string | null;
   /** Observation where the condition was first seen (a real receive time). */
   observedAt: number;
   /** Last observation in the run where it still held. */
@@ -179,8 +191,11 @@ type Spec = {
   caveat: string | null;
   /** Session deltas: onset is always OBSERVED (the change is between two real observations). */
   delta?: boolean;
-  /** Metric used for `prior` on an OBSERVED onset of a state condition. */
-  metric?: (s: PairSnapshot) => number | null;
+  /**
+   * Metric used for `prior` on an OBSERVED onset of a state condition, read
+   * from the previous real observation in the sense of the new direction.
+   */
+  metric?: (s: PairSnapshot, dir: EventDirection) => number | null;
   test: Test;
 };
 
@@ -199,6 +214,7 @@ function baseEvent(
     pairAddress: o.pairAddress,
     baseAddress: o.baseAddress,
     quoteAddress: o.quoteAddress,
+    dexId: o.snapshot.dexId,
     observedAt: o.observedAt,
     source: sourceOf(o),
     direction: hit.dir,
@@ -227,10 +243,16 @@ function runEvents(spec: Spec, obs: readonly AssetObservation[]): EvidenceEvent[
     if (result && open && contiguous && open.direction === result.dir) {
       open.lastObservedAt = o.observedAt;
     } else if (result) {
-      const negativeBefore = contiguous && prev!.result === false;
-      const observedChange = spec.delta === true || negativeBefore;
+      // OBSERVED when the previous CONSECUTIVE real observation (same pair,
+      // within the run gap) showed the condition false, or true in the other
+      // direction (a contiguous reversal is itself an observed change).
+      const pr = contiguous ? prev!.result : null;
+      const changedFrom = pr === false || (pr != null && pr.dir !== result.dir);
+      const observedChange = spec.delta === true || changedFrom;
       const prior =
-        observedChange && !spec.delta && spec.metric ? spec.metric(prev!.o.snapshot) : null;
+        observedChange && !spec.delta && spec.metric
+          ? spec.metric(prev!.o.snapshot, result.dir)
+          : null;
       open = {
         ...baseEvent(spec, o, result),
         lastObservedAt: o.observedAt,
@@ -255,6 +277,18 @@ function runEvents(spec: Spec, obs: readonly AssetObservation[]): EvidenceEvent[
 }
 
 const pct = (n: number) => Math.abs(n);
+
+/**
+ * The unbroken run of observations of the SAME pool (pairAddress) ending at
+ * index i, oldest first. A pair change anywhere before i cuts it: session
+ * deltas never compare across a pool switch (A → B → A included).
+ */
+export function poolSegment(obs: readonly AssetObservation[], i: number): AssetObservation[] {
+  const pair = obs[i].pairAddress;
+  let j = i;
+  while (j > 0 && obs[j - 1].pairAddress === pair) j--;
+  return obs.slice(j, i + 1);
+}
 
 const SPECS: Spec[] = [
   {
@@ -333,6 +367,11 @@ const SPECS: Spec[] = [
     threshold: IMBALANCE_MIN_RATIO,
     horizon: M5,
     caveat: "Counts of transactions, not USD; below the sample guard no ratio is evaluated.",
+    metric: (s, dir) => {
+      const w = s.txns.m5;
+      if (!w || w.buys + w.sells < IMBALANCE_MIN_SAMPLE_TXNS) return null;
+      return dir === "SELL" ? w.sells / Math.max(w.buys, 1) : w.buys / Math.max(w.sells, 1);
+    },
     test: (o) => {
       const bp = buyPressure(o.snapshot);
       if (!bp.ok) return null; // no window, or below the radar's sample guard
@@ -360,11 +399,11 @@ const SPECS: Spec[] = [
     test: (o, i, obs) => {
       // A pool delta needs a known pool: no pair address, no comparison.
       if (o.snapshot.liquidityUsd == null || o.pairAddress == null) return null;
-      const samePair = obs
-        .slice(0, i + 1)
-        .filter((x) => x.pairAddress === o.pairAddress)
-        .map((x) => x.snapshot);
-      const c = liquidityChange(samePair, LIQUIDITY_CHANGE_LOOKBACK_MINUTES);
+      // Only the unbroken same-pool segment ending here: never across a pair change.
+      const c = liquidityChange(
+        poolSegment(obs, i).map((x) => x.snapshot),
+        LIQUIDITY_CHANGE_LOOKBACK_MINUTES,
+      );
       if (!c) return null;
       if (c.currentObservedAt - c.previousObservedAt > SESSION_DELTA_MAX_SPAN_MS) return null;
       if (
@@ -397,10 +436,11 @@ const SPECS: Spec[] = [
     test: (o, i, obs) => {
       const now = o.snapshot.boostsActive;
       if (now == null) return null;
+      const segment = poolSegment(obs, i);
       let prev: AssetObservation | null = null;
-      for (let j = i - 1; j >= 0; j--) {
-        if (obs[j].snapshot.boostsActive != null) {
-          prev = obs[j];
+      for (let j = segment.length - 2; j >= 0; j--) {
+        if (segment[j].snapshot.boostsActive != null) {
+          prev = segment[j];
           break;
         }
       }
@@ -484,6 +524,7 @@ function identityEvent(
     pairAddress: o.pairAddress,
     baseAddress: o.baseAddress,
     quoteAddress: o.quoteAddress,
+    dexId: o.snapshot.dexId,
     observedAt: at,
     lastObservedAt: at,
     active: false,

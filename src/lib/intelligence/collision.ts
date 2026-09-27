@@ -10,7 +10,23 @@ import { COLLISION_WINDOW_MS } from "./rules";
  * The window ends at the newest onset considered and spans `windowMs`
  * (COLLISION_WINDOW_MS by default), inclusive at both ends. Not confidence,
  * not causality — co-occurrence in time only.
+ *
+ * ONE POOL: pool-level market events (price, volume, liquidity, transactions,
+ * boosts, radar signals) are only combined when they were observed on the
+ * SAME pairAddress. A feed asset's observed pool can switch between rounds;
+ * events on pool A and pool B never form one collision. The pool is the one
+ * of the newest pool-level event in the pool (or `opts.pairAddress`).
+ * PROVIDER events are lane-level and are not tied to a pool.
  */
+
+export const POOL_LEVEL_FAMILIES: ReadonlySet<EventFamily> = new Set<EventFamily>([
+  "PRICE",
+  "VOLUME",
+  "LIQUIDITY",
+  "TRANSACTIONS",
+  "BOOST",
+  "SIGNAL",
+]);
 
 export type CollisionFamily = { family: EventFamily; firstAt: number; events: EvidenceEvent[] };
 
@@ -22,15 +38,29 @@ export type Collision = {
   windowEnd: number;
   /** Last family onset − first family onset. */
   spanMs: number;
+  /** The one observed pool the pool-level events belong to (null if none). */
+  pairAddress: string | null;
 };
 
 export function collisionFamilies(
   events: readonly EvidenceEvent[],
   windowMs: number = COLLISION_WINDOW_MS,
-  opts: { end?: number; families?: readonly EventFamily[] } = {},
+  opts: { end?: number; families?: readonly EventFamily[]; pairAddress?: string | null } = {},
 ): Collision | null {
-  const pool = opts.families ? events.filter((e) => opts.families!.includes(e.family)) : events;
+  let pool = opts.families ? events.filter((e) => opts.families!.includes(e.family)) : [...events];
   if (pool.length === 0 || !(windowMs >= 0)) return null;
+  const poolLevel = pool.filter((e) => POOL_LEVEL_FAMILIES.has(e.family));
+  const newestPoolEvent = poolLevel.reduce<EvidenceEvent | null>(
+    (a, e) =>
+      a == null || e.observedAt > a.observedAt || (e.observedAt === a.observedAt && e.id > a.id)
+        ? e
+        : a,
+    null,
+  );
+  const pairAddress =
+    opts.pairAddress !== undefined ? opts.pairAddress : (newestPoolEvent?.pairAddress ?? null);
+  pool = pool.filter((e) => !POOL_LEVEL_FAMILIES.has(e.family) || e.pairAddress === pairAddress);
+  if (pool.length === 0) return null;
   const windowEnd = opts.end ?? Math.max(...pool.map((e) => e.observedAt));
   const windowStart = windowEnd - windowMs;
   const inWindow = pool
@@ -47,5 +77,5 @@ export function collisionFamilies(
     (a, b) => a.firstAt - b.firstAt || (a.family < b.family ? -1 : 1),
   );
   const spanMs = families[families.length - 1].firstAt - families[0].firstAt;
-  return { families, count: families.length, windowStart, windowEnd, spanMs };
+  return { families, count: families.length, windowStart, windowEnd, spanMs, pairAddress };
 }

@@ -27,6 +27,7 @@ function ev(type: EventType, at: number, over: Partial<EvidenceEvent> = {}): Evi
     pairAddress: SOL_PAIR.pairAddress ?? null,
     baseAddress: SOL_PAIR.baseToken.address,
     quoteAddress: null,
+    dexId: null,
     observedAt: at,
     lastObservedAt: at,
     active: true,
@@ -47,6 +48,18 @@ function ev(type: EventType, at: number, over: Partial<EvidenceEvent> = {}): Evi
 }
 
 describe("edge clock origin", () => {
+  it("an active, contiguous observed reversal may be the Edge Clock origin", () => {
+    let s = createSessionState(START);
+    [4, 5, -4, -5].forEach((v, i) => {
+      const at = T0 + i * 30 * SEC;
+      s = ingest(s, batch("realtime", at, [obs(SOL_PAIR, at, { priceChange: { m5: v } })]));
+    });
+    const events = extractAssetEvents(s.assets.get(SOL_KEY)!, s.lanes);
+    const origin = edgeClockOrigin(events)!;
+    expect(origin).toMatchObject({ type: "PRICE_EXPANSION", direction: "DOWN", onset: "OBSERVED" });
+    expect(origin.observedAt).toBe(T0 + 60 * SEC);
+  });
+
   it("is null when nothing was observed changing — session start / first observation never become the origin", () => {
     // A condition already true at the first observation, observed for 10 minutes.
     let s = createSessionState(START);
@@ -94,6 +107,27 @@ describe("edge clock origin", () => {
 });
 
 describe("collision families", () => {
+  it("pair-switch regression: events on pool A then pool B inside the window never form one collision", () => {
+    const A = SOL_PAIR.pairAddress!;
+    const B = "OtherPoo1111111111111111111111111111111111";
+    const list = [
+      ev("PRICE_EXPANSION", T0, { pairAddress: A }),
+      ev("LIQUIDITY_CHANGE", T0 + 30 * SEC, { pairAddress: A }),
+      ev("VOLUME_ACCELERATION", T0 + MIN, { pairAddress: B }),
+      ev("PROVIDER_STALE", T0 + 2 * MIN, { pairAddress: A }),
+    ];
+    const c = collisionFamilies(list)!;
+    expect(c.pairAddress).toBe(B);
+    expect(c.families.map((f) => f.family)).toEqual(["VOLUME", "PROVIDER"]);
+    const a = collisionFamilies(list, COLLISION_WINDOW_MS, { pairAddress: A })!;
+    expect(a.families.map((f) => f.family)).toEqual(["PRICE", "LIQUIDITY", "PROVIDER"]);
+    for (const f of [...c.families, ...a.families]) {
+      if (f.family !== "PROVIDER") {
+        expect(new Set(f.events.map((e) => e.pairAddress)).size).toBe(1);
+      }
+    }
+  });
+
   it("counts families, not events — same family in the window is one vote", () => {
     const c = collisionFamilies([
       ev("TXN_ACCELERATION", T0),
@@ -135,22 +169,37 @@ describe("change queue", () => {
     newestType: "PRICE_EXPANSION",
     eventCount: 1,
     familyCount: 1,
-    volumeChange: null,
+    volumeAcceleration: null,
     liquidityChangeUsd: null,
     ...over,
   });
   const rows = [
-    row("a", { newestAt: T0, eventCount: 3, volumeChange: 4, liquidityChangeUsd: -50_000 }),
-    row("b", { newestAt: T0 + MIN, eventCount: 1, volumeChange: null, liquidityChangeUsd: 20_000 }),
-    row("c", { newestAt: T0 + MIN, eventCount: 3, volumeChange: 4, liquidityChangeUsd: null }),
-    row("d", { newestAt: T0 - MIN, eventCount: 0 + 2, volumeChange: 0, liquidityChangeUsd: 0 }),
+    row("a", { newestAt: T0, eventCount: 3, volumeAcceleration: 4, liquidityChangeUsd: -50_000 }),
+    row("b", {
+      newestAt: T0 + MIN,
+      eventCount: 1,
+      volumeAcceleration: null,
+      liquidityChangeUsd: 20_000,
+    }),
+    row("c", {
+      newestAt: T0 + MIN,
+      eventCount: 3,
+      volumeAcceleration: 4,
+      liquidityChangeUsd: null,
+    }),
+    row("d", {
+      newestAt: T0 - MIN,
+      eventCount: 0 + 2,
+      volumeAcceleration: 0,
+      liquidityChangeUsd: 0,
+    }),
   ];
   const keys = (r: QueueRow[]) => r.map((x) => x.assetKey);
 
   it("deterministic orderings with fixed tie-breaks (newest, then assetKey); unknown sorts last, 0 is data", () => {
     expect(keys(sortQueue(rows, "NEWEST"))).toEqual(["b", "c", "a", "d"]);
     expect(keys(sortQueue(rows, "MOST_EVENTS"))).toEqual(["c", "a", "d", "b"]);
-    expect(keys(sortQueue(rows, "LARGEST_VOLUME_CHANGE"))).toEqual(["c", "a", "d", "b"]);
+    expect(keys(sortQueue(rows, "LARGEST_VOLUME_ACCELERATION"))).toEqual(["c", "a", "d", "b"]);
     expect(keys(sortQueue(rows, "LARGEST_LIQUIDITY_CHANGE"))).toEqual(["a", "b", "d", "c"]);
     for (const s of QUEUE_SORTS)
       expect(sortQueue([...rows].reverse(), s)).toEqual(sortQueue(rows, s));
@@ -169,6 +218,6 @@ describe("change queue", () => {
       ev("LIQUIDITY_CHANGE", T0, { evidence: { deltaUsd: -15_000 } }),
       ev("VOLUME_ACCELERATION", T0 + 1, { value: 3.2 }),
     ])!;
-    expect([liq.liquidityChangeUsd, liq.volumeChange]).toEqual([-15_000, 3.2]);
+    expect([liq.liquidityChangeUsd, liq.volumeAcceleration]).toEqual([-15_000, 3.2]);
   });
 });
