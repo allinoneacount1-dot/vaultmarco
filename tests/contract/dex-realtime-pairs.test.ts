@@ -198,3 +198,63 @@ describe("11. financial formatter — K / M / B / T", () => {
     expect(formatNumber(Number.POSITIVE_INFINITY)).toBe("—");
   });
 });
+
+describe("NO_SILENT_PAIR_SUBSTITUTION — the pair address is evidence too", () => {
+  it("every recorded canonical pair still resolves, carrying the provider's own pair address", async () => {
+    const env = await fetchRealtimePairs(deps());
+    expect(env.status).toBe("live");
+    for (const c of CANONICAL_PAIRS) {
+      const row = env.data.find((r) => r.key === c.key)!;
+      expect(row.resolved).toBe(true);
+      const recorded = FIXTURES[c.chainId].pairs.find(
+        (p) => (p.pairAddress as string).toLowerCase() === c.pairAddress.toLowerCase(),
+      )!;
+      expect(row.pairAddress).toBe(recorded.pairAddress);
+      expect(row.pairAddress).toBe(c.pairAddress);
+    }
+  });
+
+  it("same chain, base and quote but a DIFFERENT pool → unresolved, no values under the canonical identity", async () => {
+    const other = solPair();
+    other.pairAddress = "7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm"; // another SOL/USDC pool
+    expect(validateCandidate(want("SOL/USDC"), other as never)).toBe(false);
+    const env = await fetchRealtimePairs(deps({ solana: payload(other) }));
+    const sol = env.data.find((r) => r.key === "SOL/USDC")!;
+    expect(sol).toMatchObject({
+      resolved: false,
+      reason: "identity_mismatch",
+      priceUsd: null,
+      change24h: null,
+      volume24h: null,
+      liquidityUsd: null,
+      url: null,
+    });
+    expect(sol.pair).toBeUndefined();
+  });
+
+  it("an EVM pair address matches whatever case the provider returns", () => {
+    const c = want("WETH/USDT");
+    const p = structuredClone(FIXTURES.ethereum.pairs[0]) as MutablePair;
+    p.pairAddress = c.pairAddress.toLowerCase();
+    expect(validateCandidate(c, p as never)).toBe(true);
+    p.pairAddress = c.pairAddress.toUpperCase().replace("0X", "0x");
+    expect(validateCandidate(c, p as never)).toBe(true);
+  });
+
+  it("a Base58 pair address is case-sensitive: a case variant is a different pool", () => {
+    const p = solPair();
+    p.pairAddress = want("SOL/USDC").pairAddress.toLowerCase();
+    expect(validateCandidate(want("SOL/USDC"), p as never)).toBe(false);
+  });
+
+  it("a missing provider pair address is never taken as evidence", async () => {
+    const p = solPair();
+    delete p.pairAddress;
+    expect(validateCandidate(want("SOL/USDC"), p as never)).toBe(false);
+    const env = await fetchRealtimePairs(deps({ solana: payload(p) }));
+    const sol = env.data.find((r) => r.key === "SOL/USDC")!;
+    expect(sol.resolved).toBe(false);
+    expect(sol.reason).toBe("identity_mismatch");
+    expect(sol.priceUsd).toBeNull();
+  });
+});
