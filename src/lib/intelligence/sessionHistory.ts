@@ -109,15 +109,18 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
 
   // Lane status point (deduplicated: the same round is never recorded twice).
   const lane: LaneTrack = state.lanes[batch.lane];
-  const last = lane.points[lane.points.length - 1];
-  const samePoint = last && last.at === batch.at && last.state === batch.state;
+  // A round recorded before the session began (e.g. a cached pre-session
+  // query error) is NOT session evidence: it never becomes a lane point, so
+  // it can never be the "before" of an in-session transition.
+  const preSessionPoint = batch.at < state.startedAt;
+  if (preSessionPoint) rejected.preSession++;
+  const samePoint =
+    preSessionPoint || lane.points.some((p) => p.at === batch.at && p.state === batch.state);
   const firstRoundOfLane = lane.firstOkAt == null && batch.state !== "failed";
   const nextLane: LaneTrack = samePoint
     ? lane
     : {
-        firstOkAt:
-          lane.firstOkAt ??
-          (batch.state !== "failed" && batch.at >= state.startedAt ? batch.at : null),
+        firstOkAt: lane.firstOkAt ?? (batch.state !== "failed" ? batch.at : null),
         points: pushBounded(
           lane.points,
           {
@@ -185,7 +188,8 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
 
   for (const g of batch.gaps ?? []) {
     const track = assets.get(g.assetKey);
-    if (!track || !validTime(g.at)) continue; // never observed: nothing to mark stale
+    // Never observed: nothing to mark stale. Pre-session gaps are not session evidence.
+    if (!track || !validTime(g.at) || g.at < state.startedAt) continue;
     if (track.gaps.some((x) => x.at === g.at && x.lane === g.lane)) continue;
     const gaps = pushBounded(
       track.gaps,

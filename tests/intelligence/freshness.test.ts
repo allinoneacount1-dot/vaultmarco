@@ -3,7 +3,19 @@ import { FRESHNESS_TEXT, ageLabel, assetFreshness } from "@/lib/intelligence/fre
 import { batchFromRealtime, failureBatch } from "@/lib/intelligence/ingest";
 import { staleAfterMs } from "@/lib/intelligence/rules";
 import { createSessionState, ingest } from "@/lib/intelligence/sessionHistory";
-import { SEC, SOL_KEY, SOL_PAIR, START, T0, WETH_KEY, batch, obs, realEnvelope } from "./helpers";
+import { assetKey } from "@/lib/assetIdentity";
+import {
+  SEC,
+  SOL_KEY,
+  SOL_PAIR,
+  START,
+  T0,
+  TOKEN_A,
+  WETH_KEY,
+  batch,
+  obs,
+  realEnvelope,
+} from "./helpers";
 
 const empty = () => createSessionState(START);
 
@@ -28,6 +40,33 @@ describe("freshness state machine", () => {
     });
     const later = assetFreshness(track, s.lanes, T0 + staleAfterMs("realtime") + 1);
     expect(later).toMatchObject({ state: "stale", reason: "AGE", observedAt: T0 });
+  });
+
+  it("aligned with the landing: realtime LIVE at 45 s, STALE at 46 s; universe LIVE at 90 s, STALE at 91 s", () => {
+    let s = ingest(empty(), batch("realtime", T0, [obs(SOL_PAIR, T0)]));
+    const rt = s.assets.get(SOL_KEY)!;
+    expect(assetFreshness(rt, s.lanes, T0 + 45 * SEC).state).toBe("live");
+    expect(assetFreshness(rt, s.lanes, T0 + 45 * SEC + 1).state).toBe("stale");
+    expect(assetFreshness(rt, s.lanes, T0 + 46 * SEC)).toMatchObject({
+      state: "stale",
+      reason: "AGE",
+    });
+    s = ingest(empty(), batch("universe", T0, [obs(TOKEN_A, T0, {}, "universe")]));
+    const u = s.assets.get(assetKey("solana", TOKEN_A.baseToken.address))!;
+    expect(assetFreshness(u, s.lanes, T0 + 90 * SEC).state).toBe("live");
+    expect(assetFreshness(u, s.lanes, T0 + 91 * SEC)).toMatchObject({
+      state: "stale",
+      reason: "AGE",
+    });
+  });
+
+  it("failure evidence after an observation keeps STALE even inside the age window, until a NEW observation", () => {
+    let s = ingest(empty(), batch("realtime", T0, [obs(SOL_PAIR, T0)]));
+    s = ingest(s, failureBatch("realtime", T0 + 5 * SEC, new Error("429"))!);
+    s = ingest(s, batch("realtime", T0 + 10 * SEC, [])); // lane answers without this asset
+    expect(assetFreshness(s.assets.get(SOL_KEY), s.lanes, T0 + 11 * SEC).state).toBe("stale");
+    s = ingest(s, batch("realtime", T0 + 30 * SEC, [obs(SOL_PAIR, T0 + 30 * SEC)]));
+    expect(assetFreshness(s.assets.get(SOL_KEY), s.lanes, T0 + 31 * SEC).state).toBe("live");
   });
 
   it("render time is never the observation time: advancing the clock never moves observedAt", () => {

@@ -2,7 +2,12 @@ import { assetKey, isEvmHexAddress } from "@/lib/assetIdentity";
 
 /**
  * FOCUS-ASSET URL CODEC — the selected asset lives in the URL as
- *   ?chain=<provider chain slug>&address=<base token address>[&pair=<pair address>]
+ *   ?chain=<provider chain slug>&address=<base token address>
+ *
+ * The focus is an ASSET, not a pool: there is deliberately no pair in the
+ * URL. Which pool an observation came from is evidence carried by each
+ * observation/event (pairAddress, quoteAddress, dexId), never a scope the URL
+ * pretends to pin. A legacy `pair` param is ignored and dropped.
  *
  * Identity is chain + ADDRESS, never a symbol:
  *   - chain is a provider slug, lowercased ("solana", "base", "hyperliquid").
@@ -20,22 +25,15 @@ export type FocusAsset = {
   assetKey: string;
   chainId: string;
   address: string;
-  pairAddress: string | null;
 };
 
-export type FocusSearch = { chain?: string; address?: string; pair?: string };
+export type FocusSearch = { chain?: string; address?: string };
 
 export type DecodeResult =
   | { ok: true; asset: FocusAsset }
   | {
       ok: false;
-      reason:
-        | "EMPTY"
-        | "MISSING_CHAIN"
-        | "MISSING_ADDRESS"
-        | "INVALID_CHAIN"
-        | "INVALID_ADDRESS"
-        | "INVALID_PAIR";
+      reason: "EMPTY" | "MISSING_CHAIN" | "MISSING_ADDRESS" | "INVALID_CHAIN" | "INVALID_ADDRESS";
     };
 
 const CHAIN = /^[a-z0-9][a-z0-9-]{0,31}$/;
@@ -58,18 +56,9 @@ export function canonicalUrlAddress(address: string): string {
   return isEvmHexAddress(address) ? address.toLowerCase() : address;
 }
 
-/** Search params for a focus asset (only these three keys). */
-export function encodeFocus(a: {
-  chainId: string;
-  address: string;
-  pairAddress?: string | null;
-}): FocusSearch {
-  const out: FocusSearch = {
-    chain: a.chainId.toLowerCase(),
-    address: canonicalUrlAddress(a.address),
-  };
-  if (a.pairAddress) out.pair = canonicalUrlAddress(a.pairAddress);
-  return out;
+/** Search params for a focus asset: chain + address only. */
+export function encodeFocus(a: { chainId: string; address: string }): FocusSearch {
+  return { chain: a.chainId.toLowerCase(), address: canonicalUrlAddress(a.address) };
 }
 
 const str = (v: unknown): string | undefined =>
@@ -83,9 +72,8 @@ const str = (v: unknown): string | undefined =>
 export function decodeFocus(search: Record<string, unknown> | null | undefined): DecodeResult {
   const rawChain = search?.chain;
   const rawAddress = search?.address;
-  const rawPair = search?.pair;
-  if (rawChain == null && rawAddress == null && rawPair == null)
-    return { ok: false, reason: "EMPTY" };
+  // `pair` (legacy) is ignored: it is not part of the focus identity.
+  if (rawChain == null && rawAddress == null) return { ok: false, reason: "EMPTY" };
   const chain = str(rawChain);
   const address = str(rawAddress);
   if (rawChain != null && chain == null) return { ok: false, reason: "INVALID_CHAIN" };
@@ -95,16 +83,10 @@ export function decodeFocus(search: Record<string, unknown> | null | undefined):
   const chainId = chain.toLowerCase();
   if (!CHAIN.test(chainId)) return { ok: false, reason: "INVALID_CHAIN" };
   if (!isAddressLike(address)) return { ok: false, reason: "INVALID_ADDRESS" };
-  let pairAddress: string | null = null;
-  if (rawPair != null) {
-    const pair = str(rawPair);
-    if (!pair || !isAddressLike(pair)) return { ok: false, reason: "INVALID_PAIR" };
-    pairAddress = canonicalUrlAddress(pair);
-  }
   const canonical = canonicalUrlAddress(address);
   return {
     ok: true,
-    asset: { assetKey: assetKey(chainId, canonical), chainId, address: canonical, pairAddress },
+    asset: { assetKey: assetKey(chainId, canonical), chainId, address: canonical },
   };
 }
 
@@ -116,7 +98,8 @@ export function decodeFocus(search: Record<string, unknown> | null | undefined):
  */
 export function pickFocusSearch(search: Record<string, unknown>): FocusSearch {
   const out: FocusSearch = {};
-  for (const k of ["chain", "address", "pair"] as const) {
+  // Only chain + address survive; anything else (including a legacy `pair`) is dropped.
+  for (const k of ["chain", "address"] as const) {
     const v = search[k];
     if (v == null) continue;
     out[k] = typeof v === "string" ? v : `!${String(v)}`;
@@ -124,7 +107,7 @@ export function pickFocusSearch(search: Record<string, unknown>): FocusSearch {
   return out;
 }
 
-/** Same asset under the identity rule (pair ignored). */
+/** Same asset under the identity rule. */
 export function sameFocus(a: FocusAsset | null, b: FocusAsset | null): boolean {
   if (!a || !b) return a === b;
   return a.assetKey === b.assetKey;

@@ -109,21 +109,63 @@ describe("events — onset semantics", () => {
     expect(ofType(allMissing, "PRICE_EXPANSION")).toEqual([]);
   });
 
-  it("a direction flip or a gap longer than the run gap starts a new event", () => {
+  it("direction reversal UP → DOWN between consecutive observations is an OBSERVED onset", () => {
     const ev = ofType(
       eventsOf([
         obs(SOL_PAIR, t(0), { priceChange: { m5: 4 } }),
         obs(SOL_PAIR, t(1), { priceChange: { m5: -4 } }),
-        obs(SOL_PAIR, t(1) + RUN_MAX_GAP_MS + SEC, { priceChange: { m5: -5 } }),
       ]),
       "PRICE_EXPANSION",
     );
     expect(ev.map((e) => [e.direction, e.observedAt, e.onset])).toEqual([
       ["UP", t(0), "IN_PROGRESS_WHEN_OBSERVED"],
-      ["DOWN", t(1), "IN_PROGRESS_WHEN_OBSERVED"],
-      ["DOWN", t(1) + RUN_MAX_GAP_MS + SEC, "IN_PROGRESS_WHEN_OBSERVED"],
+      ["DOWN", t(1), "OBSERVED"],
     ]);
-    expect(ev.map((e) => e.active)).toEqual([false, false, true]);
+    expect(ev[1]).toMatchObject({ prior: 4, priorObservedAt: t(0), active: true });
+    expect(ev[0].active).toBe(false);
+  });
+
+  it("direction reversal BUY → SELL between consecutive observations is an OBSERVED onset", () => {
+    const ev = ofType(
+      eventsOf([
+        obs(SOL_PAIR, t(0), { txns: { m5: { buys: 30, sells: 10 } } }),
+        obs(SOL_PAIR, t(1), { txns: { m5: { buys: 10, sells: 30 } } }),
+      ]),
+      "BUY_SELL_IMBALANCE",
+    );
+    expect(ev.map((e) => [e.direction, e.onset])).toEqual([
+      ["BUY", "IN_PROGRESS_WHEN_OBSERVED"],
+      ["SELL", "OBSERVED"],
+    ]);
+    // prior read in the new direction's sense from the previous real observation: sells/buys = 10/30.
+    expect(ev[1].prior).toBeCloseTo(1 / 3, 6);
+    expect(ev[1].priorObservedAt).toBe(t(0));
+  });
+
+  it("the same reversals after a gap longer than the run gap stay IN_PROGRESS_WHEN_OBSERVED", () => {
+    const later = t(0) + RUN_MAX_GAP_MS + SEC;
+    const px = ofType(
+      eventsOf([
+        obs(SOL_PAIR, t(0), { priceChange: { m5: 4 } }),
+        obs(SOL_PAIR, later, { priceChange: { m5: -4 } }),
+      ]),
+      "PRICE_EXPANSION",
+    );
+    expect(px.map((e) => [e.direction, e.onset])).toEqual([
+      ["UP", "IN_PROGRESS_WHEN_OBSERVED"],
+      ["DOWN", "IN_PROGRESS_WHEN_OBSERVED"],
+    ]);
+    const bs = ofType(
+      eventsOf([
+        obs(SOL_PAIR, t(0), { txns: { m5: { buys: 30, sells: 10 } } }),
+        obs(SOL_PAIR, later, { txns: { m5: { buys: 10, sells: 30 } } }),
+      ]),
+      "BUY_SELL_IMBALANCE",
+    );
+    expect(bs.map((e) => [e.direction, e.onset])).toEqual([
+      ["BUY", "IN_PROGRESS_WHEN_OBSERVED"],
+      ["SELL", "IN_PROGRESS_WHEN_OBSERVED"],
+    ]);
   });
 
   it("extraction is deterministic, chronological and has unique ids", () => {
@@ -326,5 +368,57 @@ describe("events — radar, discovery, provider", () => {
       (e) => e.family === "PROVIDER",
     );
     expect(sol).toEqual([]);
+  });
+});
+
+describe("events — feed-pool policy (observed pool can switch)", () => {
+  const POOL_B = "OtherPoo1111111111111111111111111111111111";
+  const key = assetKey("solana", TOKEN_A.baseToken.address);
+
+  it("a pair switch breaks event continuity (pool B starts its own event, not a continuation)", () => {
+    const ev = ofType(
+      eventsOf([
+        obs(SOL_PAIR, t(0), { priceChange: { m5: 1 } }),
+        obs(SOL_PAIR, t(1), { priceChange: { m5: 4 } }),
+        obs(SOL_PAIR, t(2), { priceChange: { m5: 5 }, pairAddress: POOL_B }),
+      ]),
+      "PRICE_EXPANSION",
+    );
+    expect(ev.map((e) => [e.pairAddress, e.onset, e.lastObservedAt])).toEqual([
+      [SOL_PAIR.pairAddress, "OBSERVED", t(1)],
+      [POOL_B, "IN_PROGRESS_WHEN_OBSERVED", t(2)],
+    ]);
+    expect(ev[0].active).toBe(false);
+  });
+
+  it("session deltas never compare across a pair change (A → B → A included)", () => {
+    const liq = eventsOf([
+      obs(SOL_PAIR, T0, { liquidityUsd: 100_000 }),
+      obs(SOL_PAIR, T0 + 3 * MIN, { liquidityUsd: 100_000, pairAddress: POOL_B }),
+      obs(SOL_PAIR, T0 + 6 * MIN, { liquidityUsd: 50_000 }),
+    ]);
+    expect(ofType(liq, "LIQUIDITY_CHANGE")).toEqual([]);
+    const boost = eventsOf(
+      [
+        obs(TOKEN_A, T0, {}, "universe"),
+        obs(TOKEN_A, T0 + MIN, { boostsActive: 30, pairAddress: POOL_B }, "universe"),
+      ],
+      key,
+    );
+    expect(ofType(boost, "BOOST_CHANGE")).toEqual([]);
+  });
+
+  it("every event keeps its observed pool as evidence (chain, base, quote, pair, dex)", () => {
+    const [e] = ofType(
+      eventsOf([obs(SOL_PAIR, t(0), { priceChange: { m5: 4 } })]),
+      "PRICE_EXPANSION",
+    );
+    expect(e).toMatchObject({
+      chainId: "solana",
+      baseAddress: SOL_PAIR.baseToken.address,
+      quoteAddress: SOL_PAIR.quoteToken!.address,
+      pairAddress: SOL_PAIR.pairAddress,
+      dexId: SOL_PAIR.dexId,
+    });
   });
 });

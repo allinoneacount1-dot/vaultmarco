@@ -642,14 +642,10 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
           )}
           {copy === "copied" ? "COPIED" : "COPY CA"}
         </button>
-        {/* Internal: open this exact asset (canonical chain + address + pair) in THE MOMENT. */}
+        {/* Internal: open this exact asset (canonical chain + address) in THE MOMENT. */}
         <Link
           to="/dashboard/moment"
-          search={encodeFocus({
-            chainId: ref_.chainId,
-            address: ref_.address,
-            pairAddress: snapshot?.pairAddress ?? null,
-          })}
+          search={encodeFocus({ chainId: ref_.chainId, address: ref_.address })}
           onClick={() => close()}
           className={ACTION}
           data-testid="open-moment"

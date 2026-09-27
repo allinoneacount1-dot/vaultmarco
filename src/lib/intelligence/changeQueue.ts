@@ -7,8 +7,12 @@ import type { EventType, EvidenceEvent } from "./events";
  *
  *   NEWEST                    newest qualifying change first
  *   MOST_EVENTS               more qualifying events first
- *   LARGEST_VOLUME_CHANGE     larger VA ratio of the newest VOLUME_ACCELERATION first
- *   LARGEST_LIQUIDITY_CHANGE  larger |Δ USD| of the newest LIQUIDITY_CHANGE first
+ *   LARGEST_VOLUME_ACCELERATION  larger VA ratio (m5 pace ÷ previous pace) of the
+ *                                newest VOLUME_ACCELERATION event first — an
+ *                                acceleration ratio, NOT a volume change
+ *   LARGEST_LIQUIDITY_CHANGE     larger |Δ USD| of the newest LIQUIDITY_CHANGE
+ *                                event first — a session delta between two real
+ *                                observations of the SAME pool
  *
  * then (every sort) newest change first, then assetKey ascending. A row
  * without the metric a sort needs goes after every row that has it — an
@@ -18,13 +22,13 @@ import type { EventType, EvidenceEvent } from "./events";
 export type QueueSort =
   | "NEWEST"
   | "MOST_EVENTS"
-  | "LARGEST_VOLUME_CHANGE"
+  | "LARGEST_VOLUME_ACCELERATION"
   | "LARGEST_LIQUIDITY_CHANGE";
 
 export const QUEUE_SORTS: readonly QueueSort[] = [
   "NEWEST",
   "MOST_EVENTS",
-  "LARGEST_VOLUME_CHANGE",
+  "LARGEST_VOLUME_ACCELERATION",
   "LARGEST_LIQUIDITY_CHANGE",
 ];
 
@@ -38,7 +42,7 @@ export type QueueRow = {
   eventCount: number;
   familyCount: number;
   /** VA ratio of the newest VOLUME_ACCELERATION event, or null. */
-  volumeChange: number | null;
+  volumeAcceleration: number | null;
   /** Δ USD of the newest LIQUIDITY_CHANGE event, or null. */
   liquidityChangeUsd: number | null;
 };
@@ -74,7 +78,7 @@ export function queueRow(events: readonly EvidenceEvent[]): QueueRow | null {
     newestType: newest.type,
     eventCount: q.length,
     familyCount: new Set(q.map((e) => e.family)).size,
-    volumeChange: va?.value ?? null,
+    volumeAcceleration: va?.value ?? null,
     liquidityChangeUsd: typeof delta === "number" ? delta : null,
   };
 }
@@ -89,7 +93,8 @@ const desc = (x: number | null, y: number | null) =>
 export const QUEUE_COMPARATORS: Record<QueueSort, (a: QueueRow, b: QueueRow) => number> = {
   NEWEST: tie,
   MOST_EVENTS: (a, b) => b.eventCount - a.eventCount || tie(a, b),
-  LARGEST_VOLUME_CHANGE: (a, b) => desc(a.volumeChange, b.volumeChange) || tie(a, b),
+  LARGEST_VOLUME_ACCELERATION: (a, b) =>
+    desc(a.volumeAcceleration, b.volumeAcceleration) || tie(a, b),
   LARGEST_LIQUIDITY_CHANGE: (a, b) =>
     desc(
       a.liquidityChangeUsd == null ? null : Math.abs(a.liquidityChangeUsd),
