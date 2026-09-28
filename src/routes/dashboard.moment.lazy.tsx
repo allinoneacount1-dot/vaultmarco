@@ -1,10 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { IntelligencePlaceholder } from "@/components/marco/intelligence/IntelligenceShell";
+import { MomentView } from "@/components/marco/intelligence/moment/MomentView";
 
 export const Route = createLazyFileRoute("/dashboard/moment")({
-  component: Page,
+  component: MomentView,
 });
-
-function Page() {
-  return <IntelligencePlaceholder feature="moment" />;
-}
