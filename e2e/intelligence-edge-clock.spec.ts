@@ -310,7 +310,7 @@ test.describe("Edge Clock", () => {
     const { problems, rounds } = await setup(page, MOVE, "/dashboard/edge-clock");
     await expect(page.getByTestId("intel-empty")).toContainText("NO ASSET SELECTED");
     await page.goto(`/dashboard/edge-clock?chain=ethereum&address=0x${"1".repeat(40)}`);
-    await expect(page.getByTestId("intel-unavailable")).toContainText("NOT IN OBSERVED UNIVERSE");
+    await expect(page.getByTestId("intel-empty")).toContainText("NOT IN OBSERVED UNIVERSE");
     await page.goto(CLOCK);
     await expect(page.getByTestId("clock-body")).toBeVisible();
     void rounds;

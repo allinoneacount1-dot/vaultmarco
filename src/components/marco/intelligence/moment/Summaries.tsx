@@ -1,4 +1,5 @@
 import type { Collision } from "@/lib/intelligence/collision";
+import { DIVERGENCE_STATE_TEXT, pairLabel } from "@/lib/intelligence/divergenceView";
 import type { EvidenceEvent } from "@/lib/intelligence/events";
 import { ageLabel } from "@/lib/intelligence/freshness";
 import type { FocusSearch } from "@/lib/intelligence/identityCodec";
@@ -11,7 +12,9 @@ import {
   directionText,
 } from "@/lib/intelligence/moment";
 import { ruleMeta } from "@/lib/intelligence/rules";
-import { ObservedTime, SectionHead, ViewLink } from "./parts";
+import { ViewLink } from "../shared/links";
+import { ObservedTime } from "../shared/ObservedTime";
+import { SectionHead } from "../shared/SectionHead";
 
 /**
  * The supporting column: four compact answers, each a doorway to its full
@@ -146,12 +149,6 @@ function EdgeAge({ edge, search }: { edge: EdgeSummary; search: FocusSearch }) {
   );
 }
 
-const STATE_TEXT = {
-  DIVERGED: "DIVERGED",
-  NOT_DIVERGED: "NOT DIVERGED",
-  NOT_EVALUABLE: "NOT EVALUABLE",
-} as const;
-
 function Divergences({ d, search }: { d: DivergenceSummary; search: FocusSearch }) {
   const { counts } = d;
   return (
@@ -170,8 +167,9 @@ function Divergences({ d, search }: { d: DivergenceSummary; search: FocusSearch 
             className="font-mono text-[10.5px] tracking-[0.1em] text-(--bone)"
             data-testid="moment-divergence-counts"
           >
-            {counts.DIVERGED} DIVERGED · {counts.NOT_DIVERGED} NOT DIVERGED · {counts.NOT_EVALUABLE}{" "}
-            NOT EVALUABLE
+            {counts.DIVERGED} {DIVERGENCE_STATE_TEXT.DIVERGED} · {counts.NOT_DIVERGED}{" "}
+            {DIVERGENCE_STATE_TEXT.NOT_DIVERGED} · {counts.NOT_EVALUABLE}{" "}
+            {DIVERGENCE_STATE_TEXT.NOT_EVALUABLE}
           </p>
           <ul className="space-y-1">
             {d.rows.map((r) => (
@@ -182,7 +180,7 @@ function Divergences({ d, search }: { d: DivergenceSummary; search: FocusSearch 
                 title={r.missing ? `Missing: ${r.missing}` : undefined}
               >
                 <span className="truncate font-mono text-[9.5px] tracking-[0.06em] text-(--muted-2)">
-                  {r.label.replace(/ · DIVERGED$/, "")}
+                  {pairLabel(r.label)}
                 </span>
                 <span
                   className={`shrink-0 font-mono text-[9px] tracking-[0.12em] ${
@@ -194,7 +192,7 @@ function Divergences({ d, search }: { d: DivergenceSummary; search: FocusSearch 
                   }`}
                 >
                   {r.state === "DIVERGED" && <span aria-hidden>◆ </span>}
-                  {STATE_TEXT[r.state]}
+                  {DIVERGENCE_STATE_TEXT[r.state]}
                 </span>
               </li>
             ))}

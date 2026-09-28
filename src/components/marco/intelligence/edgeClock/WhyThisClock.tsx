@@ -1,13 +1,8 @@
 import { ChevronRight } from "lucide-react";
-import { Time } from "@/components/marco/intelligence/trace/common";
+import { ObservedTime } from "@/components/marco/intelligence/shared/ObservedTime";
 import { shortAddress } from "@/lib/search";
-import {
-  type EdgeClockModel,
-  eventRules,
-  factLabel,
-  priorText,
-  valueText,
-} from "@/lib/intelligence/trace";
+import type { EdgeClockModel } from "@/lib/intelligence/edgeClock";
+import { eventRules, factLabel, priorText, valueText } from "@/lib/intelligence/trace";
 
 /**
  * WHY THIS CLOCK STARTED — an inspectable disclosure of the origin: the
@@ -41,26 +36,26 @@ export function WhyThisClock({ model }: { model: EdgeClockModel }) {
     [
       "OBSERVED VALUE",
       <>
-        {valueText(o)} · AT <Time at={o.observedAt} />
+        {valueText(o)} · AT <ObservedTime at={o.observedAt} />
       </>,
     ],
     [
       delta ? "COMPARED WITH" : "PRIOR OBSERVATION",
       prior && o.priorObservedAt != null ? (
         <>
-          {prior} · AT <Time at={o.priorObservedAt} />
+          {prior} · AT <ObservedTime at={o.priorObservedAt} />
           {delta ? "" : " · CONDITION NOT MET THERE (OR MET IN THE OTHER DIRECTION)"}
         </>
       ) : prev ? (
         <>
-          OBSERVATION AT <Time at={prev.observedAt} /> · CONDITION NOT MET THERE · ITS VALUE WAS NOT
-          EVALUABLE (—)
+          OBSERVATION AT <ObservedTime at={prev.observedAt} /> · CONDITION NOT MET THERE · ITS VALUE
+          WAS NOT EVALUABLE (—)
         </>
       ) : (
         "—"
       ),
     ],
-    ["OBSERVED AT", <Time key="t" at={o.observedAt} prefix="OBSERVED" />],
+    ["OBSERVED AT", <ObservedTime key="t" at={o.observedAt} prefix="OBSERVED" />],
     ["ONSET", "OBSERVED — THE CHANGE HAPPENED BETWEEN TWO REAL OBSERVATIONS OF THE SAME POOL"],
     [
       "OBSERVED POOL",

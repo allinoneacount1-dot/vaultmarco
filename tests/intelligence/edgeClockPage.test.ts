@@ -3,7 +3,8 @@ import { extractAssetEvents } from "@/lib/intelligence/events";
 import type { SessionState } from "@/lib/intelligence/facts";
 import { failureBatch } from "@/lib/intelligence/ingest";
 import { createSessionState, ingest } from "@/lib/intelligence/sessionHistory";
-import { edgeClockModel, sinceText } from "@/lib/intelligence/trace";
+import { edgeClockModel } from "@/lib/intelligence/edgeClock";
+import { sinceText } from "@/lib/intelligence/trace";
 import { MIN, SEC, SOL_KEY, SOL_PAIR, START, T0, batch, obs } from "./helpers";
 
 type Over = Parameters<typeof obs>[2];

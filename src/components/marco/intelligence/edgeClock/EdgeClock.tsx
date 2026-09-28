@@ -1,23 +1,16 @@
 import { useMemo } from "react";
 import { Zone } from "@/components/marco/desk";
 import { IntelligenceShell } from "@/components/marco/intelligence/IntelligenceShell";
-import {
-  CrossLinks,
-  type FocusEvidence,
-  FocusGate,
-  FreshnessNote,
-  Time,
-} from "@/components/marco/intelligence/trace/common";
+import { type FocusEvidence, FocusGate } from "@/components/marco/intelligence/shared/FocusGate";
+import { FreshnessNote } from "@/components/marco/intelligence/shared/FreshnessNote";
+import { RelatedViews } from "@/components/marco/intelligence/shared/links";
+import { ObservedTime } from "@/components/marco/intelligence/shared/ObservedTime";
 import { useNow } from "@/hooks/useIntelligence";
 import type { EvidenceEvent } from "@/lib/intelligence/events";
 import { ageLabel } from "@/lib/intelligence/freshness";
 import { shortAddress } from "@/lib/search";
-import {
-  type EdgeClockModel,
-  edgeClockModel,
-  factLabel,
-  valueText,
-} from "@/lib/intelligence/trace";
+import { type EdgeClockModel, edgeClockModel } from "@/lib/intelligence/edgeClock";
+import { factLabel, valueText } from "@/lib/intelligence/trace";
 import { SinceOrigin } from "./SinceOrigin";
 import { WhyThisClock } from "./WhyThisClock";
 
@@ -36,7 +29,7 @@ function ClockBody({ ev }: { ev: FocusEvidence }) {
   return (
     <div className="flex flex-col gap-6 lg:gap-8" data-testid="clock-body">
       <div className="order-last lg:order-first">
-        <CrossLinks search={ev.search} sibling="trace" />
+        <RelatedViews search={ev.search} views={["moment", "trace"]} />
       </div>
       <FreshnessNote fresh={ev.fresh} what="The clock's evidence" />
       {model.origin ? <ActiveClock model={model} ev={ev} /> : <NoClock model={model} ev={ev} />}
@@ -79,8 +72,8 @@ function ActiveClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }
             </p>
             <Age from={o.observedAt} />
             <p className="font-mono text-[10px] tracking-[0.14em] text-(--muted-2)">
-              SINCE <Time at={o.observedAt} className="text-(--gold)" /> OBSERVED · AGE UPDATES
-              EVERY SECOND FROM A FIXED ORIGIN
+              SINCE <ObservedTime at={o.observedAt} className="text-(--gold)" /> OBSERVED · AGE
+              UPDATES EVERY SECOND FROM A FIXED ORIGIN
             </p>
             <div className="hairline-t space-y-1.5 pt-4">
               <p className="font-display text-[15px] font-semibold uppercase tracking-[0.04em] text-(--bone) lg:text-[17px]">
@@ -92,7 +85,7 @@ function ActiveClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }
                 {o.dexId ? ` · ${o.dexId.toUpperCase()}` : ""} · {o.source}
               </p>
               <p className="font-mono text-[9.5px] leading-relaxed text-(--faint)">
-                STILL HELD AT THE LATEST OBSERVATION <Time at={o.lastObservedAt} /> ·{" "}
+                STILL HELD AT THE LATEST OBSERVATION <ObservedTime at={o.lastObservedAt} /> ·{" "}
                 {ageLabel(model.observedActiveMs)} OF OBSERVATIONS
                 {stale ? " · LATEST OBSERVATION IS STALE — ACTIVITY AFTER IT IS UNKNOWN" : ""}
               </p>
@@ -143,8 +136,8 @@ function NoClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }) {
             The clock starts only at a real, observed structural change — a later observation of the
             same pool meeting a rule an earlier one did not. It never starts at page load, session
             start or an asset's first observation. Observing this asset since{" "}
-            <Time at={ev.track.observations[0].observedAt} /> · session started{" "}
-            <Time at={ev.startedAt} /> · {ev.track.observations.length} observation
+            <ObservedTime at={ev.track.observations[0].observedAt} /> · session started{" "}
+            <ObservedTime at={ev.startedAt} /> · {ev.track.observations.length} observation
             {ev.track.observations.length === 1 ? "" : "s"}.
           </p>
         </section>
@@ -179,14 +172,14 @@ function EarlierChange({ e }: { e: EvidenceEvent }) {
         EARLIER OBSERVED STRUCTURAL CHANGE · NO LONGER ACTIVE · CONTEXT ONLY
       </p>
       <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <Time at={e.observedAt} className="text-[13px] text-(--muted-2)" />
+        <ObservedTime at={e.observedAt} className="text-[13px] text-(--muted-2)" />
         <span className="font-mono text-[11px] font-semibold tracking-[0.08em] text-(--muted-2)">
           {factLabel(e)}
         </span>
         <span className="mono-data text-[11px] text-(--faint)">{valueText(e)}</span>
       </div>
       <p className="mt-1 font-mono text-[9.5px] text-(--faint)">
-        LAST HELD <Time at={e.lastObservedAt} /> · OBSERVED POOL{" "}
+        LAST HELD <ObservedTime at={e.lastObservedAt} /> · OBSERVED POOL{" "}
         {e.pairAddress ? shortAddress(e.pairAddress) : "—"} · NOT THE CLOCK'S ORIGIN
       </p>
     </section>

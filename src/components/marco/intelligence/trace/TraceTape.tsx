@@ -9,7 +9,7 @@ import {
   priorText,
   valueText,
 } from "@/lib/intelligence/trace";
-import { Time } from "./common";
+import { ObservedTime } from "../shared/ObservedTime";
 
 /**
  * THE EVIDENCE TAPE — one row per observed onset, oldest first:
@@ -82,7 +82,7 @@ function EventRow({ row, last }: { row: TraceEventRow; last: boolean }) {
       data-lane={lane ? "true" : undefined}
     >
       <div className="pt-1.5 text-right">
-        <Time
+        <ObservedTime
           at={row.at}
           className={`block text-[11px] ${anchor ? "text-(--gold)" : lane ? "text-(--faint)" : "text-(--bone)"}`}
         />
@@ -128,12 +128,12 @@ function EventRow({ row, last }: { row: TraceEventRow; last: boolean }) {
                 "HOLDS AT LATEST OBSERVATION"
               ) : (
                 <>
-                  LAST HELD <Time at={e.lastObservedAt} />
+                  LAST HELD <ObservedTime at={e.lastObservedAt} />
                 </>
               )}
               {prior && e.priorObservedAt != null && (
                 <>
-                  {" · "}PRIOR {prior} @ <Time at={e.priorObservedAt} />
+                  {" · "}PRIOR {prior} @ <ObservedTime at={e.priorObservedAt} />
                 </>
               )}
             </p>
@@ -180,7 +180,7 @@ function PoolBreakRow({ row }: { row: TracePoolRow }) {
       data-testid="trace-pool-break"
     >
       <div className="pt-2 text-right">
-        <Time at={row.at} className="block text-[11px] text-(--champagne)" />
+        <ObservedTime at={row.at} className="block text-[11px] text-(--champagne)" />
       </div>
       <span aria-hidden className="relative flex justify-center">
         <span className="absolute inset-y-0 w-px border-l border-dashed border-(--champagne)" />

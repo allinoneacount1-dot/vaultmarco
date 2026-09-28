@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Zone } from "@/components/marco/desk";
-import { useAssetEvents, useNow } from "@/hooks/useIntelligence";
+import { useNow } from "@/hooks/useIntelligence";
 import type { CollisionFamily } from "@/lib/intelligence/collision";
 import {
   ONSET_TEXT,
@@ -12,11 +12,14 @@ import {
   spanText,
 } from "@/lib/intelligence/collisionView";
 import type { EvidenceEvent } from "@/lib/intelligence/events";
-import { type AssetFreshness, ageLabel, clockLabel } from "@/lib/intelligence/freshness";
+import { type AssetFreshness, ageLabel } from "@/lib/intelligence/freshness";
 import { shortAddress } from "@/lib/search";
-import { useFocusEvidence } from "../divergence/useFocusEvidence";
 import { IntelligenceShell } from "../IntelligenceShell";
-import { EvidenceStatus, FocusGate, MomentLink } from "../divergence/FocusGate";
+import { FocusGate } from "../shared/FocusGate";
+import { useFocusLinkSearch } from "../shared/useFocusLinkSearch";
+import { FreshnessNote } from "../shared/FreshnessNote";
+import { RelatedViews } from "../shared/links";
+import { ObservedTime } from "../shared/ObservedTime";
 
 /**
  * COLLISION — "What changed together?"
@@ -27,37 +30,32 @@ import { EvidenceStatus, FocusGate, MomentLink } from "../divergence/FocusGate";
  * contributing events, observed times and observed pool. Co-occurrence only.
  */
 export function CollisionPage() {
-  const { assetKey, track, fresh, search } = useFocusEvidence();
+  const search = useFocusLinkSearch();
   return (
     <IntelligenceShell feature="collision">
-      <FocusGate hasFocus={assetKey != null} track={track} fresh={fresh}>
-        {assetKey && track && (
+      <FocusGate what="which evidence families changed together">
+        {(ev) => (
           <CollisionBody
-            assetKey={assetKey}
-            fresh={fresh}
-            observedAt={track.observations[track.observations.length - 1]?.observedAt ?? null}
+            events={ev.events}
+            fresh={ev.fresh}
+            observedAt={ev.track.observations[ev.track.observations.length - 1]?.observedAt ?? null}
           />
         )}
       </FocusGate>
-      <nav aria-label="Related views" className="flex flex-wrap items-center gap-2">
-        <MomentLink search={search} />
-      </nav>
+      <RelatedViews search={search} views={["moment"]} />
     </IntelligenceShell>
   );
 }
 
-const iso = (ms: number) => new Date(ms).toISOString();
-
 function CollisionBody({
-  assetKey,
+  events,
   fresh,
   observedAt,
 }: {
-  assetKey: string;
+  events: EvidenceEvent[];
   fresh: AssetFreshness;
   observedAt: number | null;
 }) {
-  const events = useAssetEvents(assetKey);
   const view = useMemo(() => collisionView(events), [events]);
   const now = useNow();
   const c = view.collision;
@@ -74,7 +72,7 @@ function CollisionBody({
       data-collision={view.isCollision}
       data-observed-at={observedAt ?? ""}
     >
-      <EvidenceStatus fresh={fresh} />
+      <FreshnessNote fresh={fresh} what="The collision" />
       <Zone index="01" label="CHANGED TOGETHER" meta="OBSERVED THIS SESSION">
         <div className="space-y-3">
           {view.isCollision && c ? (
@@ -112,16 +110,9 @@ function CollisionBody({
               <div className="flex flex-wrap gap-x-2">
                 <dt className="text-(--faint)">ONSETS</dt>
                 <dd data-testid="collision-onsets">
-                  FIRST{" "}
-                  <time dateTime={iso(c.families[0].firstAt)}>
-                    {clockLabel(c.families[0].firstAt)}
-                  </time>{" "}
-                  → LAST{" "}
-                  <time dateTime={iso(c.families[c.families.length - 1].firstAt)}>
-                    {clockLabel(c.families[c.families.length - 1].firstAt)}
-                  </time>{" "}
-                  · WINDOW ENDS AT THE NEWEST OBSERVED CHANGE ·{" "}
-                  {ageLabel(Math.max(0, now - c.windowEnd))} AGO
+                  FIRST <ObservedTime at={c.families[0].firstAt} /> → LAST{" "}
+                  <ObservedTime at={c.families[c.families.length - 1].firstAt} /> · WINDOW ENDS AT
+                  THE NEWEST OBSERVED CHANGE · {ageLabel(Math.max(0, now - c.windowEnd))} AGO
                 </dd>
               </div>
             )}
@@ -186,10 +177,7 @@ function FamilyRow({ f }: { f: CollisionFamily }) {
           {f.family}
         </h3>
         <p className="font-mono text-[10px] tracking-[0.1em] text-(--muted-2)">
-          FIRST{" "}
-          <time dateTime={iso(f.firstAt)} className="text-(--gold)">
-            {clockLabel(f.firstAt)}
-          </time>
+          FIRST <ObservedTime at={f.firstAt} className="text-(--gold)" />
         </p>
         {f.events.length > 1 && (
           <p className="font-mono text-[9px] tracking-[0.1em] text-(--faint)">
@@ -217,7 +205,7 @@ function EventLine({ e }: { e: EvidenceEvent }) {
       </p>
       <p className="flex flex-wrap gap-x-2 font-mono text-[10px] tracking-[0.08em] text-(--muted-2)">
         <span>
-          OBSERVED <time dateTime={iso(e.observedAt)}>{clockLabel(e.observedAt)}</time>
+          OBSERVED <ObservedTime at={e.observedAt} />
         </span>
         <span className="text-(--faint)">· {ONSET_TEXT[e.onset]}</span>
         <span className="text-(--faint)">· {e.source}</span>

@@ -1,7 +1,6 @@
 import { signedPct } from "@/lib/format";
-import { transactionAcceleration, volumeAcceleration } from "@/lib/signals/pace";
-import { type Collision, collisionFamilies } from "./collision";
-import { edgeClockOrigin, eventsSince, firstObservedStructuralChange } from "./edgeClock";
+import { edgeClockOrigin, firstObservedStructuralChange } from "./edgeClock";
+import type { SinceMetric } from "./edgeClock";
 import {
   type EventDirection,
   type EventFamily,
@@ -9,11 +8,11 @@ import {
   type EvidenceEvent,
   STRUCTURAL_TYPES,
   compareEvents,
-  poolSegment,
 } from "./events";
 import type { AssetObservation, AssetTrack } from "./facts";
 import { ageLabel } from "./freshness";
-import { RUN_MAX_GAP_MS, type RuleMeta, TRACE_WINDOWS_MS, ruleMeta } from "./rules";
+import { EVENT_RULE_IDS, EVENT_RULE_SUBJECT, TRACE_WINDOW_RULE_IDS } from "./ruleRefs";
+import { type RuleMeta, TRACE_WINDOWS_MS, ruleMeta } from "./rules";
 
 /**
  * VAULT TRACE + EDGE CLOCK page cores — "what moved first?" and "how old is
@@ -27,7 +26,7 @@ import { RUN_MAX_GAP_MS, type RuleMeta, TRACE_WINDOWS_MS, ruleMeta } from "./rul
  */
 
 /* ------------------------------------------------------------------ *
- * Windows (5M / 15M / 1H / SESSION) — TRACE_WINDOWS_MS from rules.ts
+ * Windows (5M / 15M / 1H / SESSION) — TRACE_WINDOW_*_MS metadata in rules.ts
  * ------------------------------------------------------------------ */
 
 export type TraceWindowId = keyof typeof TRACE_WINDOWS_MS | "SESSION";
@@ -59,9 +58,15 @@ export function historySpan(track: AssetTrack | null | undefined): HistorySpan |
  * actually spans it (first retained observation to latest ≥ the window).
  * SESSION is offered as soon as one observation exists.
  */
+/** A fixed window's length, read from the rules.ts metadata (TRACE_WINDOW_*_MS). */
+export function traceWindowMs(id: TraceWindowId): number | null {
+  if (id === "SESSION") return null;
+  return ruleMeta(TRACE_WINDOW_RULE_IDS[id])?.value ?? null;
+}
+
 export function traceWindows(span: HistorySpan | null): TraceWindowOption[] {
   return TRACE_WINDOW_IDS.map((id) => {
-    const ms = id === "SESSION" ? null : TRACE_WINDOWS_MS[id];
+    const ms = traceWindowMs(id);
     if (span == null) {
       return { id, ms, enabled: false, reason: "NO OBSERVATION OF THIS ASSET THIS SESSION" };
     }
@@ -87,40 +92,7 @@ export function effectiveWindow(
  * Rules shown next to the evidence they produced
  * ------------------------------------------------------------------ */
 
-/** The rules.ts ids each event type was evaluated against (none for radar / provider / discovery). */
-export const EVENT_RULE_IDS: Record<EventType, readonly string[]> = {
-  PRICE_EXPANSION: ["PRICE_EXPANSION_M5_PCT"],
-  VOLUME_ACCELERATION: ["VOLUME_ACCELERATION_MIN"],
-  TXN_ACCELERATION: ["TXN_ACCELERATION_MIN"],
-  BUY_SELL_IMBALANCE: ["IMBALANCE_MIN_RATIO", "IMBALANCE_MIN_SAMPLE_TXNS"],
-  LIQUIDITY_CHANGE: [
-    "LIQUIDITY_CHANGE_MIN_REL",
-    "LIQUIDITY_CHANGE_MIN_ABS_USD",
-    "LIQUIDITY_CHANGE_MIN_PREVIOUS_USD",
-    "LIQUIDITY_CHANGE_LOOKBACK_MINUTES",
-  ],
-  BOOST_CHANGE: ["BOOST_CHANGE_MIN_DELTA"],
-  PAIR_DISCOVERED: [],
-  MOMENTUM_FIRED: [],
-  RISK_FIRED: [],
-  PROVIDER_RECOVERED: [],
-  PROVIDER_STALE: [],
-};
-
 export type RuleLine = { id: string; text: string; horizon: string; source: string };
-
-const RULE_PREFIX: Record<string, string> = {
-  PRICE_EXPANSION_M5_PCT: "|PRICE M5| ≥",
-  VOLUME_ACCELERATION_MIN: "VOLUME PACE ≥",
-  TXN_ACCELERATION_MIN: "TXN PACE ≥",
-  IMBALANCE_MIN_RATIO: "BUY/SELL RATIO ≥",
-  IMBALANCE_MIN_SAMPLE_TXNS: "M5 SAMPLE ≥",
-  LIQUIDITY_CHANGE_MIN_REL: "|Δ LIQUIDITY| ≥",
-  LIQUIDITY_CHANGE_MIN_ABS_USD: "|Δ LIQUIDITY| ≥",
-  LIQUIDITY_CHANGE_MIN_PREVIOUS_USD: "PREVIOUS LIQUIDITY ≥",
-  LIQUIDITY_CHANGE_LOOKBACK_MINUTES: "OBSERVATIONS APART ≥",
-  BOOST_CHANGE_MIN_DELTA: "|Δ ACTIVE BOOSTS| ≥",
-};
 
 /** A rule value in its own unit, e.g. "3%", "3.0×", "$10,000", "10%", "8 TXNS", "5 MIN". */
 export function ruleValueText(r: Pick<RuleMeta, "value" | "unit">): string {
@@ -154,7 +126,7 @@ export function eventRules(type: EventType): RuleLine[] {
     if (!r) continue;
     out.push({
       id,
-      text: `${RULE_PREFIX[id] ?? id} ${ruleValueText(r)}`,
+      text: `${EVENT_RULE_SUBJECT[id] ?? id} ${ruleValueText(r)}`,
       horizon: r.horizon.toUpperCase(),
       source: r.source.replace("_", " "),
     });
@@ -406,7 +378,7 @@ export function buildTrace(
     span == null && newestEvent == null
       ? null
       : Math.max(span?.to ?? -Infinity, newestEvent ?? -Infinity);
-  const ms = window === "SESSION" ? null : TRACE_WINDOWS_MS[window];
+  const ms = traceWindowMs(window);
   const windowStart = ms == null || end == null ? null : end - ms;
   const inView = (at: number) => windowStart == null || at >= windowStart;
 
@@ -482,212 +454,8 @@ export function offsetText(ms: number | null): string {
 }
 
 /* ------------------------------------------------------------------ *
- * EDGE CLOCK — evidence since the origin
+ * EDGE CLOCK — since-origin text (the model is edgeClockModel in edgeClock.ts)
  * ------------------------------------------------------------------ */
-
-export type SinceMetricId =
-  | "PRICE"
-  | "VOLUME_M5"
-  | "VOLUME_PACE"
-  | "LIQUIDITY"
-  | "TXNS_M5"
-  | "TXN_PACE"
-  | "BOOSTS";
-
-export type SinceMetric = {
-  id: SinceMetricId;
-  label: string;
-  /** Value at the origin observation (same pool), or null. */
-  from: number | null;
-  /** Value at the latest observation (same pool), or null. */
-  to: number | null;
-  /** to − from, only when both are real; else null ("—"). */
-  delta: number | null;
-  /** delta / from × 100 where meaningful (from > 0), else null. */
-  deltaPct: number | null;
-  unit: "USD" | "PRICE" | "RATIO" | "COUNT";
-  horizon: string;
-  /** Why no delta: the first missing input, else null. */
-  missing: string | null;
-};
-
-export type EdgeClockModel = {
-  /** Active, OBSERVED-onset structural change with the earliest onset. */
-  origin: EvidenceEvent | null;
-  /** Earliest OBSERVED structural change retained, only when it is NOT the origin. */
-  earlier: EvidenceEvent | null;
-  /** Active structural conditions already true when first observed (start not seen). */
-  inProgress: EvidenceEvent[];
-  /** Observation where the origin was first seen (same pool). */
-  originObs: AssetObservation | null;
-  /** The previous real observation of the same pool before the origin (within the run gap). */
-  previousObs: AssetObservation | null;
-  latestObs: AssetObservation | null;
-  /** Latest observation is on the origin's pool with no switch in between. */
-  samePool: boolean;
-  /** Why no since-delta can be computed at all (origin not retained, pool switch, no later observation), else null. */
-  sinceBlocked: string | null;
-  since: SinceMetric[];
-  /** Structural events whose onset is at/after the origin, same pool, chronological. */
-  sinceEvents: EvidenceEvent[];
-  /** Independent families among them (collisionFamilies over origin → latest). */
-  families: Collision | null;
-  /** Observed duration origin → last observation where it still held. */
-  observedActiveMs: number | null;
-};
-
-/** Horizon of a plain origin → latest comparison (shown once, not per row). */
-export const PAIR_HORIZON = "ORIGIN OBSERVATION → LATEST OBSERVATION · SAME POOL";
-
-function metric(
-  id: SinceMetricId,
-  label: string,
-  unit: SinceMetric["unit"],
-  from: number | null,
-  to: number | null,
-  why: string | null,
-  horizon = PAIR_HORIZON,
-): SinceMetric {
-  if (why) return { id, label, unit, from, to, delta: null, deltaPct: null, horizon, missing: why };
-  if (from == null || to == null) {
-    return {
-      id,
-      label,
-      unit,
-      from,
-      to,
-      delta: null,
-      deltaPct: null,
-      horizon,
-      missing:
-        from == null ? "NOT REPORTED AT THE ORIGIN" : "NOT REPORTED AT THE LATEST OBSERVATION",
-    };
-  }
-  const delta = to - from;
-  return {
-    id,
-    label,
-    unit,
-    from,
-    to,
-    delta,
-    deltaPct: from > 0 ? (delta / from) * 100 : null,
-    horizon,
-    missing: null,
-  };
-}
-
-const txnTotal = (o: AssetObservation | null) => {
-  const w = o?.snapshot.txns.m5;
-  return w ? w.buys + w.sells : null;
-};
-const pace = (r: ReturnType<typeof volumeAcceleration>) => (r.ok ? r.ratio : null);
-
-export function edgeClockModel(
-  track: AssetTrack | null | undefined,
-  events: readonly EvidenceEvent[],
-): EdgeClockModel {
-  const obs = track?.observations ?? [];
-  const origin = edgeClockOrigin(events);
-  const firstEver = firstObservedStructuralChange(events);
-  const earlier = firstEver && (!origin || firstEver.id !== origin.id) ? firstEver : null;
-  const inProgress = events.filter(
-    (e) => STRUCTURAL_TYPES.has(e.type) && e.onset === "IN_PROGRESS_WHEN_OBSERVED" && e.active,
-  );
-  const latestObs = obs.length ? obs[obs.length - 1] : null;
-
-  const empty: EdgeClockModel = {
-    origin,
-    earlier,
-    inProgress,
-    originObs: null,
-    previousObs: null,
-    latestObs,
-    samePool: false,
-    sinceBlocked: null,
-    since: [],
-    sinceEvents: [],
-    families: null,
-    observedActiveMs: null,
-  };
-  if (!origin || !latestObs) return empty;
-
-  const originIdx = obs.findIndex(
-    (o) => o.observedAt === origin.observedAt && o.pairAddress === origin.pairAddress,
-  );
-  const originObs = originIdx >= 0 ? obs[originIdx] : null;
-  const prevCandidate = originIdx > 0 ? obs[originIdx - 1] : null;
-  const previousObs =
-    prevCandidate &&
-    originObs &&
-    prevCandidate.pairAddress === originObs.pairAddress &&
-    originObs.observedAt - prevCandidate.observedAt <= RUN_MAX_GAP_MS
-      ? prevCandidate
-      : null;
-
-  const segment = poolSegment(obs, obs.length - 1);
-  const samePool =
-    originObs != null && segment.some((o) => o === originObs) && latestObs.pairAddress != null;
-  const later = originObs != null && latestObs.observedAt > originObs.observedAt;
-  const why = !originObs
-    ? "ORIGIN OBSERVATION NO LONGER RETAINED"
-    : !samePool
-      ? "OBSERVED POOL CHANGED SINCE THE ORIGIN"
-      : !later
-        ? "NO LATER OBSERVATION YET"
-        : null;
-  const a = originObs?.snapshot ?? null;
-  const b = latestObs.snapshot;
-  const since: SinceMetric[] = [
-    metric("PRICE", "PRICE", "PRICE", a?.priceUsd ?? null, b.priceUsd, why),
-    metric("VOLUME_M5", "VOLUME M5", "USD", a?.volume.m5 ?? null, b.volume.m5, why),
-    metric(
-      "VOLUME_PACE",
-      "VOLUME PACE",
-      "RATIO",
-      a ? pace(volumeAcceleration(a)) : null,
-      pace(volumeAcceleration(b)),
-      why,
-      "M5 PACE VS (H1 − M5) PACE · AT ORIGIN → LATEST",
-    ),
-    metric("LIQUIDITY", "LIQUIDITY", "USD", a?.liquidityUsd ?? null, b.liquidityUsd, why),
-    metric("TXNS_M5", "TXNS M5", "COUNT", txnTotal(originObs), txnTotal(latestObs), why),
-    metric(
-      "TXN_PACE",
-      "TXN PACE",
-      "RATIO",
-      a ? pace(transactionAcceleration(a)) : null,
-      pace(transactionAcceleration(b)),
-      why,
-      "M5 PACE VS (H1 − M5) PACE · AT ORIGIN → LATEST",
-    ),
-    metric("BOOSTS", "ACTIVE BOOSTS", "COUNT", a?.boostsActive ?? null, b.boostsActive, why),
-  ];
-
-  const sinceEvents = eventsSince(events, origin).filter(
-    (e) => STRUCTURAL_TYPES.has(e.type) && e.pairAddress === origin.pairAddress,
-  );
-  const familiesEnd = Math.max(latestObs.observedAt, ...sinceEvents.map((e) => e.observedAt));
-  const families =
-    sinceEvents.length > 0
-      ? collisionFamilies(sinceEvents, familiesEnd - origin.observedAt, {
-          end: familiesEnd,
-          pairAddress: origin.pairAddress,
-        })
-      : null;
-
-  return {
-    ...empty,
-    originObs,
-    previousObs,
-    samePool,
-    sinceBlocked: why,
-    since,
-    sinceEvents,
-    families,
-    observedActiveMs: origin.lastObservedAt - origin.observedAt,
-  };
-}
 
 /** Formatted "from → to" and delta for a since-metric; unknown → "—". */
 export function sinceText(m: SinceMetric): { from: string; to: string; delta: string } {

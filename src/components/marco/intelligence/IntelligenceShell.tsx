@@ -48,21 +48,6 @@ export function IntelligenceShell({
   );
 }
 
-/** Minimal truthful body until a view's evidence surface exists: nothing is shown as data. */
-export function IntelligencePlaceholder({ feature }: { feature: IntelligenceFeature["id"] }) {
-  return (
-    <IntelligenceShell feature={feature}>
-      <section className="mv-panel p-4 sm:p-5" aria-label="Evidence" data-testid="intel-empty">
-        <p className="mono-label text-[9px]!">EVIDENCE</p>
-        <p className="mono-data mt-3 text-[20px] text-(--faint)">
-          <span aria-hidden>—</span>
-          <span className="sr-only">No evidence shown.</span>
-        </p>
-      </section>
-    </IntelligenceShell>
-  );
-}
-
 function SessionLine() {
   const { retainedSince } = useSessionInfo();
   return (

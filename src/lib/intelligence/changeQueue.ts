@@ -1,4 +1,4 @@
-import type { EventType, EvidenceEvent } from "./events";
+import type { EventDirection, EventType, EvidenceEvent } from "./events";
 
 /**
  * CHANGE QUEUE — "what deserves attention now?" as an EVENT QUEUE, not a
@@ -38,7 +38,10 @@ export type QueueRow = {
   address: string;
   pairAddress: string | null;
   newestAt: number;
+  /** Id of the newest qualifying event (the one newestAt / newestType describe). */
+  newestId: string;
   newestType: EventType;
+  newestDirection: EventDirection;
   eventCount: number;
   familyCount: number;
   /** VA ratio of the newest VOLUME_ACCELERATION event, or null. */
@@ -75,7 +78,9 @@ export function queueRow(events: readonly EvidenceEvent[]): QueueRow | null {
     address: newest.address,
     pairAddress: newest.pairAddress,
     newestAt: newest.observedAt,
+    newestId: newest.id,
     newestType: newest.type,
+    newestDirection: newest.direction,
     eventCount: q.length,
     familyCount: new Set(q.map((e) => e.family)).size,
     volumeAcceleration: va?.value ?? null,

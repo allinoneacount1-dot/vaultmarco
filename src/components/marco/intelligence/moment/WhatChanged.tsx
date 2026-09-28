@@ -12,7 +12,8 @@ import {
 } from "@/lib/intelligence/moment";
 import { INTELLIGENCE_RULES_VERSION } from "@/lib/intelligence/rules";
 import { shortAddress } from "@/lib/search";
-import { ObservedTime, SectionHead } from "./parts";
+import { ObservedTime } from "../shared/ObservedTime";
+import { SectionHead } from "../shared/SectionHead";
 
 /**
  * WHAT CHANGED — the main instrument. The asset's currently active evidence

@@ -295,9 +295,9 @@ test.describe("Divergence — what doesn't fit?", () => {
     const observed = await page.getByTestId("divergence").getAttribute("data-observed-at");
     mock.chains.ethereum = "429";
     await page.clock.fastForward(30_000);
-    await expect(page.getByTestId("evidence-status")).toHaveAttribute("data-state", "stale");
-    await expect(page.getByTestId("evidence-status")).toContainText(
-      "STALE · SHOWN FROM THE LAST OBSERVATION",
+    await expect(page.getByTestId("freshness-note")).toHaveAttribute("data-state", "stale");
+    await expect(page.getByTestId("freshness-note")).toContainText(
+      /^STALE · .+ · FRESHNESS WINDOW 45 S\. The evaluation is as of OBSERVATION \d\d:\d\d:\d\d, not now/,
     );
     await expect(page.getByTestId("focus-freshness")).toHaveAttribute("data-state", "stale");
     // The evidence itself is unchanged: never refreshed by a failed round.
@@ -310,12 +310,12 @@ test.describe("Divergence — what doesn't fit?", () => {
     await page.clock.fastForward(30_000);
     mock.chains.ethereum = "abort";
     await page.clock.fastForward(30_000);
-    await expect(page.getByTestId("evidence-status")).toHaveAttribute("data-state", "stale");
+    await expect(page.getByTestId("freshness-note")).toHaveAttribute("data-state", "stale");
     await expect(page.getByTestId("divergence")).toHaveAttribute("data-observed-at", observed!);
 
     mock.chains.ethereum = weth({});
     await round(page);
-    await expect(page.getByTestId("evidence-status")).toHaveCount(0);
+    await expect(page.getByTestId("freshness-note")).toHaveCount(0);
     await expect(page.getByTestId("divergence-headline")).toHaveText(
       "NO DIVERGENCE IN CURRENT OBSERVATION",
     );
@@ -329,7 +329,7 @@ test.describe("Divergence — what doesn't fit?", () => {
       chains: { ethereum: weth({ volume: { m5: 40_000, h1: 100_000 } }), solana: { pairs: [] } },
     };
     const { problems } = await setup(page, URL_WETH, mock);
-    await expect(page.getByTestId("evidence-status")).toHaveAttribute("data-state", "degraded");
+    await expect(page.getByTestId("freshness-note")).toHaveAttribute("data-state", "degraded");
     await expect(page.getByTestId("focus-freshness")).toHaveAttribute("data-state", "degraded");
     await expect(rows(page).first()).toHaveAttribute("data-state", "DIVERGED");
     await shot(page, info, "divergence-degraded-1440");
@@ -378,7 +378,7 @@ test.describe("Divergence — what doesn't fit?", () => {
     await expect(rows(page)).toHaveCount(6);
     mock.chains.ethereum = { pairs: [] };
     await page.clock.fastForward(30_000);
-    await expect(page.getByTestId("evidence-status")).toHaveAttribute("data-state", "stale");
+    await expect(page.getByTestId("freshness-note")).toHaveAttribute("data-state", "stale");
     await expect(rows(page)).toHaveCount(6);
     expect(problems).toEqual([]);
   });
@@ -394,7 +394,7 @@ test.describe("Divergence — what doesn't fit?", () => {
       "data-key",
       `ethereum:${WETH.toLowerCase()}`,
     );
-    await page.getByTestId("back-to-moment").click();
+    await page.getByTestId("to-moment").click();
     await expect(page).toHaveURL(new RegExp(`/dashboard/moment\\?.*address=${WETH.toLowerCase()}`));
     await expect(page.getByTestId("intel-question")).toHaveText("What just changed?");
     await page.goBack();

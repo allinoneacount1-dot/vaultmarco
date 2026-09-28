@@ -1,5 +1,4 @@
-import { formatNumber } from "@/components/marco/shared/helpers";
-import { signedPct } from "@/lib/format";
+import { formatNumber, signedPct } from "@/lib/format";
 import { type QueueRow, queueRow, qualifiesForQueue, sortQueue } from "./changeQueue";
 import { type Collision, collisionFamilies } from "./collision";
 import type { DivergenceResult, DivergenceState } from "./divergence";
@@ -12,6 +11,7 @@ import {
   assetEvents,
 } from "./events";
 import type { AssetTrack, SessionState } from "./facts";
+import { EVENT_RULE_IDS } from "./ruleRefs";
 import { type RuleMeta, ruleMeta } from "./rules";
 
 /**
@@ -37,30 +37,7 @@ export const MOMENT_PICKER_SIZE = 6;
  * Which rule produced an event (threshold + horizon come from rules.ts)
  * ------------------------------------------------------------------ */
 
-/**
- * The rules.ts ids each event type is evaluated with, primary first. Radar
- * firings use the Alpha Radar's own deterministic rule (recorded as it fired),
- * discovery and provider events use no threshold: they map to no rule.
- */
-export const EVENT_RULE_IDS: Record<EventType, readonly string[]> = {
-  PRICE_EXPANSION: ["PRICE_EXPANSION_M5_PCT"],
-  VOLUME_ACCELERATION: ["VOLUME_ACCELERATION_MIN"],
-  TXN_ACCELERATION: ["TXN_ACCELERATION_MIN"],
-  BUY_SELL_IMBALANCE: ["IMBALANCE_MIN_RATIO", "IMBALANCE_MIN_SAMPLE_TXNS"],
-  LIQUIDITY_CHANGE: [
-    "LIQUIDITY_CHANGE_MIN_REL",
-    "LIQUIDITY_CHANGE_MIN_ABS_USD",
-    "LIQUIDITY_CHANGE_MIN_PREVIOUS_USD",
-    "LIQUIDITY_CHANGE_LOOKBACK_MINUTES",
-  ],
-  BOOST_CHANGE: ["BOOST_CHANGE_MIN_DELTA"],
-  PAIR_DISCOVERED: [],
-  MOMENTUM_FIRED: [],
-  RISK_FIRED: [],
-  PROVIDER_RECOVERED: [],
-  PROVIDER_STALE: [],
-};
-
+/** The rules an event type is evaluated with (EVENT_RULE_IDS, ruleRefs.ts), primary first. */
 export function eventRules(type: EventType): RuleMeta[] {
   return EVENT_RULE_IDS[type].map((id) => ruleMeta(id)).filter((r): r is RuleMeta => r != null);
 }

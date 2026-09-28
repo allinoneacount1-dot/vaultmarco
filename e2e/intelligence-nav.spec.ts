@@ -20,18 +20,71 @@ const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 const TV = `(()=>{const s=document.currentScript;const w=s.parentElement.querySelector(".tradingview-widget-container__widget");const f=document.createElement("iframe");f.srcdoc="<body></body>";w.appendChild(f);})();`;
 
+const SOL = "So11111111111111111111111111111111111111112";
+
+/**
+ * Each built page: its question (the shell's h1), the page's own surface with
+ * no asset selected, and the page's own evidence surface once a real
+ * observation of the selected asset exists.
+ */
 const VIEWS = [
-  { label: "The Moment", path: "/dashboard/moment", question: "What just changed?" },
-  { label: "Vault Trace", path: "/dashboard/trace", question: "What moved first?" },
-  { label: "Edge Clock", path: "/dashboard/edge-clock", question: "How old is this move?" },
-  { label: "Divergence", path: "/dashboard/divergence", question: "What doesn't fit?" },
-  { label: "Collision", path: "/dashboard/collision", question: "What changed together?" },
   {
+    id: "moment",
+    label: "The Moment",
+    path: "/dashboard/moment",
+    question: "What just changed?",
+    empty: "moment-no-selection",
+    body: "moment",
+  },
+  {
+    id: "trace",
+    label: "Vault Trace",
+    path: "/dashboard/trace",
+    question: "What moved first?",
+    empty: "intel-empty",
+    body: "trace-body",
+  },
+  {
+    id: "edge-clock",
+    label: "Edge Clock",
+    path: "/dashboard/edge-clock",
+    question: "How old is this move?",
+    empty: "intel-empty",
+    body: "clock-body",
+  },
+  {
+    id: "divergence",
+    label: "Divergence",
+    path: "/dashboard/divergence",
+    question: "What doesn't fit?",
+    empty: "intel-empty",
+    body: "divergence",
+  },
+  {
+    id: "collision",
+    label: "Collision",
+    path: "/dashboard/collision",
+    question: "What changed together?",
+    empty: "intel-empty",
+    body: "collision",
+  },
+  {
+    id: "change-queue",
     label: "Change Queue",
     path: "/dashboard/change-queue",
     question: "What deserves attention now?",
+    empty: "queue",
+    body: "queue",
   },
 ];
+
+/** The page's one question is its h1, inside the shell of that page. */
+async function expectQuestion(page: Page, v: (typeof VIEWS)[number]) {
+  await expect(
+    page.getByRole("heading", { level: 1, name: v.question, exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("intel-shell")).toHaveAttribute("data-feature", v.id);
+}
 
 async function setup(page: Page, path = "/dashboard") {
   const problems: string[] = [];
@@ -113,9 +166,12 @@ test.describe("Intelligence suite navigation", () => {
       await openNav(page);
       await navLink(page, v.label).click();
       await expect(page).toHaveURL(new RegExp(`${v.path}$`));
-      await expect(page.getByTestId("intel-question")).toHaveText(v.question);
-      // Nothing is presented as data before a view is built.
-      await expect(page.getByTestId("intel-empty")).toContainText("—");
+      await expectQuestion(page, v);
+      // No asset selected: the page's own honest surface, nothing presented as data.
+      await expect(page.getByTestId(v.empty)).toBeVisible();
+      if (v.empty === "intel-empty") {
+        await expect(page.getByTestId("intel-empty")).toHaveAttribute("data-state", "none");
+      }
       await openNav(page);
       await expect(navLink(page, v.label)).toHaveAttribute("aria-current", "page");
       await expect(navLink(page, "Overview")).not.toHaveAttribute("aria-current", "page");
@@ -129,6 +185,28 @@ test.describe("Intelligence suite navigation", () => {
     await navLink(page, "Overview").click();
     await expect(page).toHaveURL(/\/dashboard$/);
     await expectOverview(page);
+    expect(problems).toEqual([]);
+  });
+
+  test("each built page renders its question and its own evidence surface for a selected asset", async ({
+    page,
+  }) => {
+    const { problems } = await setup(page, `/dashboard/moment?chain=solana&address=${SOL}`);
+    for (const v of VIEWS) {
+      await openNav(page);
+      await navLink(page, v.label).click();
+      await expect(page).toHaveURL(new RegExp(`${v.path}(\\?|$)`));
+      await expectQuestion(page, v);
+      await expect(page.getByTestId(v.body)).toBeVisible();
+      await expect(page.getByTestId("intel-empty")).toHaveCount(0);
+      if (v.id !== "change-queue") {
+        // The sidebar carries the focus identity (chain + address) between focused views.
+        await expect(page.getByTestId("asset-bar")).toHaveAttribute("data-key", `solana:${SOL}`);
+      }
+      if (await page.getByRole("button", { name: "Close menu" }).first().isVisible()) {
+        await page.keyboard.press("Escape");
+      }
+    }
     expect(problems).toEqual([]);
   });
 

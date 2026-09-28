@@ -1,6 +1,7 @@
-import { Time } from "@/components/marco/intelligence/trace/common";
+import { ObservedTime } from "@/components/marco/intelligence/shared/ObservedTime";
 import { ageLabel } from "@/lib/intelligence/freshness";
-import { type EdgeClockModel, PAIR_HORIZON, factLabel, sinceText } from "@/lib/intelligence/trace";
+import { type EdgeClockModel, PAIR_HORIZON } from "@/lib/intelligence/edgeClock";
+import { factLabel, sinceText } from "@/lib/intelligence/trace";
 
 /**
  * EVIDENCE SINCE THE ORIGIN — each metric at the origin observation and at
@@ -14,7 +15,8 @@ export function SinceOrigin({ model }: { model: EdgeClockModel }) {
   return (
     <section aria-label="Evidence since the origin" className="mv-panel space-y-5 p-4 sm:p-5">
       <p className="font-mono text-[9.5px] leading-relaxed tracking-[0.1em] text-(--faint)">
-        ORIGIN <Time at={origin.observedAt} /> → LATEST <Time at={latest?.observedAt} /> ·{" "}
+        ORIGIN <ObservedTime at={origin.observedAt} /> → LATEST{" "}
+        <ObservedTime at={latest?.observedAt} /> ·{" "}
         {latest ? ageLabel(latest.observedAt - origin.observedAt) : "—"} BETWEEN THE TWO REAL
         OBSERVATIONS · {PAIR_HORIZON}
         {model.sinceBlocked ? ` · NO CHANGE COMPUTED — ${model.sinceBlocked}` : ""}
@@ -89,7 +91,7 @@ export function SinceOrigin({ model }: { model: EdgeClockModel }) {
                 key={f.family}
                 className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 font-mono text-[10px] sm:grid-cols-[84px_120px_minmax(0,1fr)]"
               >
-                <Time at={f.firstAt} className="text-(--muted-2)" />
+                <ObservedTime at={f.firstAt} className="text-(--muted-2)" />
                 <span className="text-(--bone)">{f.family}</span>
                 <span className="col-start-2 truncate text-(--faint) sm:col-start-3">
                   {f.events.map((e) => factLabel(e)).join(" · ")}

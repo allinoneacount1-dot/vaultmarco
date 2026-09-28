@@ -179,11 +179,19 @@ export const BOOST_CHANGE_MIN_DELTA = 1;
  */
 export const COLLISION_WINDOW_MS = 5 * MINUTE;
 
-/** Trace filters. SESSION = everything retained. Offered only when observations span them. */
+/**
+ * Trace filters. SESSION = everything retained. Offered only when the asset's
+ * observations span them. Exported as INTELLIGENCE_RULES metadata
+ * (TRACE_WINDOW_*_MS), which is where the trace filter reads its horizon.
+ */
+export const TRACE_WINDOW_5M_MS = 5 * MINUTE;
+export const TRACE_WINDOW_15M_MS = 15 * MINUTE;
+export const TRACE_WINDOW_1H_MS = 60 * MINUTE;
+
 export const TRACE_WINDOWS_MS = {
-  "5M": 5 * MINUTE,
-  "15M": 15 * MINUTE,
-  "1H": 60 * MINUTE,
+  "5M": TRACE_WINDOW_5M_MS,
+  "15M": TRACE_WINDOW_15M_MS,
+  "1H": TRACE_WINDOW_1H_MS,
 } as const;
 
 /* ------------------------------------------------------------------ *
@@ -484,6 +492,30 @@ export const INTELLIGENCE_RULES: readonly RuleMeta[] = [
     horizon: "Event onsets",
     source: "PRODUCT_DEFINED",
     note: "One provider M5 window; co-occurrence only, not causality.",
+  },
+  {
+    id: "TRACE_WINDOW_5M_MS",
+    value: TRACE_WINDOW_5M_MS,
+    unit: "MS",
+    horizon: "Trace filter, latest observation back",
+    source: "PRODUCT_DEFINED",
+    note: "Offered only when the asset's session observations span it.",
+  },
+  {
+    id: "TRACE_WINDOW_15M_MS",
+    value: TRACE_WINDOW_15M_MS,
+    unit: "MS",
+    horizon: "Trace filter, latest observation back",
+    source: "PRODUCT_DEFINED",
+    note: "Offered only when the asset's session observations span it.",
+  },
+  {
+    id: "TRACE_WINDOW_1H_MS",
+    value: TRACE_WINDOW_1H_MS,
+    unit: "MS",
+    horizon: "Trace filter, latest observation back",
+    source: "PRODUCT_DEFINED",
+    note: "Offered only when the asset's session observations span it.",
   },
   {
     id: "DIVERGENCE_PRICE_FLAT_M5_PCT",

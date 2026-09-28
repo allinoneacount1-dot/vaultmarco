@@ -26,11 +26,13 @@ import {
   firstMoves,
   pickerRows,
 } from "@/lib/intelligence/moment";
-import { staleAfterMs } from "@/lib/intelligence/rules";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import { shortAddress } from "@/lib/search";
 import { IntelligenceShell } from "../IntelligenceShell";
-import { ObservedTime, SectionHead } from "./parts";
+import { FreshnessNote } from "../shared/FreshnessNote";
+import { useFocusLinkSearch } from "../shared/useFocusLinkSearch";
+import { ObservedTime } from "../shared/ObservedTime";
+import { SectionHead } from "../shared/SectionHead";
 import { Summaries } from "./Summaries";
 import { WhatChanged } from "./WhatChanged";
 
@@ -67,7 +69,7 @@ function MomentBody() {
  * ------------------------------------------------------------------ */
 
 function Evidence({ assetKey, fresh }: { assetKey: string; fresh: AssetFreshness }) {
-  const { search } = useFocusAsset();
+  const search = useFocusLinkSearch();
   const track = useAssetTrack(assetKey)!;
   const events = useAssetEvents(assetKey);
   const now = useNow();
@@ -85,7 +87,7 @@ function Evidence({ assetKey, fresh }: { assetKey: string; fresh: AssetFreshness
   return (
     <div className="space-y-4 lg:space-y-5" data-testid="moment" data-state={fresh.state}>
       <HeaderStrip latest={latest} fresh={fresh} />
-      {(fresh.state === "stale" || fresh.state === "degraded") && <StateNotice fresh={fresh} />}
+      <FreshnessNote fresh={fresh} what="The evidence below" />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <WhatChanged changes={changes} now={now} asOf={latest.observedAt} />
         <Summaries
@@ -163,38 +165,6 @@ function Window({ label, value }: { label: string; value: number | null }) {
         PROVIDER WINDOW
       </p>
     </div>
-  );
-}
-
-const STALE_REASON: Record<string, string> = {
-  PROVIDER_FAILED: "A LATER PROVIDER ROUND FAILED",
-  SLOT_UNRESOLVED: "THE PROVIDER DID NOT RESOLVE THIS PAIR IN A LATER ROUND",
-  AGE: "NO NEW OBSERVATION WITHIN THE FRESHNESS WINDOW",
-};
-
-function StateNotice({ fresh }: { fresh: AssetFreshness }) {
-  const stale = fresh.state === "stale";
-  const window = fresh.lane ? `${staleAfterMs(fresh.lane) / 1000} S` : "—";
-  return (
-    <p
-      role="status"
-      className="hairline border-l-2! border-l-(--champagne)! px-3 py-2.5 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-(--champagne)"
-      data-testid="moment-notice"
-      data-state={fresh.state}
-    >
-      {stale ? (
-        <>
-          STALE · {STALE_REASON[fresh.reason] ?? fresh.reason} · FRESHNESS WINDOW {window}. The
-          evidence below is as of <ObservedTime at={fresh.observedAt} prefix="OBSERVATION" />, not
-          now.
-        </>
-      ) : (
-        <>
-          DEGRADED · THE LATEST OBSERVATION CAME FROM A PARTIAL PROVIDER ROUND. Missing slots show
-          as “—”, never as zero.
-        </>
-      )}
-    </p>
   );
 }
 

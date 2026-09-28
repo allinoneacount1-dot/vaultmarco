@@ -24,7 +24,7 @@ import { type Lane, COLLISION_WINDOW_MS, ruleMeta, staleAfterMs } from "./rules"
 
 export type QueueEntry = {
   row: QueueRow;
-  /** The newest qualifying event (the one `queueRow` picked as `newestType` / `newestAt`). */
+  /** The newest qualifying event (`row.newestId`). */
   newest: EvidenceEvent;
   /**
    * Distinct families whose onsets fall in the rules window
@@ -73,10 +73,7 @@ export function buildQueueEntry(
   const latest = track.observations[track.observations.length - 1];
   if (!row || !latest) return null;
   const qualifying = events.filter(qualifiesForQueue);
-  // The event queueRow chose: same onset time and type; the largest id breaks ties as it does.
-  const newest = qualifying
-    .filter((e) => e.observedAt === row.newestAt && e.type === row.newestType)
-    .reduce<EvidenceEvent | null>((a, e) => (a == null || e.id > a.id ? e : a), null);
+  const newest = qualifying.find((e) => e.id === row.newestId);
   if (!newest) return null;
   const c = collisionFamilies(qualifying, COLLISION_WINDOW_MS);
   return {

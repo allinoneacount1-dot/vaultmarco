@@ -169,10 +169,21 @@ test.describe("Vault Trace", () => {
 
     // Windows: only SESSION is spanned so far; the reason is measured, not generic.
     const win = page.getByTestId("trace-windows");
-    await expect(win.locator('[data-window="SESSION"]')).toHaveAttribute("aria-pressed", "true");
-    await expect(win.locator('[data-window="5M"]')).toBeDisabled();
+    await expect(win.getByRole("button", { name: "SESSION", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(win.getByRole("button", { name: "5M", exact: true })).toBeDisabled();
     await expect(page.getByTestId("trace-window-reason")).toContainText(
       /5M · 15M · 1H NOT SPANNED YET — OBSERVED HISTORY OF THIS ASSET SPANS 02m 0\ds/,
+    );
+    // Shared Segmented disabled state: native disabled button, reason as its description + title.
+    await expect(win.getByRole("button", { name: "5M", exact: true })).toHaveAccessibleDescription(
+      /^5M unavailable — observed history of this asset spans 02m 0\ds$/,
+    );
+    await expect(win.getByRole("button", { name: "5M", exact: true })).toHaveAttribute(
+      "title",
+      /^5M unavailable/,
     );
     if (info.project.name === "desktop") {
       await shot(page, "trace-1440", 1440);
@@ -182,10 +193,13 @@ test.describe("Vault Trace", () => {
 
     // After ≥ 5 min of history the 5M window becomes available.
     await tick(page, rounds, 7);
-    await expect(win.locator('[data-window="5M"]')).toBeEnabled();
-    await expect(win.locator('[data-window="15M"]')).toBeDisabled();
-    await win.locator('[data-window="5M"]').click();
-    await expect(win.locator('[data-window="5M"]')).toHaveAttribute("aria-pressed", "true");
+    await expect(win.getByRole("button", { name: "5M", exact: true })).toBeEnabled();
+    await expect(win.getByRole("button", { name: "15M", exact: true })).toBeDisabled();
+    await win.getByRole("button", { name: "5M", exact: true }).click();
+    await expect(win.getByRole("button", { name: "5M", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(problems).toEqual([]);
   });
 
@@ -210,7 +224,7 @@ test.describe("Vault Trace", () => {
     await page.goto(
       "/dashboard/trace?chain=solana&address=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     );
-    await expect(page.getByTestId("intel-unavailable")).toContainText("NOT IN OBSERVED UNIVERSE");
+    await expect(page.getByTestId("intel-empty")).toContainText("NOT IN OBSERVED UNIVERSE");
     await expect(page.getByTestId("trace-tape")).toHaveCount(0);
     expect(problems).toEqual([]);
   });

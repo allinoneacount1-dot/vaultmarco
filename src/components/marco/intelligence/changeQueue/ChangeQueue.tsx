@@ -15,6 +15,7 @@ import {
 } from "@/lib/intelligence/changeQueueView";
 import { clockLabel } from "@/lib/intelligence/freshness";
 import { encodeFocus } from "@/lib/intelligence/identityCodec";
+import { EVENT_RULE_IDS } from "@/lib/intelligence/ruleRefs";
 import {
   COLLISION_WINDOW_MS,
   INTELLIGENCE_RULES_VERSION,
@@ -272,20 +273,18 @@ const QueueRowItem = memo(function QueueRowItem({
   );
 });
 
-const RULE_ROWS: Array<{ label: string; ids: string[] }> = [
-  { label: "PRICE EXPANSION", ids: ["PRICE_EXPANSION_M5_PCT"] },
-  { label: "VOLUME ACCELERATION", ids: ["VOLUME_ACCELERATION_MIN"] },
-  { label: "TXN ACCELERATION", ids: ["TXN_ACCELERATION_MIN"] },
-  { label: "BUY/SELL IMBALANCE", ids: ["IMBALANCE_MIN_RATIO", "IMBALANCE_MIN_SAMPLE_TXNS"] },
-  {
-    label: "LIQUIDITY CHANGE",
-    ids: [
-      "LIQUIDITY_CHANGE_MIN_REL",
-      "LIQUIDITY_CHANGE_MIN_ABS_USD",
-      "LIQUIDITY_CHANGE_LOOKBACK_MINUTES",
-    ],
-  },
-  { label: "BOOST CHANGE", ids: ["BOOST_CHANGE_MIN_DELTA"] },
+/** The rules each qualifying event type is evaluated with (ruleRefs.ts), plus the families window. */
+const RULE_ROWS: Array<{ label: string; ids: readonly string[] }> = [
+  ...(
+    [
+      ["PRICE EXPANSION", "PRICE_EXPANSION"],
+      ["VOLUME ACCELERATION", "VOLUME_ACCELERATION"],
+      ["TXN ACCELERATION", "TXN_ACCELERATION"],
+      ["BUY/SELL IMBALANCE", "BUY_SELL_IMBALANCE"],
+      ["LIQUIDITY CHANGE", "LIQUIDITY_CHANGE"],
+      ["BOOST CHANGE", "BOOST_CHANGE"],
+    ] as const
+  ).map(([label, type]) => ({ label, ids: EVENT_RULE_IDS[type] })),
   { label: "FAMILIES WINDOW", ids: ["COLLISION_WINDOW_MS"] },
 ];
 
@@ -302,7 +301,7 @@ const UNIT_TEXT: Record<string, (v: number) => string> = {
 };
 
 /** Each rule's threshold, then the distinct horizons they apply over. */
-function ruleText(ids: string[]): string {
+function ruleText(ids: readonly string[]): string {
   const metas = ids.map((id) => ruleMeta(id));
   if (metas.some((m) => m == null)) return "—";
   const values = metas.map((m) => UNIT_TEXT[m!.unit]?.(m!.value) ?? String(m!.value));

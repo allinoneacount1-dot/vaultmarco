@@ -1,5 +1,6 @@
 import type { AssetObservation } from "./facts";
 import type { DivergenceMetric, DivergenceResult, DivergenceState } from "./divergence";
+import { DIVERGENCE_THRESHOLD_REFS } from "./ruleRefs";
 import { DIVERGENCE_RULES, type DivergenceId, type RuleMeta, ruleMeta } from "./rules";
 
 /**
@@ -135,46 +136,6 @@ export function metricText(m: DivergenceMetric): {
  * Thresholds each predicate compared against (rules.ts metadata)
  * ------------------------------------------------------------------ */
 
-type ThresholdRef = { ruleId: string; subject: string; op: string };
-
-/**
- * Which rules.ts constants each predicate (DIVERGENCE_RULES[].predicate)
- * references, with the comparison it applies. The VALUES are read from
- * `ruleMeta` at call time; nothing numeric is restated here.
- */
-export const DIVERGENCE_THRESHOLD_REFS: Record<DivergenceId, readonly ThresholdRef[]> = {
-  PRICE_VS_VOLUME: [
-    { ruleId: "VOLUME_ACCELERATION_MIN", subject: "VA", op: "≥" },
-    { ruleId: "DIVERGENCE_PRICE_FLAT_M5_PCT", subject: "|PRICE M5|", op: "<" },
-  ],
-  PRICE_VS_TXNS: [
-    { ruleId: "TXN_ACCELERATION_MIN", subject: "TA", op: "≥" },
-    { ruleId: "DIVERGENCE_PRICE_FLAT_M5_PCT", subject: "|PRICE M5|", op: "<" },
-  ],
-  VOLUME_VS_LIQUIDITY: [
-    { ruleId: "VOLUME_ACCELERATION_MIN", subject: "VA", op: "≥" },
-    { ruleId: "LIQUIDITY_CHANGE_MIN_REL", subject: "LIQ Δ", op: "≤ −" },
-    { ruleId: "LIQUIDITY_CHANGE_MIN_ABS_USD", subject: "|LIQ Δ|", op: "≥" },
-    { ruleId: "LIQUIDITY_CHANGE_MIN_PREVIOUS_USD", subject: "PREVIOUS LIQ", op: "≥" },
-    { ruleId: "LIQUIDITY_CHANGE_LOOKBACK_MINUTES", subject: "COMPARED ≥", op: "" },
-    { ruleId: "SESSION_DELTA_MAX_SPAN_MS", subject: "SPAN ≤", op: "" },
-  ],
-  BALANCE_VS_PRICE: [
-    { ruleId: "IMBALANCE_MIN_SAMPLE_TXNS", subject: "M5 TXNS", op: "≥" },
-    { ruleId: "IMBALANCE_MIN_RATIO", subject: "ONE SIDE / OTHER", op: "≥" },
-    { ruleId: "DIVERGENCE_PRICE_FLAT_M5_PCT", subject: "|PRICE M5| AGAINST IT", op: "≥" },
-  ],
-  BOOST_VS_ACTIVITY: [
-    { ruleId: "BOOST_CHANGE_MIN_DELTA", subject: "ACTIVE BOOSTS Δ", op: "≥ +" },
-    { ruleId: "DIVERGENCE_ACTIVITY_FLAT_RATIO", subject: "TA", op: "≤" },
-    { ruleId: "SESSION_DELTA_MAX_SPAN_MS", subject: "SPAN ≤", op: "" },
-  ],
-  PRICE_EXPANSION_WITHOUT_VOLUME: [
-    { ruleId: "PRICE_EXPANSION_M5_PCT", subject: "|PRICE M5|", op: "≥" },
-    { ruleId: "DIVERGENCE_ACTIVITY_FLAT_RATIO", subject: "VA", op: "≤" },
-  ],
-};
-
 export function ruleValueText(meta: RuleMeta): string {
   switch (meta.unit) {
     case "PCT":
@@ -207,7 +168,11 @@ export type ThresholdLine = {
   source: RuleMeta["source"];
 };
 
-/** The thresholds + horizons a predicate compared against. Unknown rule ids are skipped. */
+/**
+ * The thresholds + horizons a predicate compared against (which rules:
+ * DIVERGENCE_THRESHOLD_REFS in ruleRefs.ts; values: `ruleMeta` at call time).
+ * Unknown rule ids are skipped.
+ */
 export function thresholdLines(id: DivergenceId): ThresholdLine[] {
   const out: ThresholdLine[] = [];
   for (const ref of DIVERGENCE_THRESHOLD_REFS[id]) {

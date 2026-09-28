@@ -10,8 +10,8 @@ import {
   extractAssetEvents,
 } from "@/lib/intelligence/events";
 import type { SessionState } from "@/lib/intelligence/facts";
+import { EVENT_RULE_IDS } from "@/lib/intelligence/ruleRefs";
 import {
-  EVENT_RULE_IDS,
   MOMENT_FIRST_MOVES,
   activeChanges,
   collisionSummary,

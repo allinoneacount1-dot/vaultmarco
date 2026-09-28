@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { evaluateDivergences } from "@/lib/intelligence/divergence";
 import {
   DIVERGENCE_STATE_TEXT,
-  DIVERGENCE_THRESHOLD_REFS,
   compactHorizon,
   metricText,
   orderDivergences,
@@ -13,6 +12,7 @@ import {
   summarizeDivergences,
   thresholdLines,
 } from "@/lib/intelligence/divergenceView";
+import { DIVERGENCE_THRESHOLD_REFS } from "@/lib/intelligence/ruleRefs";
 import { DIVERGENCE_RULES, INTELLIGENCE_RULES, ruleMeta } from "@/lib/intelligence/rules";
 import { HYPE_PAIR, MIN, SEC, SOL_PAIR, T0, obs } from "./helpers";
 

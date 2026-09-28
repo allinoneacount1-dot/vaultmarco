@@ -309,7 +309,7 @@ test.describe("The Moment", () => {
       await expect(page.getByTestId("moment")).toHaveAttribute("data-state", "stale", {
         timeout: 10_000,
       });
-      await expect(page.getByTestId("moment-notice")).toContainText("STALE");
+      await expect(page.getByTestId("freshness-note")).toContainText("STALE");
       // The last real price stays, labelled STALE — never blanked, never relabelled fresh.
       await expect(page.getByTestId("moment-header")).toContainText("+4.20%");
       if (mode === "429" && info.project.name === "desktop") await shot(page, "moment-stale");
@@ -333,7 +333,7 @@ test.describe("The Moment", () => {
     await expect(page.getByTestId("moment")).toHaveAttribute("data-state", "degraded", {
       timeout: 10_000,
     });
-    await expect(page.getByTestId("moment-notice")).toContainText("DEGRADED");
+    await expect(page.getByTestId("freshness-note")).toContainText("DEGRADED");
     if (info.project.name === "desktop") await shot(page, "moment-degraded");
     // In-app selection (same session): the pair the provider stopped resolving.
     await page.getByTestId("select-asset").click();
@@ -346,7 +346,7 @@ test.describe("The Moment", () => {
     await expect(page.getByTestId("moment")).toHaveAttribute("data-state", "stale", {
       timeout: 10_000,
     });
-    await expect(page.getByTestId("moment-notice")).toContainText("DID NOT RESOLVE");
+    await expect(page.getByTestId("freshness-note")).toContainText("DID NOT RESOLVE");
     expect(problems).toEqual([]);
   });
 

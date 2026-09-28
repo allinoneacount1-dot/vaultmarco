@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { extractAssetEvents } from "@/lib/intelligence/events";
 import type { AssetObservation, SessionState } from "@/lib/intelligence/facts";
 import { failureBatch } from "@/lib/intelligence/ingest";
+import { EVENT_RULE_IDS } from "@/lib/intelligence/ruleRefs";
 import { TRACE_WINDOWS_MS, ruleMeta } from "@/lib/intelligence/rules";
 import { createSessionState, ingest } from "@/lib/intelligence/sessionHistory";
 import {
-  EVENT_RULE_IDS,
   buildTrace,
   effectiveWindow,
   eventRules,

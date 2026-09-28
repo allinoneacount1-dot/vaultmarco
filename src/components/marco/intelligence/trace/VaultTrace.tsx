@@ -10,7 +10,10 @@ import {
   offsetText,
   valueText,
 } from "@/lib/intelligence/trace";
-import { CrossLinks, type FocusEvidence, FocusGate, FreshnessNote, Time } from "./common";
+import { type FocusEvidence, FocusGate } from "../shared/FocusGate";
+import { FreshnessNote } from "../shared/FreshnessNote";
+import { RelatedViews } from "../shared/links";
+import { ObservedTime } from "../shared/ObservedTime";
 import { TraceTape } from "./TraceTape";
 import { WindowFilter } from "./WindowFilter";
 
@@ -33,7 +36,7 @@ function TraceBody({ ev }: { ev: FocusEvidence }) {
   return (
     <div className="flex flex-col gap-6 lg:gap-8" data-testid="trace-body">
       <div className="order-last lg:order-first">
-        <CrossLinks search={ev.search} sibling="edge-clock" />
+        <RelatedViews search={ev.search} views={["moment", "edge-clock"]} />
       </div>
       <FreshnessNote fresh={ev.fresh} what="The tape" />
       <Zone
@@ -80,7 +83,7 @@ function FirstMoved({ model }: { model: TraceModel }) {
   return (
     <div className="space-y-4" data-testid="trace-first" data-state="observed">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <Time at={first.observedAt} className="text-[22px] text-(--gold) lg:text-[26px]" />
+        <ObservedTime at={first.observedAt} className="text-[22px] text-(--gold) lg:text-[26px]" />
         <p className="font-display text-[15px] font-semibold uppercase tracking-[0.04em] text-(--bone) lg:text-[18px]">
           {factLabel(first)}
         </p>
@@ -143,10 +146,11 @@ function EmptyTape({ model, ev }: { model: TraceModel; ev: FocusEvidence }) {
           : `NO EVIDENCE OBSERVED IN THE LAST ${model.window}`}
       </p>
       <p className="mt-2 font-mono text-[10px] leading-relaxed text-(--faint)">
-        SESSION STARTED <Time at={ev.startedAt} /> · {ev.track.observations.length} OBSERVATION
+        SESSION STARTED <ObservedTime at={ev.startedAt} /> · {ev.track.observations.length}{" "}
+        OBSERVATION
         {ev.track.observations.length === 1 ? "" : "S"} OF THIS ASSET SINCE{" "}
-        <Time at={ev.track.observations[0].observedAt} /> · NO RULE WAS MET AND NO PROVIDER EVENT
-        OCCURRED{session ? "" : " IN THIS WINDOW"}
+        <ObservedTime at={ev.track.observations[0].observedAt} /> · NO RULE WAS MET AND NO PROVIDER
+        EVENT OCCURRED{session ? "" : " IN THIS WINDOW"}
       </p>
     </div>
   );
@@ -159,14 +163,14 @@ function TapeFooter({ model, ev }: { model: TraceModel; ev: FocusEvidence }) {
       LANE CONTEXT · {model.poolSwitches} POOL SWITCH{model.poolSwitches === 1 ? "" : "ES"} ·{" "}
       {model.window === "SESSION" ? (
         <>
-          SESSION HISTORY SINCE <Time at={model.span?.from} />
+          SESSION HISTORY SINCE <ObservedTime at={model.span?.from} />
         </>
       ) : (
         <>
-          FROM <Time at={model.windowStart} /> TO <Time at={model.end} />
+          FROM <ObservedTime at={model.windowStart} /> TO <ObservedTime at={model.end} />
         </>
       )}{" "}
-      · SESSION STARTED <Time at={ev.startedAt} /> · NOTHING BEFORE IT IS KNOWN
+      · SESSION STARTED <ObservedTime at={ev.startedAt} /> · NOTHING BEFORE IT IS KNOWN
     </p>
   );
 }

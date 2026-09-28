@@ -53,3 +53,39 @@ export function changeTone(n: number | null | undefined): "up" | "down" | "flat"
   if (n < 0) return "down";
   return "flat";
 }
+
+const TIERS = [
+  { limit: 1e12, suffix: "T", digits: 2 },
+  { limit: 1e9, suffix: "B", digits: 2 },
+  { limit: 1e6, suffix: "M", digits: 1 },
+  { limit: 1e3, suffix: "K", digits: 1 },
+] as const;
+
+/**
+ * Compact USD amount across K / M / B / T.
+ *
+ * The previous version stopped at M and hard-coded the K branch, so a $2.16B
+ * pool printed as "$2159225K". Every magnitude now picks its own tier, and
+ * negatives and non-finite inputs are handled rather than reaching the DOM.
+ */
+export const formatNumber = (num: number): string => {
+  if (!Number.isFinite(num)) return "—";
+  const sign = num < 0 ? "-" : "";
+  const n = Math.abs(num);
+
+  for (let i = 0; i < TIERS.length; i++) {
+    const t = TIERS[i];
+    if (n < t.limit) continue;
+
+    const shown = Number((n / t.limit).toFixed(t.digits));
+    // Rounding can push a value into the next tier: 999_999 would otherwise
+    // render as "$1000K" instead of "$1M". Promote instead of printing that.
+    if (shown >= 1000 && i > 0) {
+      const up = TIERS[i - 1];
+      return `${sign}$${Number((n / up.limit).toFixed(up.digits))}${up.suffix}`;
+    }
+    return `${sign}$${shown}${t.suffix}`;
+  }
+
+  return `${sign}$${Math.round(n)}`;
+};

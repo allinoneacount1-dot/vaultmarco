@@ -13,12 +13,15 @@ import {
   thresholdLines,
 } from "@/lib/intelligence/divergenceView";
 import type { AssetTrack } from "@/lib/intelligence/facts";
-import { type AssetFreshness, clockLabel } from "@/lib/intelligence/freshness";
+import type { AssetFreshness } from "@/lib/intelligence/freshness";
 import { INTELLIGENCE_RULES_VERSION } from "@/lib/intelligence/rules";
 import { shortAddress } from "@/lib/search";
-import { useFocusEvidence } from "./useFocusEvidence";
 import { IntelligenceShell } from "../IntelligenceShell";
-import { EvidenceStatus, FocusGate, MomentLink } from "./FocusGate";
+import { FocusGate } from "../shared/FocusGate";
+import { useFocusLinkSearch } from "../shared/useFocusLinkSearch";
+import { FreshnessNote } from "../shared/FreshnessNote";
+import { RelatedViews } from "../shared/links";
+import { ObservedTime } from "../shared/ObservedTime";
 
 /**
  * DIVERGENCE — "What doesn't fit?"
@@ -29,15 +32,13 @@ import { EvidenceStatus, FocusGate, MomentLink } from "./FocusGate";
  * fields those predicates read. No interpretation is attached to a state.
  */
 export function DivergencePage() {
-  const { assetKey, track, fresh, search } = useFocusEvidence();
+  const search = useFocusLinkSearch();
   return (
     <IntelligenceShell feature="divergence">
-      <FocusGate hasFocus={assetKey != null} track={track} fresh={fresh}>
-        {track && <DivergenceBody track={track} fresh={fresh} />}
+      <FocusGate what="which of its metrics disagree">
+        {(ev) => <DivergenceBody track={ev.track} fresh={ev.fresh} />}
       </FocusGate>
-      <nav aria-label="Related views" className="flex flex-wrap items-center gap-2">
-        <MomentLink search={search} />
-      </nav>
+      <RelatedViews search={search} views={["moment"]} />
     </IntelligenceShell>
   );
 }
@@ -61,7 +62,7 @@ function DivergenceBody({ track, fresh }: { track: AssetTrack; fresh: AssetFresh
 
   return (
     <div className="space-y-8" data-testid="divergence" data-observed-at={latest.observedAt}>
-      <EvidenceStatus fresh={fresh} />
+      <FreshnessNote fresh={fresh} what="The evaluation" />
       <Zone
         index="01"
         label="PREDICATES"
@@ -79,11 +80,8 @@ function DivergenceBody({ track, fresh }: { track: AssetTrack; fresh: AssetFresh
           </p>
           <p className="font-mono text-[10px] tracking-[0.14em] text-(--faint)">
             {summary.DIVERGED} DIVERGED · {summary.NOT_DIVERGED} ALIGNED · {summary.NOT_EVALUABLE}{" "}
-            NOT EVALUABLE · LATEST OBSERVATION{" "}
-            <time dateTime={new Date(latest.observedAt).toISOString()}>
-              {clockLabel(latest.observedAt)}
-            </time>{" "}
-            · OBSERVED THIS SESSION
+            NOT EVALUABLE · LATEST OBSERVATION <ObservedTime at={latest.observedAt} /> · OBSERVED
+            THIS SESSION
           </p>
         </div>
         <ol className="mv-tape hairline-t hairline-b" data-testid="divergence-list">
@@ -191,17 +189,11 @@ function PredicateRow({ r }: { r: DivergenceResult }) {
 
       <div className="min-w-0 space-y-0.5 font-mono text-[10px] tracking-[0.08em] text-(--muted-2)">
         <p>
-          OBSERVED{" "}
-          <time dateTime={new Date(r.observedAt).toISOString()} className="text-(--gold)">
-            {clockLabel(r.observedAt)}
-          </time>
+          OBSERVED <ObservedTime at={r.observedAt} className="text-(--gold)" />
         </p>
         {r.priorObservedAt != null && (
           <p>
-            COMPARED WITH{" "}
-            <time dateTime={new Date(r.priorObservedAt).toISOString()}>
-              {clockLabel(r.priorObservedAt)}
-            </time>
+            COMPARED WITH <ObservedTime at={r.priorObservedAt} />
           </p>
         )}
         <p className="text-(--faint)">{r.source}</p>
@@ -263,9 +255,7 @@ function RawMetricsTable({ rows }: { rows: RawMetricRow[] }) {
             </td>
             <td className="py-1.5 pr-2 pl-4 break-words text-(--faint)">{r.horizon}</td>
             <td className="hidden py-1.5 pr-2 text-(--muted-2) sm:table-cell">
-              <time dateTime={new Date(r.observedAt).toISOString()}>
-                {clockLabel(r.observedAt)}
-              </time>
+              <ObservedTime at={r.observedAt} />
             </td>
             <td
               className="hidden py-1.5 text-(--faint) lg:table-cell"

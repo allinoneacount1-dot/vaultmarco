@@ -267,7 +267,7 @@ test.describe("Collision — what changed together?", () => {
     mock.honse = "429";
     await page.clock.fastForward(60_000);
     await page.clock.fastForward(60_000);
-    await expect(page.getByTestId("evidence-status")).toHaveAttribute("data-state", "stale");
+    await expect(page.getByTestId("freshness-note")).toHaveAttribute("data-state", "stale");
     await expect(page.getByTestId("focus-freshness")).toHaveAttribute("data-state", "stale");
     await expect(box).toHaveAttribute("data-observed-at", observed!);
     await expect(box).toHaveAttribute("data-count", count!);
@@ -293,7 +293,7 @@ test.describe("Collision — what changed together?", () => {
     await expect(page.getByTestId("collision")).toBeVisible({ timeout: 15_000 });
     await page.reload();
     await expect(page.getByTestId("asset-bar")).toHaveAttribute("data-key", `solana:${HONSE}`);
-    await page.getByTestId("back-to-moment").click();
+    await page.getByTestId("to-moment").click();
     // Base58 case is kept exactly.
     await expect(page).toHaveURL(new RegExp(`/dashboard/moment\\?.*address=${HONSE}`));
     await page.goBack();

@@ -85,6 +85,9 @@ describe("change queue page — view model over the foundation queue", () => {
     const e = queueEntry(s.assets.get(WETH_KEY)!, s.lanes)!;
     expect(e.row.newestType).toBe("PRICE_EXPANSION");
     expect(e.newest.type).toBe(e.row.newestType);
+    // The row names its event: no second lookup by (time, type) is needed.
+    expect(e.newest.id).toBe(e.row.newestId);
+    expect(e.row.newestDirection).toBe("DOWN");
     expect(e.newest.observedAt).toBe(e.row.newestAt);
     expect(e.newest.direction).toBe("DOWN");
     expect(e.newest.onset).toBe("OBSERVED");
