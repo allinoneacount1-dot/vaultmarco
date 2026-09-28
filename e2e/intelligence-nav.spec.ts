@@ -210,6 +210,31 @@ test.describe("Intelligence suite navigation", () => {
     expect(problems).toEqual([]);
   });
 
+  test("rapid route switching: all 7 sidebar entries clicked quickly, 4 laps, no console errors", async ({
+    page,
+  }) => {
+    const { problems } = await setup(page, `/dashboard?chain=solana&address=${SOL}`);
+    const entries = ["Overview", ...VIEWS.map((v) => v.label)];
+    for (let lap = 0; lap < 4; lap++) {
+      for (const label of entries) {
+        await openNav(page);
+        // No wait for the view to settle: the next click lands mid-transition.
+        await navLink(page, label).click({ noWaitAfter: true });
+      }
+    }
+    // The last entry wins: its route, its question, one shell, its own surface.
+    const last = VIEWS[VIEWS.length - 1];
+    await expect(page).toHaveURL(new RegExp(`${last.path}(\\?|$)`));
+    await expectQuestion(page, last);
+    await expect(page.getByTestId("intel-shell")).toHaveCount(1);
+    await expect(page.getByTestId(last.body)).toBeVisible();
+    // Back to a focused view: the recorder kept the session, nothing re-fetched per view.
+    await openNav(page);
+    await navLink(page, "The Moment").click();
+    await expectQuestion(page, VIEWS[0]);
+    expect(problems).toEqual([]);
+  });
+
   test("refresh on a nested route keeps the view and the asset; back/forward restore both", async ({
     page,
   }) => {
