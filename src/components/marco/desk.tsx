@@ -22,13 +22,21 @@ export function Segmented<T extends string>({
   label,
   className = "",
 }: {
-  options: readonly { id: T; label?: string }[];
+  /**
+   * `disabled` renders a native disabled button (not focusable, not
+   * clickable); its `reason` is exposed as the button's accessible
+   * description (aria-describedby) and its title. Both are optional and
+   * additive: options without them render exactly as before.
+   */
+  options: readonly { id: T; label?: string; disabled?: boolean; reason?: string }[];
   value: T;
   onChange: (id: T) => void;
   /** Accessible group name. */
   label: string;
   className?: string;
 }) {
+  const uid = useId();
+  const reasons = options.filter((o) => o.disabled && o.reason);
   return (
     <div
       role="group"
@@ -37,19 +45,28 @@ export function Segmented<T extends string>({
     >
       {options.map((o) => {
         const active = o.id === value;
+        const described = o.disabled && o.reason ? `${uid}-${o.id}-reason` : undefined;
         return (
           <button
             key={o.id}
             type="button"
             onClick={() => onChange(o.id)}
             aria-pressed={active}
+            disabled={o.disabled || undefined}
+            title={described ? o.reason : undefined}
+            aria-describedby={described}
             // Glass rail + solid selected key: state reads from aria-pressed (styles.css).
-            className="mv-glass-seg min-h-9 shrink-0 cursor-pointer px-3 font-mono text-[10px] tracking-[0.14em] lg:min-h-8"
+            className="mv-glass-seg min-h-9 shrink-0 cursor-pointer px-3 font-mono text-[10px] tracking-[0.14em] disabled:cursor-not-allowed disabled:text-(--faint) disabled:line-through disabled:decoration-(--hairline-strong) lg:min-h-8"
           >
             {o.label ?? o.id}
           </button>
         );
       })}
+      {reasons.map((o) => (
+        <span key={o.id} id={`${uid}-${o.id}-reason`} className="sr-only">
+          {o.reason}
+        </span>
+      ))}
     </div>
   );
 }

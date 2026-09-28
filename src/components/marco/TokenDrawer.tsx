@@ -21,7 +21,9 @@ import {
   resolveDrawerModel,
 } from "@/lib/tokenDrawer";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { ArrowUpRight, Bookmark, BookmarkCheck, Check, Copy, X } from "lucide-react";
+import { ArrowUpRight, Bookmark, BookmarkCheck, Check, Copy, Crosshair, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { encodeFocus } from "@/lib/intelligence/identityCodec";
 import {
   Sheet,
   SheetClose,
@@ -590,6 +592,7 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
     return () => window.clearTimeout(t);
   }, [copy]);
 
+  const { close } = useTokenDrawerActions();
   const watchlist = useWatchlist();
   const watched = watchlist.isWatched(ref_.key);
   const [full, setFull] = useState(false);
@@ -639,6 +642,17 @@ function ActionsSection({ ref_, snapshot }: { ref_: TokenRef; snapshot: PairSnap
           )}
           {copy === "copied" ? "COPIED" : "COPY CA"}
         </button>
+        {/* Internal: open this exact asset (canonical chain + address) in THE MOMENT. */}
+        <Link
+          to="/dashboard/moment"
+          search={encodeFocus({ chainId: ref_.chainId, address: ref_.address })}
+          onClick={() => close()}
+          className={ACTION}
+          data-testid="open-moment"
+        >
+          <Crosshair aria-hidden className="size-3.5" strokeWidth={1.8} />
+          OPEN IN THE MOMENT
+        </Link>
         <a
           href={dexScreenerUrl(ref_, snapshot)}
           target="_blank"

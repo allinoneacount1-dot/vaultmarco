@@ -105,14 +105,23 @@ function useCachedUniverseState(active: boolean): QueryState<PairUniverse> | und
   );
 }
 
-function SearchDialog({
+/**
+ * The search palette. By default a chosen result opens the Token Drawer; the
+ * intelligence views pass `onChoose` to use the same identity results as an
+ * asset picker (same index, same ranking, same temporal labels).
+ */
+export function SearchDialog({
   open,
   onOpenChange,
   trigger,
+  onChoose,
+  description,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   trigger: React.RefObject<HTMLButtonElement | null>;
+  onChoose?: (entry: SearchEntry) => void;
+  description?: string;
 }) {
   const { open: openToken } = useTokenDrawerActions();
   const id = useId();
@@ -187,6 +196,11 @@ function SearchDialog({
             e.preventDefault();
             const entry = chosen.current;
             chosen.current = null;
+            if (entry && onChoose) {
+              onChoose(entry);
+              trigger.current?.focus();
+              return;
+            }
             if (entry) {
               // The drawer takes focus, and returns it to the SEARCH control on close.
               openToken(entry.ref, trigger.current);
@@ -206,8 +220,8 @@ function SearchDialog({
         >
           <DialogPrimitive.Title className="sr-only">Global search</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            Search tokens MARCOVAULT currently holds by symbol, name, contract address, chain or
-            source. Choosing a result opens its Token Intelligence Drawer.
+            {description ??
+              "Search tokens MARCOVAULT currently holds by symbol, name, contract address, chain or source. Choosing a result opens its Token Intelligence Drawer."}
           </DialogPrimitive.Description>
           <div className="hairline-b flex items-center gap-3 px-4">
             <Search className="size-4 shrink-0 text-(--faint)" aria-hidden />

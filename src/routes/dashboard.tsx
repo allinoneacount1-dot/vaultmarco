@@ -26,12 +26,16 @@ import { useArrivals } from "@/hooks/useArrivals";
 import { QUICK_STATS_WORD, feedState, quickStatsState, type DeskState } from "@/lib/deskState";
 import type { TokenRef } from "@/lib/tokenDrawer";
 import { enterGroup } from "@/lib/motion";
+import { IntelligenceRecorder } from "@/hooks/useIntelligence";
 
 function DashboardComponent() {
   // The Token Intelligence Drawer is mounted once here, with the dashboard,
   // so opening it never mounts a new data observer.
+  // The intelligence session recorder is mounted here too: it records while
+  // any dashboard route is open and renders nothing.
   return (
     <TokenDrawerProvider>
+      <IntelligenceRecorder />
       <DashboardLayout>
         <Outlet />
       </DashboardLayout>
