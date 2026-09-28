@@ -1,10 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { IntelligencePlaceholder } from "@/components/marco/intelligence/IntelligenceShell";
+import { DivergencePage } from "@/components/marco/intelligence/divergence/DivergencePage";
 
 export const Route = createLazyFileRoute("/dashboard/divergence")({
-  component: Page,
+  component: DivergencePage,
 });
-
-function Page() {
-  return <IntelligencePlaceholder feature="divergence" />;
-}
