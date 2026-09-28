@@ -5,6 +5,7 @@ import { toPairSnapshot } from "@/lib/signals/pairSnapshot";
 import type { DexPair } from "@/lib/providers/dexscreener";
 import { collisionFamilies } from "@/lib/intelligence/collision";
 import { collisionView } from "@/lib/intelligence/collisionView";
+import { queueRow } from "@/lib/intelligence/changeQueue";
 import { changeText } from "@/lib/intelligence/changeQueueView";
 import { edgeClockOrigin } from "@/lib/intelligence/edgeClock";
 import {
@@ -289,5 +290,57 @@ describe("m3 — discovery wording", () => {
   it("PAIR_DISCOVERED reads ENTERED OBSERVED UNIVERSE everywhere", () => {
     expect(TYPE_TEXT.PAIR_DISCOVERED).toBe("ENTERED OBSERVED UNIVERSE");
     expect(changeText("PAIR_DISCOVERED", null)).toBe("ENTERED OBSERVED UNIVERSE");
+  });
+});
+
+describe("N1 — a queue row says when its newest change's start was not seen", () => {
+  it("in-progress at the first observation → newestOnset IN_PROGRESS_WHEN_OBSERVED; a seen onset → OBSERVED", () => {
+    let s = createSessionState(START);
+    const calm = { priceChange: { m5: 0.1 } };
+    s = ingest(s, batch("realtime", T0, [obs(TOKEN_A, T0, { priceChange: { m5: 4 } })]));
+    // Every condition here was already true at the first observation.
+    expect(queueRow(eventsOf(s))!.newestOnset).toBe("IN_PROGRESS_WHEN_OBSERVED");
+
+    let t = createSessionState(START);
+    t = ingest(t, batch("realtime", T0, [obs(TOKEN_A, T0, calm)]));
+    t = ingest(
+      t,
+      batch("realtime", T0 + 30 * SEC, [obs(TOKEN_A, T0 + 30 * SEC, { priceChange: { m5: 4 } })]),
+    );
+    expect(queueRow(eventsOf(t))).toMatchObject({
+      newestType: "PRICE_EXPANSION",
+      newestOnset: "OBSERVED",
+    });
+  });
+});
+
+describe("N2 — nothing dated inside a closed pause is recorded", () => {
+  it("a cached observation / lane round from the pause is rejected on remount; later data is kept", () => {
+    const store = new SessionStore();
+    store.start(T0);
+    store.ingest(batch("realtime", T0 + 10 * SEC, [obs(SOL_PAIR, T0 + 10 * SEC)]));
+    store.pause(T0 + MIN);
+    store.start(T0 + 10 * MIN);
+    // The landing kept polling while the dashboard was closed: a cached round from the pause.
+    store.ingest(batch("realtime", T0 + 5 * MIN, [obs(SOL_PAIR, T0 + 5 * MIN)]));
+    const s = store.getState();
+    expect(s.assets.get(SOL_KEY)!.observations.map((o) => o.observedAt)).toEqual([T0 + 10 * SEC]);
+    expect(s.lanes.realtime.points.map((p) => p.at)).toEqual([T0 + 10 * SEC]);
+    expect(s.rejected.paused).toBe(2);
+    store.ingest(batch("realtime", T0 + 11 * MIN, [obs(SOL_PAIR, T0 + 11 * MIN)]));
+    expect(store.getState().assets.get(SOL_KEY)!.observations).toHaveLength(2);
+  });
+});
+
+describe("N3 — StrictMode's mount → unmount → mount replay", () => {
+  it("leaves no visible pause and rejects nothing", () => {
+    const store = new SessionStore();
+    store.start(T0);
+    store.pause(T0);
+    store.start(T0);
+    expect(recordingGaps(store.getState().recording)).toEqual([]);
+    store.ingest(batch("realtime", T0, [obs(SOL_PAIR, T0)]));
+    expect(store.getState().assets.size).toBe(1);
+    expect(store.getState().rejected.paused).toBe(0);
   });
 });

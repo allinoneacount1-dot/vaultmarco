@@ -42,6 +42,12 @@ export type QueueRow = {
   newestId: string;
   newestType: EventType;
   newestDirection: EventDirection;
+  /**
+   * How much of the newest change's start was seen. IN_PROGRESS_WHEN_OBSERVED
+   * means it was already true at its first observation: `newestAt` is then
+   * when it was FIRST SEEN, not when it began — the page must say so.
+   */
+  newestOnset: EvidenceEvent["onset"];
   eventCount: number;
   familyCount: number;
   /** VA ratio of the newest VOLUME_ACCELERATION event, or null. */
@@ -81,6 +87,7 @@ export function queueRow(events: readonly EvidenceEvent[]): QueueRow | null {
     newestId: newest.id,
     newestType: newest.type,
     newestDirection: newest.direction,
+    newestOnset: newest.onset,
     eventCount: q.length,
     familyCount: new Set(q.map((e) => e.family)).size,
     volumeAcceleration: va?.value ?? null,

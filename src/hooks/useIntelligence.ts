@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { RealtimeRow } from "@/lib/providers/dexPairs";
 import type { DataEnvelope } from "@/lib/providers/envelope";
@@ -145,9 +145,11 @@ export function useAssetFreshness(key: string | null | undefined): AssetFreshnes
  */
 export function useIntelligenceRecorder(): void {
   const queryClient = useQueryClient();
-  // Start (or resume) the session during the recorder's first render, before
-  // any view reads it; idempotent. Unmount pauses, remount resumes.
-  useState(() => intelligenceSession.start(Date.now()));
+  // Start (or resume) the session on mount — in an effect, never during
+  // render. Declared before the ingestion effect below, so it runs first and
+  // cached data is judged against the new interval. Unmount pauses. Under
+  // StrictMode the mount → unmount → mount replay leaves a zero-length pause,
+  // which is never shown (recordingGaps) and never rejects anything.
   useEffect(() => {
     intelligenceSession.start(Date.now());
     return () => intelligenceSession.pause(Date.now());

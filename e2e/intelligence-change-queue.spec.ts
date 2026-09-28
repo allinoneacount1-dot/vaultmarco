@@ -279,6 +279,25 @@ test.describe("Change Queue", () => {
     expect(problems).toEqual([]);
   });
 
+  test("a newest change already true when first seen is marked; an observed onset is not", async ({
+    page,
+  }) => {
+    // G is +6% m5 from its very first observation (start never seen); A's move starts at round 2.
+    const G: Token = { tag: "G", sym: "GOLF", at: () => ({ m5: 6 }) };
+    const w = world({ feed: [A, G] });
+    const problems = await install(page, w);
+    await open(page, w);
+    await toRound(page, w, 3);
+    const g = row(page, G);
+    await expect(g.getByTestId("row-onset")).toHaveText("ALREADY TRUE WHEN FIRST SEEN");
+    await expect(g.getByTestId("row-onset")).toBeVisible();
+    await expect(g.getByTestId("row-age")).toHaveAttribute("data-basis", "first-seen");
+    const a = row(page, A);
+    await expect(a.getByTestId("row-onset")).toHaveCount(0);
+    await expect(a.getByTestId("row-age")).toHaveAttribute("data-basis", "onset");
+    expect(problems).toEqual([]);
+  });
+
   test("each sort order is deterministic with an honest caption; rows lacking the key go last as —", async ({
     page,
   }) => {

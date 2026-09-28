@@ -119,7 +119,7 @@ export type SessionState = {
   /** Newest observedAt ever ingested — the recorder's clock for pruning. */
   newestAt: number | null;
   /** Counters for rejected input, surfaced for observability. */
-  rejected: { preSession: number; invalid: number; duplicate: number };
+  rejected: { preSession: number; paused: number; invalid: number; duplicate: number };
   /** Bumped on every state change. */
   revision: number;
 };

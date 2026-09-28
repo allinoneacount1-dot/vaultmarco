@@ -58,7 +58,7 @@ export function createSessionState(startedAt: number): SessionState {
     lanes: { realtime: { firstOkAt: null, points: [] }, universe: { firstOkAt: null, points: [] } },
     assets: new Map(),
     newestAt: null,
-    rejected: { preSession: 0, invalid: 0, duplicate: 0 },
+    rejected: { preSession: 0, paused: 0, invalid: 0, duplicate: 0 },
     revision: 0,
   };
 }
@@ -101,6 +101,20 @@ function pushBounded<T>(list: readonly T[], item: T, max: number): T[] {
   return next.length > max ? next.slice(next.length - max) : next;
 }
 
+/**
+ * Inside a CLOSED pause (after one recording interval ended and before the
+ * next began): no dashboard route was open, so nothing dated there counts as
+ * observed — even a cached query result read on remount. Keeps
+ * "RECORDING SINCE … · PAUSED …" literally true.
+ */
+export function inClosedPause(recording: SessionState["recording"], t: number): boolean {
+  for (let i = 1; i < recording.length; i++) {
+    const end = recording[i - 1].to;
+    if (end != null && t > end && t < recording[i].from) return true;
+  }
+  return false;
+}
+
 /** Pure reducer: fold one normalized batch into the session. */
 export function ingest(state: SessionState, batch: IngestBatch): SessionState {
   if (!validTime(batch.at)) {
@@ -118,8 +132,13 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
   // it can never be the "before" of an in-session transition.
   const preSessionPoint = batch.at < state.startedAt;
   if (preSessionPoint) rejected.preSession++;
+  // A round dated inside a closed pause was not observed by this session either.
+  const pausedPoint = !preSessionPoint && inClosedPause(state.recording, batch.at);
+  if (pausedPoint) rejected.paused++;
   const samePoint =
-    preSessionPoint || lane.points.some((p) => p.at === batch.at && p.state === batch.state);
+    preSessionPoint ||
+    pausedPoint ||
+    lane.points.some((p) => p.at === batch.at && p.state === batch.state);
   const firstRoundOfLane = lane.firstOkAt == null && batch.state !== "failed";
   const nextLane: LaneTrack = samePoint
     ? lane
@@ -144,6 +163,10 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
     }
     if (o.observedAt < state.startedAt) {
       rejected.preSession++;
+      continue;
+    }
+    if (inClosedPause(state.recording, o.observedAt)) {
+      rejected.paused++;
       continue;
     }
     const prev = assets.get(o.assetKey);
@@ -181,6 +204,7 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
   for (const r of batch.radar ?? []) {
     const track = assets.get(r.assetKey);
     if (!track || !validTime(r.observedAt) || r.observedAt < state.startedAt) continue;
+    if (inClosedPause(state.recording, r.observedAt)) continue;
     if (track.radar.some((x) => x.kind === r.kind && x.observedAt === r.observedAt)) continue;
     const { assetKey: _k, ...firing } = r;
     const radar = pushBounded(track.radar, firing, SESSION_MAX_RADAR_PER_ASSET).sort(
@@ -194,6 +218,7 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
     const track = assets.get(g.assetKey);
     // Never observed: nothing to mark stale. Pre-session gaps are not session evidence.
     if (!track || !validTime(g.at) || g.at < state.startedAt) continue;
+    if (inClosedPause(state.recording, g.at)) continue;
     if (track.gaps.some((x) => x.at === g.at && x.lane === g.lane)) continue;
     const gaps = pushBounded(
       track.gaps,
@@ -208,6 +233,7 @@ export function ingest(state: SessionState, batch: IngestBatch): SessionState {
   const rejectedChanged =
     rejected.invalid !== state.rejected.invalid ||
     rejected.preSession !== state.rejected.preSession ||
+    rejected.paused !== state.rejected.paused ||
     rejected.duplicate !== state.rejected.duplicate;
   if (touched.size === 0 && !laneChanged && !rejectedChanged) return state;
 

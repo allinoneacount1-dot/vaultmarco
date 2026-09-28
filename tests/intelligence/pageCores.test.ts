@@ -169,6 +169,7 @@ describe("change queue", () => {
     newestId: `PRICE_EXPANSION|${key}`,
     newestType: "PRICE_EXPANSION",
     newestDirection: "UP",
+    newestOnset: "OBSERVED",
     eventCount: 1,
     familyCount: 1,
     volumeAcceleration: null,

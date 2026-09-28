@@ -107,7 +107,9 @@ export function ChangeQueue() {
               >
                 <span>ASSET · CHAIN</span>
                 <span>NEWEST CHANGE</span>
-                <span>AGE</span>
+                <span title="Age since the newest change's observed onset — or since it was first seen, when it was already true then (marked).">
+                  AGE
+                </span>
                 <span>FAMILIES · {WINDOW_MIN}M</span>
                 <span>{meta.keyLabel ?? "EVENTS"}</span>
                 <span>PRICE</span>
@@ -226,18 +228,41 @@ const QueueRowItem = memo(function QueueRowItem({
         >
           <NoOrphanSeparator text={changeText(newest.type, newest.direction)} />
         </p>
+        {/* Always visible: an unseen start must never read as a change observed AGE ago. */}
+        {row.newestOnset === "IN_PROGRESS_WHEN_OBSERVED" && (
+          <span
+            className="mv-chip mt-1 text-(--muted-2)"
+            data-testid="row-onset"
+            data-onset={row.newestOnset}
+          >
+            ALREADY TRUE WHEN FIRST SEEN
+          </span>
+        )}
       </div>
 
       {/* Exact age of the newest change */}
       <div className="order-4 xl:order-3">
-        <span className={CELL_LABEL}>AGE </span>
+        <span className={CELL_LABEL}>
+          {row.newestOnset === "OBSERVED" ? "AGE " : "AGE · SINCE FIRST SEEN "}
+        </span>
         <time
           dateTime={iso(newest.observedAt)}
           className="mono-data text-[12px] text-(--bone)"
           data-testid="row-age"
+          data-basis={row.newestOnset === "OBSERVED" ? "onset" : "first-seen"}
+          title={
+            row.newestOnset === "OBSERVED"
+              ? "Age since the change's observed onset"
+              : "Age since the change was first seen — it was already true then; its start was not observed"
+          }
         >
           <Age at={newest.observedAt} />
         </time>
+        {row.newestOnset !== "OBSERVED" && (
+          <span className="hidden font-mono text-[9px] tracking-[0.12em] text-(--faint) xl:block">
+            SINCE FIRST SEEN
+          </span>
+        )}
       </div>
 
       {/* Price of the latest observation */}
