@@ -1,5 +1,5 @@
 import { formatNumber, signedPct } from "@/lib/format";
-import { type QueueRow, queueRow, qualifiesForQueue, sortQueue } from "./changeQueue";
+import { type QueueRow, queueRow, sortQueue } from "./changeQueue";
 import { type Collision, collisionFamilies } from "./collision";
 import type { DivergenceResult, DivergenceState } from "./divergence";
 import { edgeClockOrigin } from "./edgeClock";
@@ -13,6 +13,7 @@ import {
 import type { AssetTrack, SessionState } from "./facts";
 import { EVENT_RULE_IDS } from "./ruleRefs";
 import { type RuleMeta, ruleMeta } from "./rules";
+import { type TraceStep, firstMoveSequence } from "./trace";
 
 /**
  * THE MOMENT — "what just changed?" for ONE asset.
@@ -90,7 +91,7 @@ export const TYPE_TEXT: Record<EventType, string> = {
   BUY_SELL_IMBALANCE: "BUY/SELL IMBALANCE",
   LIQUIDITY_CHANGE: "LIQUIDITY CHANGE",
   BOOST_CHANGE: "BOOST CHANGE",
-  PAIR_DISCOVERED: "PAIR DISCOVERED",
+  PAIR_DISCOVERED: "ENTERED OBSERVED UNIVERSE",
   MOMENTUM_FIRED: "RADAR MOMENTUM FIRED",
   RISK_FIRED: "RADAR RISK FIRED",
   PROVIDER_RECOVERED: "PROVIDER RECOVERED",
@@ -229,13 +230,17 @@ function formatRaw(n: number, fmt: Fmt): string {
  * Supporting column — compact summaries (foundation helpers only)
  * ------------------------------------------------------------------ */
 
-/** WHAT MOVED FIRST: the earliest market events retained this session, chronological. */
+/**
+ * WHAT MOVED FIRST: the same sequence VAULT TRACE shows (firstMoveSequence) —
+ * the first OBSERVED-onset structural change per family on the latest
+ * observed pool, chronological, capped for the compact summary.
+ */
 export function firstMoves(
   events: readonly EvidenceEvent[],
+  pool: string | null,
   n: number = MOMENT_FIRST_MOVES,
-): EvidenceEvent[] {
-  // events arrive in the foundation's chronological order (compareEvents).
-  return events.filter(qualifiesForQueue).slice(0, Math.max(0, n));
+): TraceStep[] {
+  return firstMoveSequence(events, pool).slice(0, Math.max(0, n));
 }
 
 export type EdgeSummary =

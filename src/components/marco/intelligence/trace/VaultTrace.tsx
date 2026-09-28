@@ -14,6 +14,7 @@ import { type FocusEvidence, FocusGate } from "../shared/FocusGate";
 import { FreshnessNote } from "../shared/FreshnessNote";
 import { RelatedViews } from "../shared/links";
 import { ObservedTime } from "../shared/ObservedTime";
+import { RecordingSince } from "../shared/RecordingSince";
 import { TraceTape } from "./TraceTape";
 import { WindowFilter } from "./WindowFilter";
 
@@ -105,13 +106,13 @@ function FirstMoved({ model }: { model: TraceModel }) {
               <li key={s.family} className="flex items-center gap-2">
                 {i > 0 && (
                   <span className="font-mono text-[9px] tracking-[0.14em] text-(--faint)">
-                    OBSERVED BEFORE
+                    {s.sameObservation ? "SAME OBSERVATION AS" : "OBSERVED BEFORE"}
                   </span>
                 )}
                 <span className="hairline inline-flex items-baseline gap-1.5 px-2 py-1 font-mono text-[10px] tracking-[0.1em]">
                   <span className={i === 0 ? "text-(--gold)" : "text-(--bone)"}>{s.family}</span>
                   <span className="text-(--faint)">
-                    {i === 0 ? "FIRST" : offsetText(s.offsetMs)}
+                    {i === 0 ? "FIRST" : s.sameObservation ? "SAME TIME" : offsetText(s.offsetMs)}
                   </span>
                 </span>
               </li>
@@ -146,8 +147,7 @@ function EmptyTape({ model, ev }: { model: TraceModel; ev: FocusEvidence }) {
           : `NO EVIDENCE OBSERVED IN THE LAST ${model.window}`}
       </p>
       <p className="mt-2 font-mono text-[10px] leading-relaxed text-(--faint)">
-        SESSION STARTED <ObservedTime at={ev.startedAt} /> · {ev.track.observations.length}{" "}
-        OBSERVATION
+        <RecordingSince /> · {ev.track.observations.length} OBSERVATION
         {ev.track.observations.length === 1 ? "" : "S"} OF THIS ASSET SINCE{" "}
         <ObservedTime at={ev.track.observations[0].observedAt} /> · NO RULE WAS MET AND NO PROVIDER
         EVENT OCCURRED{session ? "" : " IN THIS WINDOW"}
@@ -170,7 +170,7 @@ function TapeFooter({ model, ev }: { model: TraceModel; ev: FocusEvidence }) {
           FROM <ObservedTime at={model.windowStart} /> TO <ObservedTime at={model.end} />
         </>
       )}{" "}
-      · SESSION STARTED <ObservedTime at={ev.startedAt} /> · NOTHING BEFORE IT IS KNOWN
+      · <RecordingSince /> · NOTHING OUTSIDE RECORDING IS KNOWN
     </p>
   );
 }

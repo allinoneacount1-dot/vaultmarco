@@ -10,7 +10,7 @@ import type { AssetTrack } from "@/lib/intelligence/facts";
 import type { AssetFreshness } from "@/lib/intelligence/freshness";
 import type { FocusAsset, FocusSearch } from "@/lib/intelligence/identityCodec";
 import { useFocusLinkSearch } from "./useFocusLinkSearch";
-import { ObservedTime } from "./ObservedTime";
+import { RecordingSince } from "./RecordingSince";
 
 /**
  * The focus asset's evidence (foundation hooks only) and the honest states
@@ -108,9 +108,7 @@ export function FocusGate({
           state === "unobserved"
             ? "MARCOVAULT has not observed this asset this session. No focus fetch is made and nothing is substituted; every metric stays —."
             : "Nothing has been received for this asset; no value is shown until a real observation arrives.",
-          <>
-            SESSION STARTED <ObservedTime at={startedAt} />
-          </>,
+          <RecordingSince key="rec" />,
         ]}
       />
     );

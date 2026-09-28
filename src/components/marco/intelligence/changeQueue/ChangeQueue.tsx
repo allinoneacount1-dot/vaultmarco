@@ -25,6 +25,7 @@ import {
 } from "@/lib/intelligence/rules";
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import { shortAddress } from "@/lib/search";
+import { RecordingSince } from "../shared/RecordingSince";
 import { Age, QueueLaneState, RowFreshness } from "./QueueCells";
 
 /**
@@ -91,8 +92,8 @@ export function ChangeQueue() {
               NO QUALIFYING CHANGE OBSERVED THIS SESSION
             </p>
             <p className="mt-2 font-mono text-[10px] tracking-[0.14em] text-(--faint)">
-              SESSION STARTED <time dateTime={iso(startedAt)}>{clockLabel(startedAt)}</time> ·{" "}
-              <span data-testid="assets-observed">{assets.size}</span> ASSETS OBSERVED
+              <RecordingSince /> · <span data-testid="assets-observed">{assets.size}</span> ASSETS
+              OBSERVED
             </p>
           </div>
         ) : (
@@ -345,9 +346,9 @@ function QueueRules({
         className="font-mono text-[9px] tracking-[0.14em] text-(--faint)"
         data-testid="queue-session"
       >
-        SESSION STARTED <time dateTime={iso(startedAt)}>{clockLabel(startedAt)}</time> · {observed}{" "}
-        ASSETS OBSERVED · {queued} QUEUED · RETAINED {Math.round(SESSION_MAX_AGE_MS / 60_000)} MIN,
-        MAX {SESSION_MAX_ASSETS} ASSETS · DEXSCREENER REALTIME + UNIVERSE
+        <RecordingSince /> · {observed} ASSETS OBSERVED · {queued} QUEUED · RETAINED{" "}
+        {Math.round(SESSION_MAX_AGE_MS / 60_000)} MIN, MAX {SESSION_MAX_ASSETS} ASSETS · DEXSCREENER
+        REALTIME + UNIVERSE
       </p>
     </section>
   );

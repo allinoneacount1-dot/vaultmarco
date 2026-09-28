@@ -1,4 +1,5 @@
 import type { Collision } from "@/lib/intelligence/collision";
+import type { TraceStep } from "@/lib/intelligence/trace";
 import { DIVERGENCE_STATE_TEXT, pairLabel } from "@/lib/intelligence/divergenceView";
 import type { EvidenceEvent } from "@/lib/intelligence/events";
 import { ageLabel } from "@/lib/intelligence/freshness";
@@ -28,7 +29,7 @@ export function Summaries({
   collision,
   search,
 }: {
-  first: EvidenceEvent[];
+  first: TraceStep[];
   edge: EdgeSummary;
   divergence: DivergenceSummary;
   collision: Collision | null;
@@ -78,7 +79,7 @@ const Empty = ({ children, testId }: { children: React.ReactNode; testId?: strin
   </p>
 );
 
-function FirstMoves({ first, search }: { first: EvidenceEvent[]; search: FocusSearch }) {
+function FirstMoves({ first, search }: { first: TraceStep[]; search: FocusSearch }) {
   return (
     <Block
       id="moment-first"
@@ -88,10 +89,10 @@ function FirstMoves({ first, search }: { first: EvidenceEvent[]; search: FocusSe
       link={<ViewLink feature="trace" search={search} testId="moment-link-trace" />}
     >
       {first.length === 0 ? (
-        <Empty>NO MARKET EVENT OBSERVED THIS SESSION</Empty>
+        <Empty>NO OBSERVED ONSET THIS SESSION</Empty>
       ) : (
         <ol className="relative space-y-2 border-l border-(--hairline) pl-3">
-          {first.map((e) => (
+          {first.map(({ event: e, sameObservation }) => (
             <li key={e.id} className="relative min-w-0">
               <span
                 aria-hidden
@@ -110,6 +111,11 @@ function FirstMoves({ first, search }: { first: EvidenceEvent[]; search: FocusSe
                   {e.direction ? directionText(e.type, e.direction) : ""}
                 </span>
               </div>
+              {sameObservation && (
+                <p className="font-mono text-[9px] tracking-[0.12em] text-(--faint)">
+                  SAME OBSERVATION · NO ORDER
+                </p>
+              )}
             </li>
           ))}
         </ol>

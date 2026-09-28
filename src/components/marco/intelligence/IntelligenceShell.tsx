@@ -14,6 +14,7 @@ import {
 import { normalizeChain } from "@/lib/providers/dexscreener";
 import { shortAddress } from "@/lib/search";
 import { type IntelligenceFeature, featureById } from "./features";
+import { RecordingSince } from "./shared/RecordingSince";
 
 /**
  * INTELLIGENCE SHELL — the frame every intelligence view shares, so the six
@@ -48,6 +49,10 @@ export function IntelligenceShell({
   );
 }
 
+/**
+ * When the session's history comes from: the recorder's own mount time (and
+ * its pauses), never app boot. "OBSERVED THIS SESSION ONLY".
+ */
 function SessionLine() {
   const { retainedSince } = useSessionInfo();
   return (
@@ -55,9 +60,8 @@ function SessionLine() {
       className="font-mono text-[10px] tracking-[0.14em] text-(--faint)"
       data-testid="session-line"
     >
-      {retainedSince == null
-        ? "SESSION HISTORY · NO OBSERVATIONS YET"
-        : `SESSION HISTORY SINCE ${clockLabel(retainedSince)} · OBSERVED THIS SESSION ONLY`}
+      <RecordingSince />
+      {retainedSince == null ? " · NO OBSERVATIONS YET" : " · OBSERVED THIS SESSION ONLY"}
     </p>
   );
 }

@@ -210,7 +210,7 @@ test.describe("Vault Trace", () => {
     await tick(page, rounds, 2);
     const empty = page.getByTestId("trace-empty");
     await expect(empty).toContainText("NO EVIDENCE OBSERVED THIS SESSION");
-    await expect(empty).toContainText("SESSION STARTED");
+    await expect(empty).toContainText("RECORDING SINCE");
     await expect(empty.locator("time").first()).toHaveAttribute("datetime", /T/);
     await expect(page.getByTestId("trace-first")).toHaveAttribute("data-state", "none");
     if (info.project.name === "desktop") await shot(page, "trace-empty", 1440);

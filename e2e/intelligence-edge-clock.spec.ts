@@ -180,7 +180,7 @@ test.describe("Edge Clock", () => {
     await expect(why).toContainText("+4.10% M5");
     await expect(why).toContainText("+0.20% M5");
     await expect(why).toContainText("OBSERVED");
-    await expect(why).toContainText("intel-2");
+    await expect(why).toContainText("intel-3");
 
     // Evidence since the origin: real deltas, "—" where a side is missing.
     const price = page.locator('[data-testid="since-metric"][data-metric="PRICE"]');
@@ -209,7 +209,7 @@ test.describe("Edge Clock", () => {
       "NO STRUCTURAL CHANGE OBSERVED THIS SESSION",
     );
     await expect(page.getByTestId("edge-age")).toHaveCount(0);
-    await expect(page.getByTestId("edge-clock")).toContainText("session started");
+    await expect(page.getByTestId("edge-clock")).toContainText("RECORDING SINCE");
     if (info.project.name === "desktop") await shot(page, "edge-clock-none", 1440);
     expect(problems).toEqual([]);
   });

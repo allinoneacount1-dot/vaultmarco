@@ -22,9 +22,12 @@ import {
  *
  *   Source      the two EXISTING DexScreener lanes (realtime 30 s, universe 60 s);
  *               the recorder adds no request.
- *   Session     starts when the recorder is created (`startedAt`); nothing
+ *   Session     starts when the recorder FIRST MOUNTS (the first dashboard
+ *               route opens: `startRecording`), never at app boot; nothing
  *               observed before it is ever recorded, so it can never imply
- *               history that predates the session.
+ *               history that predates the session. Unmounts / remounts are
+ *               kept as `recording` intervals so pages can say
+ *               "RECORDING SINCE … · PAUSED …".
  *   Duration    rolling SESSION_MAX_AGE_MS (60 min) behind the newest
  *               observation; the session itself lasts as long as the page.
  *   Bounds      SESSION_MAX_OBSERVATIONS_PER_ASSET (150) per asset,
@@ -51,6 +54,7 @@ const LANES: readonly Lane[] = ["realtime", "universe"];
 export function createSessionState(startedAt: number): SessionState {
   return {
     startedAt,
+    recording: Number.isFinite(startedAt) ? [{ from: startedAt, to: null }] : [],
     lanes: { realtime: { firstOkAt: null, points: [] }, universe: { firstOkAt: null, points: [] } },
     assets: new Map(),
     newestAt: null,
@@ -273,6 +277,55 @@ export function retainedSince(state: SessionState): number | null {
   return earliest;
 }
 
+/**
+ * The recorder mounted at `now`. The first call starts the session
+ * (`startedAt = now`); later calls reopen recording after a pause. Idempotent
+ * while recording.
+ */
+export function startRecording(state: SessionState, now: number): SessionState {
+  if (!validTime(now)) return state;
+  if (!Number.isFinite(state.startedAt)) {
+    return {
+      ...state,
+      startedAt: now,
+      recording: [{ from: now, to: null }],
+      revision: state.revision + 1,
+    };
+  }
+  const last = state.recording[state.recording.length - 1];
+  if (last && last.to == null) return state;
+  return {
+    ...state,
+    recording: [...state.recording, { from: Math.max(now, last?.to ?? now), to: null }],
+    revision: state.revision + 1,
+  };
+}
+
+/** The recorder unmounted at `now` (no dashboard route open). */
+export function pauseRecording(state: SessionState, now: number): SessionState {
+  const last = state.recording[state.recording.length - 1];
+  if (!last || last.to != null || !validTime(now)) return state;
+  return {
+    ...state,
+    recording: [...state.recording.slice(0, -1), { from: last.from, to: Math.max(now, last.from) }],
+    revision: state.revision + 1,
+  };
+}
+
+/** Closed gaps between recording intervals ("PAUSED from–to"), oldest first. */
+export function recordingGaps(
+  recording: SessionState["recording"],
+): Array<{ from: number; to: number }> {
+  const out: Array<{ from: number; to: number }> = [];
+  for (let i = 1; i < recording.length; i++) {
+    const prev = recording[i - 1];
+    if (prev.to != null && recording[i].from > prev.to) {
+      out.push({ from: prev.to, to: recording[i].from });
+    }
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ *
  * Store — useSyncExternalStore-compatible, selector-friendly
  * ------------------------------------------------------------------ */
@@ -281,9 +334,20 @@ export class SessionStore {
   private state: SessionState;
   private readonly listeners = new Set<() => void>();
 
-  constructor(startedAt: number) {
+  /** Omit `startedAt` to create a store that starts on the first `start()`. */
+  constructor(startedAt: number = Number.POSITIVE_INFINITY) {
     this.state = createSessionState(startedAt);
   }
+
+  private set(next: SessionState): void {
+    if (next === this.state) return;
+    this.state = next;
+    for (const l of this.listeners) l();
+  }
+
+  start = (now: number): void => this.set(startRecording(this.state, now));
+
+  pause = (now: number): void => this.set(pauseRecording(this.state, now));
 
   getState = (): SessionState => this.state;
 
@@ -293,9 +357,6 @@ export class SessionStore {
   };
 
   ingest(batch: IngestBatch): void {
-    const next = ingest(this.state, batch);
-    if (next === this.state) return;
-    this.state = next;
-    for (const l of this.listeners) l();
+    this.set(ingest(this.state, batch));
   }
 }

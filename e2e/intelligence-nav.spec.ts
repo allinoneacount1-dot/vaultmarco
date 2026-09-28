@@ -86,7 +86,7 @@ async function expectQuestion(page: Page, v: (typeof VIEWS)[number]) {
   await expect(page.getByTestId("intel-shell")).toHaveAttribute("data-feature", v.id);
 }
 
-async function setup(page: Page, path = "/dashboard") {
+async function setup(page: Page, path = "/dashboard", opts: { waitForDesk?: boolean } = {}) {
   const problems: string[] = [];
   const requests: string[] = [];
   page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
@@ -123,9 +123,11 @@ async function setup(page: Page, path = "/dashboard") {
   });
   await page.clock.install();
   await page.goto(path);
-  await expect(page.getByTestId("desk-status")).toHaveAttribute("data-state", /live|degraded/, {
-    timeout: 15_000,
-  });
+  if (opts.waitForDesk !== false) {
+    await expect(page.getByTestId("desk-status")).toHaveAttribute("data-state", /live|degraded/, {
+      timeout: 15_000,
+    });
+  }
   return { problems, requests };
 }
 
@@ -317,6 +319,35 @@ test.describe("Intelligence suite navigation", () => {
     await expect(page).toHaveURL(/\/dashboard\/trace\?/);
     expect(page.url()).not.toContain("pair=");
     await expect(bar).toHaveAttribute("data-key", `ethereum:${WETH.toLowerCase()}`);
+    expect(problems).toEqual([]);
+  });
+
+  test("RECORDING SINCE is the first dashboard mount, never app boot on the landing page", async ({
+    page,
+  }) => {
+    await setup(page, "/", { waitForDesk: false });
+    const boot = await page.evaluate(() => Date.now());
+    await page.clock.fastForward(10 * 60_000);
+    // Client-side navigation: same bundle, same module-level session store.
+    await page.locator('a[href="/dashboard"]').first().click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await openNav(page);
+    await navLink(page, "Vault Trace").click();
+    const since = page.getByTestId("session-line").getByTestId("recording-since").locator("time");
+    const at = Date.parse((await since.getAttribute("datetime")) ?? "");
+    expect(at - boot).toBeGreaterThanOrEqual(10 * 60_000);
+  });
+
+  test("sidebar links carry the canonical identity (EVM lowercase), never the raw URL spelling", async ({
+    page,
+  }) => {
+    const { problems } = await setup(page, `/dashboard/moment?chain=ethereum&address=${WETH}`);
+    await openNav(page);
+    for (const label of ["Vault Trace", "Edge Clock", "Divergence", "Collision"]) {
+      const href = (await navLink(page, label).getAttribute("href")) ?? "";
+      expect(href, label).toContain(`address=${WETH.toLowerCase()}`);
+      expect(href, label).not.toContain(WETH);
+    }
     expect(problems).toEqual([]);
   });
 

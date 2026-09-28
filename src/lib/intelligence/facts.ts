@@ -102,9 +102,18 @@ export type AssetTrack = {
   gaps: SlotGap[];
 };
 
+/** One span during which the recorder was mounted (a dashboard route was open). */
+export type RecordingInterval = { from: number; to: number | null };
+
 export type SessionState = {
-  /** When this session's recorder was created. Nothing older is ever recorded. */
+  /**
+   * When the recorder first mounted (the first dashboard route opened) —
+   * never app boot. Nothing older is ever recorded. +Infinity until then,
+   * so every batch before the first mount is rejected as pre-session.
+   */
   startedAt: number;
+  /** Recorder mount spans, oldest first; the last is open (`to: null`) while recording. */
+  recording: readonly RecordingInterval[];
   lanes: Record<Lane, LaneTrack>;
   assets: ReadonlyMap<string, AssetTrack>;
   /** Newest observedAt ever ingested — the recorder's clock for pruning. */

@@ -65,6 +65,8 @@ describe("collision page", () => {
     const events = eventsOf([
       { at: T0 },
       { at: T0 + 30 * SEC, over: { priceChange: { m5: 4 } } },
+      // A contiguous observation (within the run gap) so the volume onset is OBSERVED.
+      { at: T0 + 2 * MIN, over: { priceChange: { m5: 4 } } },
       { at: T0 + 3 * MIN + 48 * SEC, over: { priceChange: { m5: 4 }, volume: { m5: 900_000 } } },
     ]);
     const v = collisionView(events);

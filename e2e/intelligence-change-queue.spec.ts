@@ -367,7 +367,7 @@ test.describe("Change Queue", () => {
     await toRound(page, w, 2);
     const empty = page.getByTestId("queue-empty");
     await expect(empty).toContainText("NO QUALIFYING CHANGE OBSERVED THIS SESSION");
-    await expect(empty).toContainText("SESSION STARTED");
+    await expect(empty).toContainText("RECORDING SINCE");
     await expect(empty.locator("time")).toHaveAttribute("datetime", /Z$/);
     await expect(page.getByTestId("assets-observed")).toHaveText("10");
     await expect(rows(page)).toHaveCount(0);

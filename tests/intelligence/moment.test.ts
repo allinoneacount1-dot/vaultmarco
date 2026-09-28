@@ -198,18 +198,21 @@ describe("moment — wording", () => {
 });
 
 describe("moment — supporting summaries use only the foundation", () => {
-  it("WHAT MOVED FIRST: earliest market events, chronological, provider events excluded, capped", () => {
+  it("WHAT MOVED FIRST: first OBSERVED onset per family on the pool, chronological — the Trace sequence", () => {
+    const pool = ev("PRICE_EXPANSION", T0).pairAddress;
     const events = [
       ev("PROVIDER_STALE", T0),
       ...Array.from({ length: 8 }, (_, i) =>
         ev(i % 2 ? "VOLUME_ACCELERATION" : "PRICE_EXPANSION", T0 + (i + 1) * SEC),
       ),
     ];
-    const first = firstMoves(events);
-    expect(first).toHaveLength(MOMENT_FIRST_MOVES);
-    expect(first.every((e) => e.family !== "PROVIDER")).toBe(true);
-    expect(first.map((e) => e.observedAt)).toEqual([1, 2, 3, 4, 5].map((i) => T0 + i * SEC));
-    expect(firstMoves([])).toEqual([]);
+    const first = firstMoves(events, pool);
+    expect(first.map((s) => s.family)).toEqual(["PRICE", "VOLUME"]);
+    expect(first.map((s) => s.event.observedAt)).toEqual([T0 + SEC, T0 + 2 * SEC]);
+    expect(first.every((s) => s.event.family !== "PROVIDER")).toBe(true);
+    expect(firstMoves(events, pool, 1)).toHaveLength(1);
+    expect(MOMENT_FIRST_MOVES).toBeGreaterThan(0);
+    expect(firstMoves([], pool)).toEqual([]);
   });
 
   it("EDGE AGE is the Edge Clock origin's age; none when nothing structural was observed starting", () => {

@@ -184,9 +184,14 @@ test.describe("Collision — what changed together?", () => {
     expect(new Set(fams).size).toBe(fams.length);
     expect(fams.length).toBe(n);
     expect(fams).toEqual(expect.arrayContaining(["PRICE", "VOLUME", "TRANSACTIONS"]));
+    // Only OBSERVED onsets vote (intel-3): a condition already true at the first
+    // observation is listed under NOT COUNTED instead (grouping of several
+    // events under one family is covered by tests/intelligence/collisionPage).
     const tx = family(page, "TRANSACTIONS");
-    await expect(tx.getByTestId("collision-event")).toHaveCount(2);
-    await expect(tx).toContainText("2 EVENTS · ONE FAMILY");
+    await expect(tx.getByTestId("collision-event").first()).toBeVisible();
+    for (const onset of await tx.getByTestId("collision-event").allInnerTexts()) {
+      expect(onset).toContain("ONSET OBSERVED");
+    }
     await expect(family(page, "PRICE")).toContainText("PRICE EXPANSION");
     await expect(family(page, "PRICE")).toContainText("+5.00%");
     await expect(family(page, "PRICE")).toContainText("ONSET OBSERVED");

@@ -2,7 +2,7 @@ import { liquidityChange } from "@/lib/signals/liquidity";
 import { buyPressure } from "@/lib/signals/momentum";
 import { transactionAcceleration, volumeAcceleration } from "@/lib/signals/pace";
 import type { PairSnapshot } from "@/lib/signals/pairSnapshot";
-import type { AssetObservation, AssetTrack, LaneTrack, SessionState } from "./facts";
+import type { AssetObservation, AssetTrack, LaneTrack, RadarFiring, SessionState } from "./facts";
 import {
   BOOST_CHANGE_MIN_DELTA,
   IMBALANCE_MIN_RATIO,
@@ -14,6 +14,7 @@ import {
   LIQUIDITY_CHANGE_MIN_REL,
   type Lane,
   PRICE_EXPANSION_M5_PCT,
+  RADAR_EVIDENCE_LOOKBACK_MINUTES,
   RUN_MAX_GAP_MS,
   SESSION_DELTA_MAX_SPAN_MS,
   TXN_ACCELERATION_MIN,
@@ -461,6 +462,28 @@ const SPECS: Spec[] = [
  * Radar firings (recorded from the round — the radar is the authority)
  * ------------------------------------------------------------------ */
 
+/**
+ * Whether a radar firing's inputs stay on the firing observation's ONE pool.
+ * The radar's history is keyed by asset only, so across a pool switch it can
+ * compare two different pools (intel-3):
+ *   RISK      its prior observation must lie inside the firing observation's
+ *             unbroken same-pool segment (poolSegment);
+ *   MOMENTUM  its evidence looks back RADAR_EVIDENCE_LOOKBACK_MINUTES; no
+ *             observation of another pool may lie inside that span.
+ * A firing that fails the guard is unknown (dropped), never evidence.
+ */
+function radarFiringOnOnePool(track: AssetTrack, o: AssetObservation, f: RadarFiring): boolean {
+  const obs = track.observations;
+  const idx = obs.indexOf(o);
+  if (idx < 0) return false;
+  const segment = poolSegment(obs, idx);
+  if (f.kind === "RISK") {
+    return f.priorObservedAt != null && segment.some((x) => x.observedAt === f.priorObservedAt);
+  }
+  const before = obs[idx - segment.length];
+  return !before || before.observedAt < o.observedAt - RADAR_EVIDENCE_LOOKBACK_MINUTES * 60_000;
+}
+
 function radarEvents(track: AssetTrack): EvidenceEvent[] {
   const evaluated = track.observations.filter((o) => o.lanes.includes("universe"));
   const out: EvidenceEvent[] = [];
@@ -478,6 +501,7 @@ function radarEvents(track: AssetTrack): EvidenceEvent[] {
       test: (o) => {
         const f = firings.get(o.observedAt);
         if (!f) return false;
+        if (!radarFiringOnOnePool(track, o, f)) return null;
         return {
           dir: kind === "MOMENTUM" ? "UP" : f.direction,
           value: f.value,
@@ -590,6 +614,12 @@ function providerEvents(track: AssetTrack, lanes: Record<Lane, LaneTrack>): Evid
         );
       } else if (p.state !== "failed" && failing) {
         failing = false;
+        // Per-asset evidence only when THIS asset was observed on the lane
+        // at/after the recovery; otherwise it is lane context (scope LANE:
+        // shown as "LANE RECOVERED", never a per-asset collision vote).
+        const assetSeen = track.observations.some(
+          (o) => o.observedAt >= p.at && o.lanes.includes(lane),
+        );
         out.push(
           identityEvent(
             track,
@@ -597,7 +627,7 @@ function providerEvents(track: AssetTrack, lanes: Record<Lane, LaneTrack>): Evid
             "PROVIDER_RECOVERED",
             p.at,
             { kind: "LANE", label: `${lane.toUpperCase()} LANE`, ms: null },
-            { lane, state: p.state },
+            { lane, state: p.state, scope: assetSeen ? "ASSET" : "LANE" },
             `DEXSCREENER · ${lane.toUpperCase()}`,
           ),
         );
@@ -654,6 +684,11 @@ export function compareEvents(a: EvidenceEvent, b: EvidenceEvent): number {
     (a.type < b.type ? -1 : a.type > b.type ? 1 : 0) ||
     (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   );
+}
+
+/** A lane-level recovery this asset was not observed after (lane context only; intel-3). */
+export function isLaneOnly(e: Pick<EvidenceEvent, "type" | "evidence">): boolean {
+  return e.type === "PROVIDER_RECOVERED" && e.evidence.scope === "LANE";
 }
 
 /** Every evidence event for one asset, oldest onset first. Pure. */

@@ -5,7 +5,7 @@ import { realtimeQueryOptions } from "@/hooks/usePairUniverse";
 
 describe("intelligence rules", () => {
   it("is versioned", () => {
-    expect(R.INTELLIGENCE_RULES_VERSION).toBe("intel-2");
+    expect(R.INTELLIGENCE_RULES_VERSION).toBe("intel-3");
   });
 
   it("reuses the radar's thresholds instead of copying them", () => {

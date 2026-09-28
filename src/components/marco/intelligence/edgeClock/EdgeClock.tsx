@@ -5,6 +5,7 @@ import { type FocusEvidence, FocusGate } from "@/components/marco/intelligence/s
 import { FreshnessNote } from "@/components/marco/intelligence/shared/FreshnessNote";
 import { RelatedViews } from "@/components/marco/intelligence/shared/links";
 import { ObservedTime } from "@/components/marco/intelligence/shared/ObservedTime";
+import { RecordingSince } from "@/components/marco/intelligence/shared/RecordingSince";
 import { useNow } from "@/hooks/useIntelligence";
 import type { EvidenceEvent } from "@/lib/intelligence/events";
 import { ageLabel } from "@/lib/intelligence/freshness";
@@ -136,8 +137,8 @@ function NoClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }) {
             The clock starts only at a real, observed structural change — a later observation of the
             same pool meeting a rule an earlier one did not. It never starts at page load, session
             start or an asset's first observation. Observing this asset since{" "}
-            <ObservedTime at={ev.track.observations[0].observedAt} /> · session started{" "}
-            <ObservedTime at={ev.startedAt} /> · {ev.track.observations.length} observation
+            <ObservedTime at={ev.track.observations[0].observedAt} /> · <RecordingSince /> ·{" "}
+            {ev.track.observations.length} observation
             {ev.track.observations.length === 1 ? "" : "s"}.
           </p>
         </section>

@@ -13,6 +13,7 @@
 import {
   BP_MIN,
   BP_MIN_SAMPLE_TXNS,
+  EVIDENCE_LOOKBACK_MINUTES,
   HISTORY_MAX_AGE_MINUTES,
   LIQUIDITY_EVENT_LOOKBACK_MINUTES,
   LIQUIDITY_EVENT_MIN_ABS_USD,
@@ -23,10 +24,25 @@ import {
 } from "@/lib/signals/thresholds";
 
 /**
- * intel-2 (from intel-1): freshness aligned with the landing windows
- * (LIVE ≤ 1.5 × cadence), central divergence predicates, rule metadata.
+ * CHANGELOG
+ *   intel-3 (from intel-2), review fixes:
+ *     - COLLISION counts only OBSERVED onsets: a condition already true when
+ *       first observed (IN_PROGRESS_WHEN_OBSERVED) never votes.
+ *     - COLLISION family votes exclude the Alpha Radar's derived signals
+ *       (COLLISION_NON_VOTING_TYPES: MOMENTUM_FIRED, RISK_FIRED): they are
+ *       computed from the same inputs as VOLUME/TXN/IMBALANCE and
+ *       LIQUIDITY_CHANGE, so counting them would double-count one change.
+ *       PAIR_DISCOVERED never votes either (a sampling fact, not a change).
+ *     - Radar firings are accepted only when their inputs stay on ONE pool:
+ *       RISK needs its prior observation inside the firing's same-pool
+ *       segment; MOMENTUM needs no observed pool switch within
+ *       RADAR_EVIDENCE_LOOKBACK_MINUTES before it.
+ *     - A lane recovery is per-asset evidence only when the asset was observed
+ *       again at/after it; otherwise it is lane context (never a collision vote).
+ *   intel-2 (from intel-1): freshness aligned with the landing windows
+ *     (LIVE ≤ 1.5 × cadence), central divergence predicates, rule metadata.
  */
-export const INTELLIGENCE_RULES_VERSION = "intel-2";
+export const INTELLIGENCE_RULES_VERSION = "intel-3";
 
 const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
@@ -178,6 +194,27 @@ export const BOOST_CHANGE_MIN_DELTA = 1;
  * than the provider's shortest window are not the same move.
  */
 export const COLLISION_WINDOW_MS = 5 * MINUTE;
+
+/**
+ * COLLISION family votes: only events with an OBSERVED onset vote, and never
+ * these types: the derived Alpha Radar signals (their inputs are the same
+ * observations as VOLUME/TXN/IMBALANCE and LIQUIDITY_CHANGE) and
+ * PAIR_DISCOVERED (entering the observed universe is a sampling fact, not a
+ * market change). See the intel-3 changelog. They stay visible in Trace /
+ * The Moment.
+ */
+export const COLLISION_NON_VOTING_TYPES = [
+  "MOMENTUM_FIRED",
+  "RISK_FIRED",
+  "PAIR_DISCOVERED",
+] as const;
+
+/**
+ * The Alpha Radar's momentum evidence looks back this far over the asset's
+ * history (imported, not copied). A MOMENTUM firing is accepted only when no
+ * pool switch was observed in this span before it.
+ */
+export const RADAR_EVIDENCE_LOOKBACK_MINUTES = EVIDENCE_LOOKBACK_MINUTES;
 
 /**
  * Trace filters. SESSION = everything retained. Offered only when the asset's
@@ -492,6 +529,14 @@ export const INTELLIGENCE_RULES: readonly RuleMeta[] = [
     horizon: "Event onsets",
     source: "PRODUCT_DEFINED",
     note: "One provider M5 window; co-occurrence only, not causality.",
+  },
+  {
+    id: "RADAR_EVIDENCE_LOOKBACK_MINUTES",
+    value: RADAR_EVIDENCE_LOOKBACK_MINUTES,
+    unit: "MINUTES",
+    horizon: "Before a MOMENTUM firing",
+    source: "RADAR_IMPORTED",
+    note: "Alpha Radar EVIDENCE_LOOKBACK_MINUTES; no pool switch may lie inside it.",
   },
   {
     id: "TRACE_WINDOW_5M_MS",

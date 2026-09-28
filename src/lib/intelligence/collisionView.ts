@@ -1,4 +1,9 @@
-import { type Collision, POOL_LEVEL_FAMILIES, collisionFamilies } from "./collision";
+import {
+  type Collision,
+  POOL_LEVEL_FAMILIES,
+  collisionFamilies,
+  votesInCollision,
+} from "./collision";
 import type { EvidenceEvent } from "./events";
 import { ageLabel } from "./freshness";
 import { COLLISION_WINDOW_MS, ruleMeta } from "./rules";
@@ -27,6 +32,12 @@ export type CollisionView = {
   excluded: EvidenceEvent[];
   /** Distinct other pools those excluded events came from. */
   excludedPools: (string | null)[];
+  /**
+   * Market conditions still true at the latest observation that were ALREADY
+   * TRUE WHEN FIRST OBSERVED: their start was not seen, so they never vote
+   * (listed separately as "NOT COUNTED"). Oldest first.
+   */
+  notCounted: EvidenceEvent[];
   windowMs: number;
 };
 
@@ -35,11 +46,22 @@ export function collisionView(
   windowMs: number = COLLISION_WINDOW_MS,
 ): CollisionView {
   const collision = collisionFamilies(events, windowMs);
+  const notCounted = events.filter(
+    (e) => e.active && e.onset === "IN_PROGRESS_WHEN_OBSERVED" && POOL_LEVEL_FAMILIES.has(e.family),
+  );
   if (!collision) {
-    return { collision: null, isCollision: false, excluded: [], excludedPools: [], windowMs };
+    return {
+      collision: null,
+      isCollision: false,
+      excluded: [],
+      excludedPools: [],
+      notCounted,
+      windowMs,
+    };
   }
   const excluded = events.filter(
     (e) =>
+      votesInCollision(e) &&
       POOL_LEVEL_FAMILIES.has(e.family) &&
       e.pairAddress !== collision.pairAddress &&
       e.observedAt >= collision.windowStart &&
@@ -51,6 +73,7 @@ export function collisionView(
     isCollision: collision.count >= MIN_FAMILIES,
     excluded,
     excludedPools,
+    notCounted,
     windowMs,
   };
 }
@@ -72,6 +95,7 @@ export function spanText(c: Collision | null): string {
 
 /** "PRICE_EXPANSION" → "PRICE EXPANSION". */
 export function eventTypeText(e: EvidenceEvent): string {
+  if (e.type === "PAIR_DISCOVERED") return "ENTERED OBSERVED UNIVERSE";
   return e.type.replace(/_/g, " ");
 }
 

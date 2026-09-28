@@ -1,5 +1,5 @@
-import type { EventFamily, EvidenceEvent } from "./events";
-import { COLLISION_WINDOW_MS } from "./rules";
+import { type EventFamily, type EvidenceEvent, isLaneOnly } from "./events";
+import { COLLISION_NON_VOTING_TYPES, COLLISION_WINDOW_MS } from "./rules";
 
 /**
  * COLLISION — "what changed together?"
@@ -17,7 +17,21 @@ import { COLLISION_WINDOW_MS } from "./rules";
  * events on pool A and pool B never form one collision. The pool is the one
  * of the newest pool-level event in the pool (or `opts.pairAddress`).
  * PROVIDER events are lane-level and are not tied to a pool.
+ *
+ * VOTES (intel-3): only an OBSERVED onset votes — a condition already true
+ * when first observed says nothing about WHEN it changed. The Alpha Radar's
+ * derived signals (COLLISION_NON_VOTING_TYPES) never vote: they are computed
+ * from the same observations as the families they summarise. A lane recovery
+ * the asset was not observed after is lane context, not this asset's change.
+ * So "N INDEPENDENT FAMILIES" stays literally true.
  */
+
+const NON_VOTING: ReadonlySet<string> = new Set(COLLISION_NON_VOTING_TYPES);
+
+/** Whether an event may vote for its family in a collision. */
+export function votesInCollision(e: EvidenceEvent): boolean {
+  return e.onset === "OBSERVED" && !NON_VOTING.has(e.type) && !isLaneOnly(e);
+}
 
 export const POOL_LEVEL_FAMILIES: ReadonlySet<EventFamily> = new Set<EventFamily>([
   "PRICE",
@@ -47,7 +61,9 @@ export function collisionFamilies(
   windowMs: number = COLLISION_WINDOW_MS,
   opts: { end?: number; families?: readonly EventFamily[]; pairAddress?: string | null } = {},
 ): Collision | null {
-  let pool = opts.families ? events.filter((e) => opts.families!.includes(e.family)) : [...events];
+  let pool = events.filter(
+    (e) => votesInCollision(e) && (!opts.families || opts.families.includes(e.family)),
+  );
   if (pool.length === 0 || !(windowMs >= 0)) return null;
   const poolLevel = pool.filter((e) => POOL_LEVEL_FAMILIES.has(e.family));
   const newestPoolEvent = poolLevel.reduce<EvidenceEvent | null>(

@@ -156,10 +156,39 @@ function CollisionBody({
             className="hairline-t hairline-b py-4 font-mono text-[11px] tracking-[0.12em] text-(--muted-2)"
             data-testid="collision-families-empty"
           >
-            NO EVIDENCE EVENT OBSERVED FOR THIS ASSET THIS SESSION
+            NO OBSERVED ONSET FOR THIS ASSET THIS SESSION
           </p>
         )}
       </Zone>
+
+      {view.notCounted.length > 0 && (
+        <section
+          aria-label="Already true when first observed, not counted"
+          className="space-y-2"
+          data-testid="collision-not-counted"
+        >
+          <p className="font-mono text-[10px] tracking-[0.14em] text-(--muted-2)">
+            ALREADY TRUE WHEN FIRST OBSERVED · NOT COUNTED
+          </p>
+          <ul className="space-y-1.5">
+            {view.notCounted.map((e) => (
+              <li
+                key={e.id}
+                className="flex flex-wrap items-baseline gap-x-2 font-mono text-[10px] tracking-[0.08em] text-(--faint)"
+                data-testid="collision-not-counted-event"
+                data-type={e.type}
+              >
+                <span className="text-(--muted-2)">{eventTypeText(e)}</span>
+                {e.direction && <span>{e.direction}</span>}
+                <span className="mono-data">{eventValueText(e)}</span>
+                <span>
+                  FIRST SEEN <ObservedTime at={e.observedAt} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

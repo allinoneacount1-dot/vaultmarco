@@ -2,15 +2,16 @@ import { useEffect, useState, memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useFocusAsset } from "@/hooks/useFocusAsset";
 import { Home, Menu, X, ArrowLeft, type LucideIcon } from "lucide-react";
 import { Logo } from "./Logo";
 import { INTELLIGENCE_FEATURES } from "./intelligence/features";
+import { useFocusLinkSearch } from "./intelligence/shared/useFocusLinkSearch";
 import { DUR, EASE } from "@/lib/motion";
 
 /**
  * OVERVIEW, then the six intelligence views directly under it. The views
- * carry the selected asset (?chain&address&pair) from one to the next.
+ * carry the selected asset from one to the next as its canonical identity
+ * (?chain&address via encodeFocus: EVM lowercase, Base58 exact; no pair).
  */
 const sidebarLinks: { label: string; href: string; icon: LucideIcon; carriesFocus: boolean }[] = [
   { label: "Overview", href: "/dashboard", icon: Home, carriesFocus: false },
@@ -42,7 +43,7 @@ function DashboardSidebarComponent({
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
-  const { search: focusSearch } = useFocusAsset();
+  const focusSearch = useFocusLinkSearch();
 
   // Escape closes the mobile drawer.
   useEffect(() => {

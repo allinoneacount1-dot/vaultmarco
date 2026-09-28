@@ -76,7 +76,7 @@ function Evidence({ assetKey, fresh }: { assetKey: string; fresh: AssetFreshness
   const latest = track.observations[track.observations.length - 1];
 
   const changes = useMemo(() => activeChanges(events), [events]);
-  const first = useMemo(() => firstMoves(events), [events]);
+  const first = useMemo(() => firstMoves(events, latest.pairAddress), [events, latest.pairAddress]);
   const divergence = useMemo(
     () => divergenceSummary(evaluateDivergences(track.observations)),
     [track.observations],

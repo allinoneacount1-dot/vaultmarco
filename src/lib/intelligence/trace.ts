@@ -8,6 +8,7 @@ import {
   type EvidenceEvent,
   STRUCTURAL_TYPES,
   compareEvents,
+  isLaneOnly,
 } from "./events";
 import type { AssetObservation, AssetTrack } from "./facts";
 import { ageLabel } from "./freshness";
@@ -182,6 +183,8 @@ export function directionWord(e: Pick<EvidenceEvent, "type" | "direction">): str
 /** Concise fact label, e.g. "PRICE EXPANSION · UP", "PROVIDER STALE · REALTIME SLOT". */
 export function factLabel(e: EvidenceEvent): string {
   const dir = directionWord(e);
+  // A recovery this asset was not observed after is lane context only (intel-3).
+  if (isLaneOnly(e)) return `LANE RECOVERED · ${e.horizon.label}`;
   if (e.family === "PROVIDER") return `${TYPE_LABEL[e.type]} · ${e.horizon.label}`;
   return dir ? `${TYPE_LABEL[e.type]} · ${dir}` : TYPE_LABEL[e.type];
 }
@@ -325,7 +328,40 @@ export type TracePoolRow = { kind: "pool"; key: string; at: number; pool: PoolBr
 
 export type TraceRow = TraceEventRow | TracePoolRow;
 
-export type TraceStep = { family: EventFamily; event: EvidenceEvent; offsetMs: number };
+export type TraceStep = {
+  family: EventFamily;
+  event: EvidenceEvent;
+  /** onset − the first step's onset. */
+  offsetMs: number;
+  /** Same receive time as the previous step: one observation showed both, no order. */
+  sameObservation: boolean;
+};
+
+/**
+ * WHAT MOVED FIRST — the first OBSERVED-onset structural change per family on
+ * one observed pool, chronological (compareEvents). Shared by VAULT TRACE and
+ * THE MOMENT so the two can never disagree. Conditions already true when first
+ * observed, provider state and PAIR_DISCOVERED are never part of it; steps
+ * with the same receive time are flagged `sameObservation` (no order claimed).
+ */
+export function firstMoveSequence(
+  events: readonly EvidenceEvent[],
+  pool: string | null,
+): TraceStep[] {
+  const byFamily = new Map<EventFamily, EvidenceEvent>();
+  for (const e of [...events].sort(compareEvents)) {
+    if (!STRUCTURAL_TYPES.has(e.type) || e.onset !== "OBSERVED") continue;
+    if (e.pairAddress !== pool) continue;
+    if (!byFamily.has(e.family)) byFamily.set(e.family, e);
+  }
+  const seq = [...byFamily.values()].sort(compareEvents);
+  return seq.map((e, i) => ({
+    family: e.family,
+    event: e,
+    offsetMs: e.observedAt - seq[0].observedAt,
+    sameObservation: i > 0 && e.observedAt === seq[i - 1].observedAt,
+  }));
+}
 
 export type TraceModel = {
   windows: TraceWindowOption[];
@@ -413,18 +449,7 @@ export function buildTrace(
   );
 
   const latestPool = obs.length ? obs[obs.length - 1].pairAddress : null;
-  const byFamily = new Map<EventFamily, EvidenceEvent>();
-  for (const e of shown) {
-    if (!STRUCTURAL_TYPES.has(e.type) || e.onset !== "OBSERVED") continue;
-    if (e.pairAddress !== latestPool) continue;
-    if (!byFamily.has(e.family)) byFamily.set(e.family, e);
-  }
-  const seq = [...byFamily.values()].sort(compareEvents);
-  const sequence = seq.map((e) => ({
-    family: e.family,
-    event: e,
-    offsetMs: e.observedAt - seq[0].observedAt,
-  }));
+  const sequence = firstMoveSequence(shown, latestPool);
 
   return {
     windows,

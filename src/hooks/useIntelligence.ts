@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { RealtimeRow } from "@/lib/providers/dexPairs";
 import type { DataEnvelope } from "@/lib/providers/envelope";
@@ -7,7 +7,7 @@ import type { AssetTrack, SessionState } from "@/lib/intelligence/facts";
 import { type EvidenceEvent, assetEvents } from "@/lib/intelligence/events";
 import { type AssetFreshness, assetFreshness } from "@/lib/intelligence/freshness";
 import { batchFromRealtime, batchFromUniverse, failureBatch } from "@/lib/intelligence/ingest";
-import { SessionStore, retainedSince } from "@/lib/intelligence/sessionHistory";
+import { SessionStore, recordingGaps, retainedSince } from "@/lib/intelligence/sessionHistory";
 import {
   PAIR_UNIVERSE_KEY,
   REALTIME_QUERY_KEY,
@@ -18,15 +18,19 @@ import {
 /**
  * INTELLIGENCE HOOKS — React access to the session history.
  *
- * One module-level store, created when the dashboard bundle loads: that
- * moment is the session start. It lives outside React on purpose (like
- * `radarHistory`), so route changes never reset it.
+ * One module-level store. It is created unstarted: the session starts when
+ * the recorder FIRST MOUNTS (the first dashboard route opens), never at app
+ * boot — the landing page does not count as observed time. Leaving the
+ * dashboard pauses recording and returning resumes it; the intervals are
+ * kept so pages can say "RECORDING SINCE … · PAUSED …". The store lives
+ * outside React on purpose (like `radarHistory`), so route changes never
+ * reset it.
  *
  * Components read it through selector hooks built on useSyncExternalStore:
  * a component re-renders only when the slice it selected changes identity
  * (the reducer keeps untouched tracks and lanes referentially stable).
  */
-export const intelligenceSession = new SessionStore(Date.now());
+export const intelligenceSession = new SessionStore();
 
 const EMPTY_EVENTS: EvidenceEvent[] = [];
 
@@ -62,11 +66,21 @@ export function useAssetEvents(key: string | null | undefined): EvidenceEvent[] 
   return track ? assetEvents(track, lanes) : EMPTY_EVENTS;
 }
 
-/** Session start and the earliest observation still retained. */
-export function useSessionInfo(): { startedAt: number; retainedSince: number | null } {
+export type SessionInfo = {
+  /** First recorder mount (+Infinity before it: render "—"). */
+  startedAt: number;
+  retainedSince: number | null;
+  /** Closed gaps while no dashboard route was open. */
+  paused: Array<{ from: number; to: number }>;
+};
+
+/** Session start, the earliest observation still retained, and recording pauses. */
+export function useSessionInfo(): SessionInfo {
   const startedAt = useSession((s) => s.startedAt);
   const since = useSession(retainedSince);
-  return { startedAt, retainedSince: since };
+  const recording = useSession((s) => s.recording);
+  const paused = useMemo(() => recordingGaps(recording), [recording]);
+  return { startedAt, retainedSince: since, paused };
 }
 
 /* ------------------------------------------------------------------ *
@@ -95,13 +109,17 @@ function subscribeNow(listener: () => void) {
   };
 }
 
+/**
+ * The current second when no ticker runs (first frame, or after every
+ * subscriber left): never a stale module-load value.
+ */
+export function nowSnapshot(): number {
+  return ticker ? nowValue : Math.floor(Date.now() / 1000) * 1000;
+}
+
 /** Wall clock, one shared 1 s ticker for every subscriber. Use only to compute ages. */
 export function useNow(): number {
-  return useSyncExternalStore(
-    subscribeNow,
-    () => nowValue,
-    () => nowValue,
-  );
+  return useSyncExternalStore(subscribeNow, nowSnapshot, nowSnapshot);
 }
 
 export function useAssetFreshness(key: string | null | undefined): AssetFreshness {
@@ -127,6 +145,13 @@ export function useAssetFreshness(key: string | null | undefined): AssetFreshnes
  */
 export function useIntelligenceRecorder(): void {
   const queryClient = useQueryClient();
+  // Start (or resume) the session during the recorder's first render, before
+  // any view reads it; idempotent. Unmount pauses, remount resumes.
+  useState(() => intelligenceSession.start(Date.now()));
+  useEffect(() => {
+    intelligenceSession.start(Date.now());
+    return () => intelligenceSession.pause(Date.now());
+  }, []);
   useQuery({ ...realtimeQueryOptions, notifyOnChangeProps: [] });
   usePairUniverseQuery();
 
