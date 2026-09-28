@@ -1,0 +1,721 @@
+import { signedPct } from "@/lib/format";
+import { transactionAcceleration, volumeAcceleration } from "@/lib/signals/pace";
+import { type Collision, collisionFamilies } from "./collision";
+import { edgeClockOrigin, eventsSince, firstObservedStructuralChange } from "./edgeClock";
+import {
+  type EventDirection,
+  type EventFamily,
+  type EventType,
+  type EvidenceEvent,
+  STRUCTURAL_TYPES,
+  compareEvents,
+  poolSegment,
+} from "./events";
+import type { AssetObservation, AssetTrack } from "./facts";
+import { ageLabel } from "./freshness";
+import { RUN_MAX_GAP_MS, type RuleMeta, TRACE_WINDOWS_MS, ruleMeta } from "./rules";
+
+/**
+ * VAULT TRACE + EDGE CLOCK page cores — "what moved first?" and "how old is
+ * this move?" as pure functions over one asset's session track and its
+ * evidence events (events.ts). No clock is read here: every time is a real
+ * observation time from the track; the caller passes nothing but data.
+ *
+ * Wording is chronology only. The tape orders onsets in observed time; it
+ * never says one change led to another. "OBSERVED BEFORE" is the strongest
+ * relation used anywhere.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Windows (5M / 15M / 1H / SESSION) — TRACE_WINDOWS_MS from rules.ts
+ * ------------------------------------------------------------------ */
+
+export type TraceWindowId = keyof typeof TRACE_WINDOWS_MS | "SESSION";
+
+export const TRACE_WINDOW_IDS: readonly TraceWindowId[] = ["5M", "15M", "1H", "SESSION"];
+
+export type TraceWindowOption = {
+  id: TraceWindowId;
+  /** Window length; null for SESSION (everything retained). */
+  ms: number | null;
+  enabled: boolean;
+  /** Why it is disabled (honest, measured), else null. */
+  reason: string | null;
+};
+
+/** The asset's retained observation span: first retained → latest observation. */
+export type HistorySpan = { from: number; to: number; spanMs: number };
+
+export function historySpan(track: AssetTrack | null | undefined): HistorySpan | null {
+  const obs = track?.observations;
+  if (!obs || obs.length === 0) return null;
+  const from = obs[0].observedAt;
+  const to = obs[obs.length - 1].observedAt;
+  return { from, to, spanMs: to - from };
+}
+
+/**
+ * A fixed window is offered only when the session history of this asset
+ * actually spans it (first retained observation to latest ≥ the window).
+ * SESSION is offered as soon as one observation exists.
+ */
+export function traceWindows(span: HistorySpan | null): TraceWindowOption[] {
+  return TRACE_WINDOW_IDS.map((id) => {
+    const ms = id === "SESSION" ? null : TRACE_WINDOWS_MS[id];
+    if (span == null) {
+      return { id, ms, enabled: false, reason: "NO OBSERVATION OF THIS ASSET THIS SESSION" };
+    }
+    if (ms == null || span.spanMs >= ms) return { id, ms, enabled: true, reason: null };
+    return {
+      id,
+      ms,
+      enabled: false,
+      reason: `OBSERVED HISTORY OF THIS ASSET SPANS ${ageLabel(span.spanMs)}`,
+    };
+  });
+}
+
+/** The selected window if it is enabled, else SESSION (never a window the history does not span). */
+export function effectiveWindow(
+  options: readonly TraceWindowOption[],
+  wanted: TraceWindowId,
+): TraceWindowId {
+  return options.find((o) => o.id === wanted)?.enabled ? wanted : "SESSION";
+}
+
+/* ------------------------------------------------------------------ *
+ * Rules shown next to the evidence they produced
+ * ------------------------------------------------------------------ */
+
+/** The rules.ts ids each event type was evaluated against (none for radar / provider / discovery). */
+export const EVENT_RULE_IDS: Record<EventType, readonly string[]> = {
+  PRICE_EXPANSION: ["PRICE_EXPANSION_M5_PCT"],
+  VOLUME_ACCELERATION: ["VOLUME_ACCELERATION_MIN"],
+  TXN_ACCELERATION: ["TXN_ACCELERATION_MIN"],
+  BUY_SELL_IMBALANCE: ["IMBALANCE_MIN_RATIO", "IMBALANCE_MIN_SAMPLE_TXNS"],
+  LIQUIDITY_CHANGE: [
+    "LIQUIDITY_CHANGE_MIN_REL",
+    "LIQUIDITY_CHANGE_MIN_ABS_USD",
+    "LIQUIDITY_CHANGE_MIN_PREVIOUS_USD",
+    "LIQUIDITY_CHANGE_LOOKBACK_MINUTES",
+  ],
+  BOOST_CHANGE: ["BOOST_CHANGE_MIN_DELTA"],
+  PAIR_DISCOVERED: [],
+  MOMENTUM_FIRED: [],
+  RISK_FIRED: [],
+  PROVIDER_RECOVERED: [],
+  PROVIDER_STALE: [],
+};
+
+export type RuleLine = { id: string; text: string; horizon: string; source: string };
+
+const RULE_PREFIX: Record<string, string> = {
+  PRICE_EXPANSION_M5_PCT: "|PRICE M5| ≥",
+  VOLUME_ACCELERATION_MIN: "VOLUME PACE ≥",
+  TXN_ACCELERATION_MIN: "TXN PACE ≥",
+  IMBALANCE_MIN_RATIO: "BUY/SELL RATIO ≥",
+  IMBALANCE_MIN_SAMPLE_TXNS: "M5 SAMPLE ≥",
+  LIQUIDITY_CHANGE_MIN_REL: "|Δ LIQUIDITY| ≥",
+  LIQUIDITY_CHANGE_MIN_ABS_USD: "|Δ LIQUIDITY| ≥",
+  LIQUIDITY_CHANGE_MIN_PREVIOUS_USD: "PREVIOUS LIQUIDITY ≥",
+  LIQUIDITY_CHANGE_LOOKBACK_MINUTES: "OBSERVATIONS APART ≥",
+  BOOST_CHANGE_MIN_DELTA: "|Δ ACTIVE BOOSTS| ≥",
+};
+
+/** A rule value in its own unit, e.g. "3%", "3.0×", "$10,000", "10%", "8 TXNS", "5 MIN". */
+export function ruleValueText(r: Pick<RuleMeta, "value" | "unit">): string {
+  switch (r.unit) {
+    case "PCT":
+      return `${r.value}%`;
+    case "RATIO":
+      return `${r.value.toFixed(1)}×`;
+    case "USD":
+      return `$${r.value.toLocaleString("en-US")}`;
+    case "FRACTION":
+      return `${Math.round(r.value * 100)}%`;
+    case "COUNT":
+      return String(r.value);
+    case "TXNS":
+      return `${r.value} TXNS`;
+    case "MINUTES":
+      return `${r.value} MIN`;
+    case "MS":
+      return ageLabel(r.value);
+    case "MULTIPLE":
+      return `${r.value}×`;
+  }
+}
+
+/** Threshold + horizon + origin of every rule an event type was evaluated against. */
+export function eventRules(type: EventType): RuleLine[] {
+  const out: RuleLine[] = [];
+  for (const id of EVENT_RULE_IDS[type]) {
+    const r = ruleMeta(id);
+    if (!r) continue;
+    out.push({
+      id,
+      text: `${RULE_PREFIX[id] ?? id} ${ruleValueText(r)}`,
+      horizon: r.horizon.toUpperCase(),
+      source: r.source.replace("_", " "),
+    });
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ * Fact labels and numeric evidence (text only; no interpretation)
+ * ------------------------------------------------------------------ */
+
+const TYPE_LABEL: Record<EventType, string> = {
+  PRICE_EXPANSION: "PRICE EXPANSION",
+  VOLUME_ACCELERATION: "VOLUME ACCELERATION",
+  TXN_ACCELERATION: "TXN ACCELERATION",
+  BUY_SELL_IMBALANCE: "BUY/SELL IMBALANCE",
+  LIQUIDITY_CHANGE: "LIQUIDITY CHANGE",
+  BOOST_CHANGE: "ACTIVE BOOSTS CHANGE",
+  PAIR_DISCOVERED: "ENTERED OBSERVED UNIVERSE",
+  MOMENTUM_FIRED: "ALPHA RADAR · MOMENTUM FIRED",
+  RISK_FIRED: "ALPHA RADAR · LIQUIDITY RISK FIRED",
+  PROVIDER_RECOVERED: "PROVIDER RECOVERED",
+  PROVIDER_STALE: "PROVIDER STALE",
+};
+
+const DIRECTION_WORD: Record<Exclude<EventDirection, null>, string> = {
+  UP: "UP",
+  DOWN: "DOWN",
+  BUY: "BUY-SIDE",
+  SELL: "SELL-SIDE",
+  ADDED: "ADDED",
+  REMOVED: "REMOVED",
+};
+
+export function typeLabel(type: EventType): string {
+  return TYPE_LABEL[type];
+}
+
+/** Direction as a word (never colour alone); null when the type has none. */
+export function directionWord(e: Pick<EvidenceEvent, "type" | "direction">): string | null {
+  if (e.direction == null) return null;
+  // One-directional types say nothing extra.
+  if (
+    e.type === "VOLUME_ACCELERATION" ||
+    e.type === "TXN_ACCELERATION" ||
+    e.type === "MOMENTUM_FIRED"
+  ) {
+    return null;
+  }
+  return DIRECTION_WORD[e.direction];
+}
+
+/** Concise fact label, e.g. "PRICE EXPANSION · UP", "PROVIDER STALE · REALTIME SLOT". */
+export function factLabel(e: EvidenceEvent): string {
+  const dir = directionWord(e);
+  if (e.family === "PROVIDER") return `${TYPE_LABEL[e.type]} · ${e.horizon.label}`;
+  return dir ? `${TYPE_LABEL[e.type]} · ${dir}` : TYPE_LABEL[e.type];
+}
+
+/** Compact USD: $950, $12.3K, $25.85M, $1.2B; unknown → "—". A real 0 is "$0". */
+export function usdText(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const sign = n < 0 ? "−" : "";
+  const a = Math.abs(n);
+  if (a >= 1e9) return `${sign}$${(a / 1e9).toFixed(2)}B`;
+  if (a >= 1e6) return `${sign}$${(a / 1e6).toFixed(2)}M`;
+  if (a >= 1e3) return `${sign}$${(a / 1e3).toFixed(1)}K`;
+  return `${sign}$${a.toFixed(a >= 100 || a === 0 ? 0 : 2)}`;
+}
+
+/** Signed USD delta with a typographic minus; a real 0 is "$0". */
+export function signedUsdText(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  if (n === 0) return "$0";
+  return `${n > 0 ? "+" : ""}${usdText(n)}`;
+}
+
+export function ratioText(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  return `${n.toFixed(2)}×`;
+}
+
+export function countText(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  return n.toLocaleString("en-US");
+}
+
+export function signedCountText(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  return n > 0 ? `+${countText(n)}` : n < 0 ? `−${countText(-n)}` : "0";
+}
+
+const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+/** The event's own value in its unit (the numeric evidence column). */
+export function valueText(e: EvidenceEvent): string {
+  switch (e.type) {
+    case "PRICE_EXPANSION":
+      return `${signedPct(e.value, 2)} M5`;
+    case "VOLUME_ACCELERATION":
+    case "TXN_ACCELERATION":
+      return `${ratioText(e.value)} PACE`;
+    case "BUY_SELL_IMBALANCE":
+      return `${ratioText(e.value)} (${countText(num(e.evidence.buysM5))} B / ${countText(num(e.evidence.sellsM5))} S)`;
+    case "LIQUIDITY_CHANGE": {
+      const rel = num(e.evidence.deltaRel);
+      return `${signedUsdText(num(e.evidence.deltaUsd))} (${signedPct(rel == null ? null : rel * 100, 1)}) → ${usdText(e.value)}`;
+    }
+    case "BOOST_CHANGE":
+      return `${countText(e.prior)} → ${countText(e.value)}`;
+    case "MOMENTUM_FIRED":
+      return `VA ${ratioText(e.value)}`;
+    case "RISK_FIRED":
+      return `Δ ${signedUsdText(e.value)}`;
+    case "PAIR_DISCOVERED":
+      return typeof e.evidence.sources === "string" && e.evidence.sources
+        ? e.evidence.sources.toUpperCase().replace(/,/g, " · ")
+        : "—";
+    case "PROVIDER_STALE":
+    case "PROVIDER_RECOVERED": {
+      const code = e.evidence.code ?? e.evidence.state ?? null;
+      return typeof code === "string" && code ? code.toUpperCase() : "—";
+    }
+  }
+}
+
+/** The prior value in the same unit, only when a real earlier observation held it. */
+export function priorText(e: EvidenceEvent): string | null {
+  if (e.prior == null) return null;
+  switch (e.type) {
+    case "PRICE_EXPANSION":
+      return `${signedPct(e.prior, 2)} M5`;
+    case "VOLUME_ACCELERATION":
+    case "TXN_ACCELERATION":
+    case "BUY_SELL_IMBALANCE":
+      return ratioText(e.prior);
+    case "LIQUIDITY_CHANGE":
+    case "RISK_FIRED":
+      return usdText(e.prior);
+    case "BOOST_CHANGE":
+      return countText(e.prior);
+    default:
+      return null;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Pool switches — a break in the tape
+ * ------------------------------------------------------------------ */
+
+export type PoolBreak = {
+  /** observedAt of the first observation on the new pool. */
+  at: number;
+  fromPair: string | null;
+  fromDex: string | null;
+  toPair: string | null;
+  toDex: string | null;
+};
+
+/** Every observed change of pool between consecutive retained observations. */
+export function poolBreaks(obs: readonly AssetObservation[]): PoolBreak[] {
+  const out: PoolBreak[] = [];
+  for (let i = 1; i < obs.length; i++) {
+    if (obs[i].pairAddress !== obs[i - 1].pairAddress) {
+      out.push({
+        at: obs[i].observedAt,
+        fromPair: obs[i - 1].pairAddress,
+        fromDex: obs[i - 1].snapshot.dexId,
+        toPair: obs[i].pairAddress,
+        toDex: obs[i].snapshot.dexId,
+      });
+    }
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ * The tape
+ * ------------------------------------------------------------------ */
+
+export type TraceAnchor = "FIRST_IN_VIEW" | "EDGE_CLOCK_ORIGIN";
+
+export type TraceEventRow = {
+  kind: "event";
+  key: string;
+  at: number;
+  event: EvidenceEvent;
+  /** Provider lane context (visually subordinate). */
+  laneContext: boolean;
+  anchors: TraceAnchor[];
+  /** at − first-in-view onset, when a first-in-view anchor exists. */
+  offsetMs: number | null;
+};
+
+export type TracePoolRow = { kind: "pool"; key: string; at: number; pool: PoolBreak };
+
+export type TraceRow = TraceEventRow | TracePoolRow;
+
+export type TraceStep = { family: EventFamily; event: EvidenceEvent; offsetMs: number };
+
+export type TraceModel = {
+  windows: TraceWindowOption[];
+  window: TraceWindowId;
+  span: HistorySpan | null;
+  /** Inclusive start of the shown window (null = SESSION, everything retained). */
+  windowStart: number | null;
+  /** End of the tape: the newest real time in it (observation or lane event). */
+  end: number | null;
+  /** Oldest first. */
+  rows: TraceRow[];
+  /** Earliest OBSERVED-onset structural change in view (a temporal anchor), or null. */
+  first: EvidenceEvent | null;
+  /** The Edge Clock origin (session-wide), or null. */
+  origin: EvidenceEvent | null;
+  /**
+   * First OBSERVED onset per family on the latest observed pool, oldest first:
+   * the order in which the families were OBSERVED — chronology, not cause.
+   */
+  sequence: TraceStep[];
+  /** Pool the sequence is restricted to. */
+  sequencePool: string | null;
+  /** Structural events in view whose start was not seen (order unknown). */
+  inProgress: number;
+  poolSwitches: number;
+  marketEvents: number;
+  laneEvents: number;
+};
+
+/**
+ * Build the tape for one asset. `events` are the asset's events
+ * (assetEvents), `wanted` the requested window; an unspanned window falls
+ * back to SESSION.
+ */
+export function buildTrace(
+  track: AssetTrack | null | undefined,
+  events: readonly EvidenceEvent[],
+  wanted: TraceWindowId = "SESSION",
+): TraceModel {
+  const span = historySpan(track);
+  const windows = traceWindows(span);
+  const window = effectiveWindow(windows, wanted);
+  const obs = track?.observations ?? [];
+  const breaks = poolBreaks(obs);
+  const newestEvent = events.reduce<number | null>(
+    (m, e) => (m == null || e.observedAt > m ? e.observedAt : m),
+    null,
+  );
+  const end =
+    span == null && newestEvent == null
+      ? null
+      : Math.max(span?.to ?? -Infinity, newestEvent ?? -Infinity);
+  const ms = window === "SESSION" ? null : TRACE_WINDOWS_MS[window];
+  const windowStart = ms == null || end == null ? null : end - ms;
+  const inView = (at: number) => windowStart == null || at >= windowStart;
+
+  const shown = events.filter((e) => inView(e.observedAt)).sort(compareEvents);
+  const first = firstObservedStructuralChange(shown);
+  const origin = edgeClockOrigin(events);
+
+  const rows: TraceRow[] = [
+    ...shown.map<TraceEventRow>((e) => {
+      const anchors: TraceAnchor[] = [];
+      if (first && e.id === first.id) anchors.push("FIRST_IN_VIEW");
+      if (origin && e.id === origin.id) anchors.push("EDGE_CLOCK_ORIGIN");
+      return {
+        kind: "event",
+        key: e.id,
+        at: e.observedAt,
+        event: e,
+        laneContext: e.family === "PROVIDER",
+        anchors,
+        offsetMs: first ? e.observedAt - first.observedAt : null,
+      };
+    }),
+    ...breaks
+      .filter((b) => inView(b.at))
+      .map<TracePoolRow>((b) => ({ kind: "pool", key: `pool|${b.at}`, at: b.at, pool: b })),
+  ].sort(
+    (a, b) =>
+      a.at - b.at ||
+      // A pool break precedes the events observed on the new pool at the same time.
+      (a.kind === b.kind ? 0 : a.kind === "pool" ? -1 : 1) ||
+      (a.kind === "event" && b.kind === "event" ? compareEvents(a.event, b.event) : 0),
+  );
+
+  const latestPool = obs.length ? obs[obs.length - 1].pairAddress : null;
+  const byFamily = new Map<EventFamily, EvidenceEvent>();
+  for (const e of shown) {
+    if (!STRUCTURAL_TYPES.has(e.type) || e.onset !== "OBSERVED") continue;
+    if (e.pairAddress !== latestPool) continue;
+    if (!byFamily.has(e.family)) byFamily.set(e.family, e);
+  }
+  const seq = [...byFamily.values()].sort(compareEvents);
+  const sequence = seq.map((e) => ({
+    family: e.family,
+    event: e,
+    offsetMs: e.observedAt - seq[0].observedAt,
+  }));
+
+  return {
+    windows,
+    window,
+    span,
+    windowStart,
+    end,
+    rows,
+    first,
+    origin,
+    sequence,
+    sequencePool: sequence.length ? latestPool : null,
+    inProgress: shown.filter(
+      (e) => STRUCTURAL_TYPES.has(e.type) && e.onset === "IN_PROGRESS_WHEN_OBSERVED",
+    ).length,
+    poolSwitches: rows.filter((r) => r.kind === "pool").length,
+    marketEvents: shown.filter((e) => e.family !== "PROVIDER").length,
+    laneEvents: shown.filter((e) => e.family === "PROVIDER").length,
+  };
+}
+
+/** Signed offset from an anchor, e.g. "+01m 30s", "−00m 30s", "0s" at the anchor. */
+export function offsetText(ms: number | null): string {
+  if (ms == null || !Number.isFinite(ms)) return "—";
+  if (ms === 0) return "ANCHOR";
+  return `${ms > 0 ? "+" : "−"}${ageLabel(Math.abs(ms))}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * EDGE CLOCK — evidence since the origin
+ * ------------------------------------------------------------------ */
+
+export type SinceMetricId =
+  | "PRICE"
+  | "VOLUME_M5"
+  | "VOLUME_PACE"
+  | "LIQUIDITY"
+  | "TXNS_M5"
+  | "TXN_PACE"
+  | "BOOSTS";
+
+export type SinceMetric = {
+  id: SinceMetricId;
+  label: string;
+  /** Value at the origin observation (same pool), or null. */
+  from: number | null;
+  /** Value at the latest observation (same pool), or null. */
+  to: number | null;
+  /** to − from, only when both are real; else null ("—"). */
+  delta: number | null;
+  /** delta / from × 100 where meaningful (from > 0), else null. */
+  deltaPct: number | null;
+  unit: "USD" | "PRICE" | "RATIO" | "COUNT";
+  horizon: string;
+  /** Why no delta: the first missing input, else null. */
+  missing: string | null;
+};
+
+export type EdgeClockModel = {
+  /** Active, OBSERVED-onset structural change with the earliest onset. */
+  origin: EvidenceEvent | null;
+  /** Earliest OBSERVED structural change retained, only when it is NOT the origin. */
+  earlier: EvidenceEvent | null;
+  /** Active structural conditions already true when first observed (start not seen). */
+  inProgress: EvidenceEvent[];
+  /** Observation where the origin was first seen (same pool). */
+  originObs: AssetObservation | null;
+  /** The previous real observation of the same pool before the origin (within the run gap). */
+  previousObs: AssetObservation | null;
+  latestObs: AssetObservation | null;
+  /** Latest observation is on the origin's pool with no switch in between. */
+  samePool: boolean;
+  /** Why no since-delta can be computed at all (origin not retained, pool switch, no later observation), else null. */
+  sinceBlocked: string | null;
+  since: SinceMetric[];
+  /** Structural events whose onset is at/after the origin, same pool, chronological. */
+  sinceEvents: EvidenceEvent[];
+  /** Independent families among them (collisionFamilies over origin → latest). */
+  families: Collision | null;
+  /** Observed duration origin → last observation where it still held. */
+  observedActiveMs: number | null;
+};
+
+/** Horizon of a plain origin → latest comparison (shown once, not per row). */
+export const PAIR_HORIZON = "ORIGIN OBSERVATION → LATEST OBSERVATION · SAME POOL";
+
+function metric(
+  id: SinceMetricId,
+  label: string,
+  unit: SinceMetric["unit"],
+  from: number | null,
+  to: number | null,
+  why: string | null,
+  horizon = PAIR_HORIZON,
+): SinceMetric {
+  if (why) return { id, label, unit, from, to, delta: null, deltaPct: null, horizon, missing: why };
+  if (from == null || to == null) {
+    return {
+      id,
+      label,
+      unit,
+      from,
+      to,
+      delta: null,
+      deltaPct: null,
+      horizon,
+      missing:
+        from == null ? "NOT REPORTED AT THE ORIGIN" : "NOT REPORTED AT THE LATEST OBSERVATION",
+    };
+  }
+  const delta = to - from;
+  return {
+    id,
+    label,
+    unit,
+    from,
+    to,
+    delta,
+    deltaPct: from > 0 ? (delta / from) * 100 : null,
+    horizon,
+    missing: null,
+  };
+}
+
+const txnTotal = (o: AssetObservation | null) => {
+  const w = o?.snapshot.txns.m5;
+  return w ? w.buys + w.sells : null;
+};
+const pace = (r: ReturnType<typeof volumeAcceleration>) => (r.ok ? r.ratio : null);
+
+export function edgeClockModel(
+  track: AssetTrack | null | undefined,
+  events: readonly EvidenceEvent[],
+): EdgeClockModel {
+  const obs = track?.observations ?? [];
+  const origin = edgeClockOrigin(events);
+  const firstEver = firstObservedStructuralChange(events);
+  const earlier = firstEver && (!origin || firstEver.id !== origin.id) ? firstEver : null;
+  const inProgress = events.filter(
+    (e) => STRUCTURAL_TYPES.has(e.type) && e.onset === "IN_PROGRESS_WHEN_OBSERVED" && e.active,
+  );
+  const latestObs = obs.length ? obs[obs.length - 1] : null;
+
+  const empty: EdgeClockModel = {
+    origin,
+    earlier,
+    inProgress,
+    originObs: null,
+    previousObs: null,
+    latestObs,
+    samePool: false,
+    sinceBlocked: null,
+    since: [],
+    sinceEvents: [],
+    families: null,
+    observedActiveMs: null,
+  };
+  if (!origin || !latestObs) return empty;
+
+  const originIdx = obs.findIndex(
+    (o) => o.observedAt === origin.observedAt && o.pairAddress === origin.pairAddress,
+  );
+  const originObs = originIdx >= 0 ? obs[originIdx] : null;
+  const prevCandidate = originIdx > 0 ? obs[originIdx - 1] : null;
+  const previousObs =
+    prevCandidate &&
+    originObs &&
+    prevCandidate.pairAddress === originObs.pairAddress &&
+    originObs.observedAt - prevCandidate.observedAt <= RUN_MAX_GAP_MS
+      ? prevCandidate
+      : null;
+
+  const segment = poolSegment(obs, obs.length - 1);
+  const samePool =
+    originObs != null && segment.some((o) => o === originObs) && latestObs.pairAddress != null;
+  const later = originObs != null && latestObs.observedAt > originObs.observedAt;
+  const why = !originObs
+    ? "ORIGIN OBSERVATION NO LONGER RETAINED"
+    : !samePool
+      ? "OBSERVED POOL CHANGED SINCE THE ORIGIN"
+      : !later
+        ? "NO LATER OBSERVATION YET"
+        : null;
+  const a = originObs?.snapshot ?? null;
+  const b = latestObs.snapshot;
+  const since: SinceMetric[] = [
+    metric("PRICE", "PRICE", "PRICE", a?.priceUsd ?? null, b.priceUsd, why),
+    metric("VOLUME_M5", "VOLUME M5", "USD", a?.volume.m5 ?? null, b.volume.m5, why),
+    metric(
+      "VOLUME_PACE",
+      "VOLUME PACE",
+      "RATIO",
+      a ? pace(volumeAcceleration(a)) : null,
+      pace(volumeAcceleration(b)),
+      why,
+      "M5 PACE VS (H1 − M5) PACE · AT ORIGIN → LATEST",
+    ),
+    metric("LIQUIDITY", "LIQUIDITY", "USD", a?.liquidityUsd ?? null, b.liquidityUsd, why),
+    metric("TXNS_M5", "TXNS M5", "COUNT", txnTotal(originObs), txnTotal(latestObs), why),
+    metric(
+      "TXN_PACE",
+      "TXN PACE",
+      "RATIO",
+      a ? pace(transactionAcceleration(a)) : null,
+      pace(transactionAcceleration(b)),
+      why,
+      "M5 PACE VS (H1 − M5) PACE · AT ORIGIN → LATEST",
+    ),
+    metric("BOOSTS", "ACTIVE BOOSTS", "COUNT", a?.boostsActive ?? null, b.boostsActive, why),
+  ];
+
+  const sinceEvents = eventsSince(events, origin).filter(
+    (e) => STRUCTURAL_TYPES.has(e.type) && e.pairAddress === origin.pairAddress,
+  );
+  const familiesEnd = Math.max(latestObs.observedAt, ...sinceEvents.map((e) => e.observedAt));
+  const families =
+    sinceEvents.length > 0
+      ? collisionFamilies(sinceEvents, familiesEnd - origin.observedAt, {
+          end: familiesEnd,
+          pairAddress: origin.pairAddress,
+        })
+      : null;
+
+  return {
+    ...empty,
+    originObs,
+    previousObs,
+    samePool,
+    sinceBlocked: why,
+    since,
+    sinceEvents,
+    families,
+    observedActiveMs: origin.lastObservedAt - origin.observedAt,
+  };
+}
+
+/** Formatted "from → to" and delta for a since-metric; unknown → "—". */
+export function sinceText(m: SinceMetric): { from: string; to: string; delta: string } {
+  const fmt = (v: number | null) =>
+    m.unit === "USD"
+      ? usdText(v)
+      : m.unit === "RATIO"
+        ? ratioText(v)
+        : m.unit === "COUNT"
+          ? countText(v)
+          : priceText(v);
+  const delta =
+    m.delta == null
+      ? "—"
+      : m.unit === "USD"
+        ? `${signedUsdText(m.delta)}${m.deltaPct == null ? "" : ` (${signedPct(m.deltaPct, 1)})`}`
+        : m.unit === "RATIO"
+          ? `${m.delta > 0 ? "+" : m.delta < 0 ? "−" : ""}${Math.abs(m.delta).toFixed(2)}×`
+          : m.unit === "COUNT"
+            ? `${signedCountText(m.delta)}${m.deltaPct == null ? "" : ` (${signedPct(m.deltaPct, 1)})`}`
+            : signedPct(m.deltaPct, 2);
+  return { from: fmt(m.from), to: fmt(m.to), delta };
+}
+
+/** Plain USD price text for the since table (the page uses <Price> where it has room). */
+export function priceText(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const a = Math.abs(n);
+  const digits = a >= 1 ? 2 : a >= 0.001 ? 4 : 8;
+  return `${n < 0 ? "−" : ""}$${a.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+}

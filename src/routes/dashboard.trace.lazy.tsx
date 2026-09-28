@@ -1,10 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { IntelligencePlaceholder } from "@/components/marco/intelligence/IntelligenceShell";
+import { VaultTracePage } from "@/components/marco/intelligence/trace/VaultTrace";
 
 export const Route = createLazyFileRoute("/dashboard/trace")({
-  component: Page,
+  component: VaultTracePage,
 });
-
-function Page() {
-  return <IntelligencePlaceholder feature="trace" />;
-}
