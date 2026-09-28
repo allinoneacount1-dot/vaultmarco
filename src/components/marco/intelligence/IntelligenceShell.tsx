@@ -34,7 +34,7 @@ export function IntelligenceShell({
     <div className="space-y-6 lg:space-y-8" data-testid="intel-shell" data-feature={f.id}>
       <header className="space-y-2">
         <p className="mono-label text-[9px]!">
-          <span className="text-(--gold)">INTELLIGENCE</span> · {f.label.toUpperCase()}
+          <span className="text-(--muted-2)">INTELLIGENCE</span> · {f.label.toUpperCase()}
         </p>
         <h1
           className="font-display text-[20px] font-semibold uppercase tracking-[0.04em] text-(--bone) lg:text-[24px]"
@@ -43,7 +43,8 @@ export function IntelligenceShell({
           {f.question}
         </h1>
       </header>
-      {f.focused ? <AssetBar /> : <SessionLine />}
+      {/* Unfocused views (the Change Queue) state recording in their own status line. */}
+      {f.focused && <AssetBar />}
       {children}
     </div>
   );
@@ -99,7 +100,7 @@ function AssetBar() {
             className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1"
             data-testid="focus-identity"
           >
-            <span className="mv-chip shrink-0 text-(--gold)">
+            <span className="mv-chip shrink-0 text-(--bone)">
               {normalizeChain(focus.chainId).toUpperCase()}
             </span>
             <span className="font-mono text-[13px] font-semibold text-(--bone)">
@@ -132,7 +133,8 @@ function AssetBar() {
           </p>
         )}
         {focus && <FreshnessLine fresh={fresh} lanes={latest?.lanes ?? []} />}
-        <SessionLine />
+        {/* Where the history comes from matters when there is little or none, or it is not current. */}
+        {(!focus || (fresh.state !== "live" && fresh.state !== "degraded")) && <SessionLine />}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <AssetPicker onPick={(chainId, addr) => setFocus({ chainId, address: addr })} />

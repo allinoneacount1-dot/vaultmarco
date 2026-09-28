@@ -36,9 +36,6 @@ function TraceBody({ ev }: { ev: FocusEvidence }) {
   const empty = model.rows.length === 0;
   return (
     <div className="flex flex-col gap-6 lg:gap-8" data-testid="trace-body">
-      <div className="order-last lg:order-first">
-        <RelatedViews search={ev.search} views={["moment", "edge-clock"]} />
-      </div>
       <FreshnessNote fresh={ev.fresh} what="The tape" />
       <Zone
         index="01"
@@ -60,6 +57,7 @@ function TraceBody({ ev }: { ev: FocusEvidence }) {
           )}
         </section>
       </Zone>
+      <RelatedViews search={ev.search} views={["moment", "edge-clock"]} />
     </div>
   );
 }
@@ -157,9 +155,15 @@ function EmptyTape({ model, ev }: { model: TraceModel; ev: FocusEvidence }) {
 }
 
 function TapeFooter({ model, ev }: { model: TraceModel; ev: FocusEvidence }) {
+  const latest = ev.track.observations[ev.track.observations.length - 1];
   return (
     <p className="hairline-t pt-3 font-mono text-[9px] leading-relaxed tracking-[0.12em] text-(--faint)">
-      {model.marketEvents} MARKET EVENT{model.marketEvents === 1 ? "" : "S"} · {model.laneEvents}{" "}
+      <span data-testid="trace-source" title={latest.pairAddress ?? undefined}>
+        {latest.provider.toUpperCase()} · {latest.lanes.map((l) => l.toUpperCase()).join(" + ")} ·
+        POOL {latest.pairAddress ? shortAddress(latest.pairAddress) : "—"}
+        {latest.snapshot.dexId ? ` · ${latest.snapshot.dexId.toUpperCase()}` : ""}
+      </span>{" "}
+      · {model.marketEvents} MARKET EVENT{model.marketEvents === 1 ? "" : "S"} · {model.laneEvents}{" "}
       LANE CONTEXT · {model.poolSwitches} POOL SWITCH{model.poolSwitches === 1 ? "" : "ES"} ·{" "}
       {model.window === "SESSION" ? (
         <>

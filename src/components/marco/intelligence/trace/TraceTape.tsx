@@ -10,10 +10,13 @@ import {
   valueText,
 } from "@/lib/intelligence/trace";
 import { ObservedTime } from "../shared/ObservedTime";
+import { RuleTip } from "../shared/RuleTip";
 
 /**
  * THE EVIDENCE TAPE — one row per observed onset, oldest first:
- *   OBSERVED time │ rail │ fact label · prior · onset │ number │ source · pool · rule
+ *   OBSERVED time │ rail │ fact label (RULE tip: rule · source · pool) · onset │ number
+ * Source and pool are stated once in the tape footer; each row keeps its own
+ * in the RULE tip (a pool switch is also a visible break).
  * Gold marks temporal anchors only (first in view, Edge Clock origin), always
  * with a word. Provider lane rows are context: smaller, fainter, hollow dot.
  * A pool switch is a dashed break across the tape.
@@ -27,10 +30,9 @@ export function TraceTape({ rows }: { rows: readonly TraceRow[] }) {
       >
         <span>OBSERVED</span>
         <span />
-        <span className="grid grid-cols-[minmax(0,1fr)_200px_minmax(0,260px)] gap-x-4">
+        <span className="grid grid-cols-[minmax(0,1fr)_200px] gap-x-4">
           <span>FACT</span>
           <span className="text-right">EVIDENCE</span>
-          <span>SOURCE · POOL · RULE</span>
         </span>
       </div>
       <ol aria-label="Evidence tape, oldest first" className="relative" data-testid="trace-tape">
@@ -94,23 +96,53 @@ function EventRow({ row, last }: { row: TraceEventRow; last: boolean }) {
       </div>
       <Rail tone={anchor ? "anchor" : lane ? "lane" : "event"} last={last} />
       <div
-        className={`min-w-0 pb-4 pt-1.5 lg:grid lg:grid-cols-[minmax(0,1fr)_200px_minmax(0,260px)] lg:gap-x-4 ${
+        className={`grid min-w-0 grid-cols-1 gap-y-1 pb-4 pt-1.5 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-x-4 ${
           lane ? "opacity-80" : ""
         }`}
       >
-        <div className="min-w-0 space-y-1">
+        <div className="min-w-0 space-y-1 lg:col-start-1 lg:row-start-1">
           {lane && (
             <span className="font-mono text-[8.5px] tracking-[0.2em] text-(--faint)">
               LANE CONTEXT
             </span>
           )}
-          <p
-            className={`font-mono tracking-[0.08em] ${
-              lane ? "text-[10px] text-(--muted-2)" : "text-[11.5px] font-semibold text-(--bone)"
-            }`}
-          >
-            {factLabel(e)}
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span
+              className={`font-mono tracking-[0.08em] ${
+                lane ? "text-[10px] text-(--muted-2)" : "text-[11.5px] font-semibold text-(--bone)"
+              }`}
+            >
+              {factLabel(e)}
+            </span>
+            <RuleTip>
+              {rules.map((r) => (
+                <span key={r.id} className="block" data-testid="trace-rule">
+                  RULE {r.text} · {r.horizon}
+                </span>
+              ))}
+              {rules.length === 0 && !lane && e.type !== "PAIR_DISCOVERED" && (
+                <span className="block">RULE ALPHA RADAR · ITS OWN DETERMINISTIC ROUND RULE</span>
+              )}
+              {e.type === "PAIR_DISCOVERED" && <span className="block">{e.horizon.label}</span>}
+              <span className="block text-(--muted-2)">{e.source}</span>
+              {e.pairAddress && (
+                <span className="block text-(--muted-2)">
+                  OBSERVED POOL {shortAddress(e.pairAddress)}
+                  {e.dexId ? ` · ${e.dexId.toUpperCase()}` : ""}
+                </span>
+              )}
+            </RuleTip>
           </p>
+        </div>
+        <p
+          className={`mono-data text-[11px] lg:col-start-2 lg:row-start-1 lg:text-right ${
+            lane ? "text-(--faint)" : "text-(--bone)"
+          }`}
+          data-testid="trace-value"
+        >
+          {valueText(e)}
+        </p>
+        <div className="min-w-0 space-y-1 lg:col-start-1 lg:row-start-2">
           {anchor && (
             <p className="flex flex-wrap gap-1.5">
               {row.anchors.map((a) => (
@@ -138,32 +170,6 @@ function EventRow({ row, last }: { row: TraceEventRow; last: boolean }) {
               )}
             </p>
           )}
-        </div>
-        <p
-          className={`mono-data mt-1 text-[11px] lg:mt-0 lg:text-right ${
-            lane ? "text-(--faint)" : "text-(--bone)"
-          }`}
-          data-testid="trace-value"
-        >
-          {valueText(e)}
-        </p>
-        <div className="mt-1 min-w-0 space-y-0.5 font-mono text-[9.5px] leading-relaxed text-(--faint) lg:mt-0">
-          <p className="truncate">{e.source}</p>
-          {e.pairAddress && (
-            <p className="truncate" title={e.pairAddress}>
-              OBSERVED POOL {shortAddress(e.pairAddress)}
-              {e.dexId ? ` · ${e.dexId.toUpperCase()}` : ""}
-            </p>
-          )}
-          {rules.map((r) => (
-            <p key={r.id} data-testid="trace-rule">
-              RULE {r.text} · {r.horizon}
-            </p>
-          ))}
-          {rules.length === 0 && !lane && e.type !== "PAIR_DISCOVERED" && (
-            <p>RULE ALPHA RADAR · ITS OWN DETERMINISTIC ROUND RULE</p>
-          )}
-          {e.type === "PAIR_DISCOVERED" && <p>{e.horizon.label}</p>}
         </div>
       </div>
     </li>

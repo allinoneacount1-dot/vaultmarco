@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { Zone } from "@/components/marco/desk";
 import { IntelligenceShell } from "@/components/marco/intelligence/IntelligenceShell";
 import { type FocusEvidence, FocusGate } from "@/components/marco/intelligence/shared/FocusGate";
@@ -29,12 +29,10 @@ function ClockBody({ ev }: { ev: FocusEvidence }) {
   const model = useMemo(() => edgeClockModel(ev.track, ev.events), [ev.track, ev.events]);
   return (
     <div className="flex flex-col gap-6 lg:gap-8" data-testid="clock-body">
-      <div className="order-last lg:order-first">
-        <RelatedViews search={ev.search} views={["moment", "trace"]} />
-      </div>
       <FreshnessNote fresh={ev.fresh} what="The clock's evidence" />
       {model.origin ? <ActiveClock model={model} ev={ev} /> : <NoClock model={model} ev={ev} />}
       {model.earlier && <EarlierChange e={model.earlier} />}
+      <RelatedViews search={ev.search} views={["moment", "trace"]} />
     </div>
   );
 }
@@ -55,9 +53,18 @@ function Age({ from }: { from: number }) {
   );
 }
 
+/** lg and up: WHY THIS CLOCK STARTED sits beside the clock; below, after the evidence. */
+function subscribeWide(cb: () => void) {
+  const mq = window.matchMedia("(min-width: 1024px)");
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+const isWide = () => window.matchMedia("(min-width: 1024px)").matches;
+
 function ActiveClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }) {
   const o = model.origin!;
   const stale = ev.fresh.state === "stale";
+  const wide = useSyncExternalStore(subscribeWide, isWide, () => true);
   return (
     <>
       <Zone index="01" label="EDGE AGE" meta="OBSERVED THIS SESSION · MARCOVAULT RECEIVE TIMES">
@@ -69,12 +76,11 @@ function ActiveClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }
         >
           <div className="min-w-0 space-y-4">
             <p className="mono-label text-[9px]!">
-              FIRST OBSERVED STRUCTURAL CHANGE · <span className="text-(--gold)">ACTIVE</span>
+              FIRST OBSERVED STRUCTURAL CHANGE · <span className="text-(--bone)">ACTIVE</span>
             </p>
             <Age from={o.observedAt} />
             <p className="font-mono text-[10px] tracking-[0.14em] text-(--muted-2)">
-              SINCE <ObservedTime at={o.observedAt} className="text-(--gold)" /> OBSERVED · AGE
-              UPDATES EVERY SECOND FROM A FIXED ORIGIN
+              SINCE <ObservedTime at={o.observedAt} className="text-(--gold)" /> OBSERVED
             </p>
             <div className="hairline-t space-y-1.5 pt-4">
               <p className="font-display text-[15px] font-semibold uppercase tracking-[0.04em] text-(--bone) lg:text-[17px]">
@@ -92,9 +98,11 @@ function ActiveClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }
               </p>
             </div>
           </div>
-          <div className="min-w-0">
-            <WhyThisClock model={model} />
-          </div>
+          {wide && (
+            <div className="min-w-0">
+              <WhyThisClock model={model} />
+            </div>
+          )}
         </section>
       </Zone>
       <InProgressNote list={model.inProgress} />
@@ -105,6 +113,7 @@ function ActiveClock({ model, ev }: { model: EdgeClockModel; ev: FocusEvidence }
       >
         <SinceOrigin model={model} />
       </Zone>
+      {!wide && <WhyThisClock model={model} />}
     </>
   );
 }

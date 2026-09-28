@@ -8,6 +8,7 @@ import {
   orderDivergences,
   overlapNote,
   pairLabel,
+  rawFieldLabel,
   rawMetricRows,
   summarizeDivergences,
   thresholdLines,
@@ -22,6 +23,7 @@ import { useFocusLinkSearch } from "../shared/useFocusLinkSearch";
 import { FreshnessNote } from "../shared/FreshnessNote";
 import { RelatedViews } from "../shared/links";
 import { ObservedTime } from "../shared/ObservedTime";
+import { RuleTip } from "../shared/RuleTip";
 
 /**
  * DIVERGENCE — "What doesn't fit?"
@@ -60,6 +62,10 @@ function DivergenceBody({ track, fresh }: { track: AssetTrack; fresh: AssetFresh
         ? "NO DIVERGENCE IN CURRENT OBSERVATION"
         : "NOTHING EVALUABLE IN CURRENT OBSERVATION";
 
+  const pool = latest.pairAddress;
+  const dex = latest.snapshot.dexId;
+  const source = results[0]?.source ?? "DEXSCREENER";
+
   return (
     <div className="space-y-8" data-testid="divergence" data-observed-at={latest.observedAt}>
       <FreshnessNote fresh={fresh} what="The evaluation" />
@@ -80,8 +86,16 @@ function DivergenceBody({ track, fresh }: { track: AssetTrack; fresh: AssetFresh
           </p>
           <p className="font-mono text-[10px] tracking-[0.14em] text-(--faint)">
             {summary.DIVERGED} DIVERGED · {summary.NOT_DIVERGED} ALIGNED · {summary.NOT_EVALUABLE}{" "}
-            NOT EVALUABLE · LATEST OBSERVATION <ObservedTime at={latest.observedAt} /> · OBSERVED
-            THIS SESSION
+            NOT EVALUABLE · OBSERVED THIS SESSION
+          </p>
+          <p
+            className="font-mono text-[10px] tracking-[0.12em] break-words text-(--faint)"
+            data-testid="divergence-meta"
+            title={pool ?? undefined}
+          >
+            OBSERVED <ObservedTime at={latest.observedAt} /> · {source} · POOL{" "}
+            {pool ? shortAddress(pool) : "—"}
+            {dex ? ` · ${dex.toUpperCase()}` : ""}
           </p>
         </div>
         <ol className="mv-tape hairline-t hairline-b" data-testid="divergence-list">
@@ -99,7 +113,7 @@ function DivergenceBody({ track, fresh }: { track: AssetTrack; fresh: AssetFresh
 }
 
 /* ------------------------------------------------------------------ *
- * Predicate row
+ * Predicate row: state · pair · the two metrics (rule behind RULE)
  * ------------------------------------------------------------------ */
 
 const STATE_MARK: Record<DivergenceResult["state"], { glyph: string; cls: string }> = {
@@ -126,20 +140,19 @@ function PredicateRow({ r }: { r: DivergenceResult }) {
   const label = pairLabel(r.label);
   return (
     <li
-      className="grid gap-x-6 gap-y-2.5 py-3.5 lg:grid-cols-[124px_minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,0.85fr)]"
+      className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 gap-y-2 py-3.5 lg:grid-cols-[124px_minmax(0,1fr)_minmax(0,1.2fr)_auto] lg:items-baseline"
       data-testid="divergence-row"
       data-id={r.id}
       data-state={r.state}
       aria-label={`${label}: ${DIVERGENCE_STATE_TEXT[r.state]}`}
     >
-      <div>
+      <div className="col-span-2 lg:col-span-1">
         <StateMark state={r.state} />
       </div>
-
-      <div className="min-w-0 space-y-1.5">
-        <h3 className="font-mono text-[12px] font-semibold tracking-[0.1em] text-(--bone)">
-          {label}
-        </h3>
+      <h3 className="min-w-0 font-mono text-[12px] font-semibold tracking-[0.1em] text-(--bone)">
+        {label}
+      </h3>
+      <div className="col-span-2 min-w-0 space-y-0.5 lg:col-span-1">
         <dl className="space-y-0.5">
           {r.metrics.map((m) => {
             const t = metricText(m);
@@ -167,40 +180,22 @@ function PredicateRow({ r }: { r: DivergenceResult }) {
           </p>
         )}
       </div>
-
-      <div className="min-w-0 space-y-1">
-        <p className="mono-label text-[8px]!">RULE</p>
-        <ul className="space-y-0.5" data-testid="divergence-thresholds">
-          {thresholds.map((t) => (
-            <li
-              key={t.ruleId}
-              className="font-mono text-[10px] tracking-[0.06em] text-(--muted-2)"
-              title={`${t.ruleId} · ${t.source.replace(/_/g, " ")}`}
-            >
-              <span className="text-(--bone)">{t.text}</span>
-              <span className="text-(--faint)"> · {t.horizon}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="font-mono text-[9px] leading-relaxed tracking-[0.04em] text-(--faint)">
-          WINDOWS · {overlapNote(r.id)}
-        </p>
-      </div>
-
-      <div className="min-w-0 space-y-0.5 font-mono text-[10px] tracking-[0.08em] text-(--muted-2)">
-        <p>
-          OBSERVED <ObservedTime at={r.observedAt} className="text-(--gold)" />
-        </p>
-        {r.priorObservedAt != null && (
-          <p>
-            COMPARED WITH <ObservedTime at={r.priorObservedAt} />
-          </p>
-        )}
-        <p className="text-(--faint)">{r.source}</p>
-        <p className="break-all text-(--faint)" title={r.pairAddress ?? undefined}>
-          OBSERVED POOL {r.pairAddress ? shortAddress(r.pairAddress) : "—"}
-          {r.dexId ? ` · ${r.dexId.toUpperCase()}` : ""}
-        </p>
+      <div className="col-start-2 row-start-2 justify-self-end lg:col-start-auto lg:row-start-auto">
+        <RuleTip testId="divergence-rule">
+          <span className="block" data-testid="divergence-thresholds">
+            {thresholds.map((t) => (
+              <span key={t.ruleId} className="block">
+                {t.text} <span className="text-(--muted-2)">· {t.horizon}</span>
+              </span>
+            ))}
+          </span>
+          <span className="block text-(--muted-2)">WINDOWS · {overlapNote(r.id)}</span>
+          {r.priorObservedAt != null && (
+            <span className="block text-(--muted-2)">
+              COMPARED WITH <ObservedTime at={r.priorObservedAt} />
+            </span>
+          )}
+        </RuleTip>
       </div>
     </li>
   );
@@ -217,35 +212,35 @@ function RawMetricsTable({ rows }: { rows: RawMetricRow[] }) {
       data-testid="raw-metrics"
     >
       <caption className="sr-only">
-        Provider fields the divergence predicates read, with their window and observation time
+        Provider values the divergence predicates read, from the latest observation
       </caption>
       <thead>
         <tr className="hairline-b text-left text-(--faint)">
-          <th scope="col" className="w-[38%] py-2 pr-2 font-normal sm:w-[26%]">
-            FIELD
+          <th scope="col" className="w-[46%] py-2 pr-2 font-normal sm:w-[36%]">
+            METRIC
           </th>
-          <th scope="col" className="w-[24%] py-2 pr-2 text-right font-normal sm:w-[16%]">
+          <th scope="col" className="w-[26%] py-2 pr-2 text-right font-normal sm:w-[18%]">
             VALUE
           </th>
-          <th scope="col" className="py-2 pr-2 pl-4 font-normal">
+          <th scope="col" className="py-2 pl-4 font-normal">
             WINDOW
-          </th>
-          <th scope="col" className="hidden py-2 pr-2 font-normal sm:table-cell sm:w-[14%]">
-            OBSERVED
-          </th>
-          <th scope="col" className="hidden py-2 font-normal lg:table-cell lg:w-[16%]">
-            OBSERVED POOL
           </th>
         </tr>
       </thead>
       <tbody className="mv-tape">
         {rows.map((r) => (
-          <tr key={r.field} data-testid="raw-metric" data-field={r.field}>
+          <tr key={r.field} data-testid="raw-metric" data-field={r.field} title={r.field}>
             <th
               scope="row"
               className="py-1.5 pr-2 text-left font-normal break-words text-(--muted-2)"
             >
-              {r.field}
+              {rawFieldLabel(r.field)}
+              {r.field.includes("(earlier") && (
+                <>
+                  {" "}
+                  <ObservedTime at={r.observedAt} className="text-(--faint)" />
+                </>
+              )}
             </th>
             <td
               className={`mono-data py-1.5 pr-2 text-right ${r.raw == null ? "text-(--faint)" : "text-(--bone)"}`}
@@ -253,16 +248,7 @@ function RawMetricsTable({ rows }: { rows: RawMetricRow[] }) {
             >
               {r.value}
             </td>
-            <td className="py-1.5 pr-2 pl-4 break-words text-(--faint)">{r.horizon}</td>
-            <td className="hidden py-1.5 pr-2 text-(--muted-2) sm:table-cell">
-              <ObservedTime at={r.observedAt} />
-            </td>
-            <td
-              className="hidden py-1.5 text-(--faint) lg:table-cell"
-              title={r.pairAddress ?? undefined}
-            >
-              {r.pairAddress ? shortAddress(r.pairAddress) : "—"}
-            </td>
+            <td className="py-1.5 pl-4 break-words text-(--faint)">{r.horizon}</td>
           </tr>
         ))}
       </tbody>

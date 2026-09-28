@@ -171,9 +171,12 @@ test.describe("Collision — what changed together?", () => {
     await expect(page.getByTestId("collision-headline")).toHaveText(
       new RegExp(`^${n} CHANGES / 01m 0\\ds$`),
     );
-    await expect(page.getByTestId("collision-disclaimer")).toHaveText(
-      "COINCIDENCE WINDOW · NOT CAUSALITY · NOT CONFIDENCE",
-    );
+    await expect(page.getByTestId("collision-disclaimer")).toHaveText("COINCIDENCE, NOT CAUSE");
+    await expect(page.getByTestId("collision-details")).toBeVisible();
+    // The full wording lives in the DETAILS tip (not causality, not confidence).
+    await expect(page.getByTestId("collision-meta")).toContainText("NOT CONFIDENCE");
+    // The span never wraps "00s" onto its own line.
+    await expect(page.getByTestId("collision-span")).toHaveCSS("white-space", "nowrap");
     await expect(page.getByTestId("collision-window")).toContainText("05m 00s");
     await expect(page.getByTestId("collision-pool")).toContainText(POOL_A.slice(0, 4));
 

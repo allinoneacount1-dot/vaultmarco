@@ -10,7 +10,7 @@ export function SectionHead({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <span aria-hidden className="size-1 shrink-0 rounded-full bg-(--gold)" />
+      <span aria-hidden className="size-1 shrink-0 rounded-full bg-(--muted-2)" />
       <h2 id={id} className="mono-label shrink-0 font-mono! text-[10px]! text-(--muted-2)!">
         {label}
       </h2>

@@ -132,27 +132,32 @@ const liqLook = ruleMeta("LIQUIDITY_CHANGE_LOOKBACK_MINUTES");
 
 export const QUEUE_SORT_META: Record<
   QueueSort,
-  { label: string; caption: string; keyLabel: string | null }
+  { label: string; caption: string; short: string; keyLabel: string | null }
 > = {
   NEWEST: {
     label: "NEWEST",
+    short: "By the observed onset of each asset's newest qualifying change, newest first",
     caption:
       "Sorted by the observed onset of each asset's newest qualifying change (MARCOVAULT receive time), newest first · ties: asset key.",
     keyLabel: null,
   },
   MOST_EVENTS: {
     label: "MOST EVENTS",
+    short: "By qualifying events observed this session, most first",
     caption:
       "Sorted by the number of qualifying events observed this session (provider-state events excluded), most first · ties: newest change, then asset key.",
     keyLabel: "EVENTS",
   },
   LARGEST_VOLUME_ACCELERATION: {
     label: "LARGEST VOLUME ACCELERATION",
+    short: "By volume-acceleration ratio, M5 vs H1 pace, largest first · rows without one last (—)",
     caption: `Sorted by volume-acceleration ratio, M5 vs H1 pace (M5 pace ÷ (H1 − M5) pace) of the newest VOLUME ACCELERATION event, largest first · rule ≥ ${va?.value ?? "—"}× · rows without one last (—) · ties: newest change, then asset key.`,
     keyLabel: "VOL ACCEL",
   },
   LARGEST_LIQUIDITY_CHANGE: {
     label: "LARGEST LIQUIDITY CHANGE",
+    short:
+      "By |Δ USD| of the newest liquidity change on the same observed pool, largest first · rows without one last (—)",
     caption: `Sorted by |Δ USD| of the newest LIQUIDITY CHANGE event, a session delta between two observations ≥ ${liqLook?.value ?? "—"}M apart on the same observed pool, largest first · rule ≥ ${liqRel ? liqRel.value * 100 : "—"}% and ≥ $${liqAbs ? liqAbs.value.toLocaleString("en-US") : "—"} · rows without one last (—) · ties: newest change, then asset key.`,
     keyLabel: "Δ LIQUIDITY",
   },

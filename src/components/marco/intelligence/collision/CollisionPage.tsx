@@ -20,6 +20,7 @@ import { useFocusLinkSearch } from "../shared/useFocusLinkSearch";
 import { FreshnessNote } from "../shared/FreshnessNote";
 import { RelatedViews } from "../shared/links";
 import { ObservedTime } from "../shared/ObservedTime";
+import { RuleTip } from "../shared/RuleTip";
 
 /**
  * COLLISION — "What changed together?"
@@ -81,7 +82,10 @@ function CollisionBody({
               data-testid="collision-headline"
             >
               {changesText(c.count)} <span className="text-(--faint)">/</span>{" "}
-              <span className="text-(--gold) normal-case" data-testid="collision-span">
+              <span
+                className="whitespace-nowrap text-(--bone) normal-case"
+                data-testid="collision-span"
+              >
                 {spanText(c)}
               </span>
             </p>
@@ -90,44 +94,51 @@ function CollisionBody({
               className="font-display text-[18px] font-semibold uppercase tracking-[0.04em] text-(--muted-2) lg:text-[22px]"
               data-testid="collision-headline"
             >
-              NO COLLISION IN THE LAST {windowText}
+              NO COLLISION IN THE LAST{" "}
+              <span className="whitespace-nowrap normal-case">{windowText}</span>
             </p>
           )}
+          {/* One faint line; each item keeps its own separator so no wrapped line starts with "·". */}
           <p
-            className="font-mono text-[10px] tracking-[0.16em] text-(--champagne)"
-            data-testid="collision-disclaimer"
+            className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[10px] tracking-[0.1em] text-(--faint)"
+            data-testid="collision-meta"
           >
-            COINCIDENCE WINDOW · NOT CAUSALITY · NOT CONFIDENCE
-          </p>
-          <dl className="grid gap-x-8 gap-y-1 font-mono text-[10px] tracking-[0.1em] text-(--muted-2) sm:grid-cols-2">
-            <div className="flex flex-wrap gap-x-2">
-              <dt className="text-(--faint)">WINDOW</dt>
-              <dd data-testid="collision-window">
-                {windowText} · COLLISION_WINDOW_MS · EVENT ONSETS
-              </dd>
-            </div>
+            <span className="whitespace-nowrap" data-testid="collision-window">
+              WINDOW <span className="normal-case">{windowText}</span> ·
+            </span>
             {c && (
-              <div className="flex flex-wrap gap-x-2">
-                <dt className="text-(--faint)">ONSETS</dt>
-                <dd data-testid="collision-onsets">
-                  FIRST <ObservedTime at={c.families[0].firstAt} /> → LAST{" "}
-                  <ObservedTime at={c.families[c.families.length - 1].firstAt} /> · WINDOW ENDS AT
-                  THE NEWEST OBSERVED CHANGE · {ageLabel(Math.max(0, now - c.windowEnd))} AGO
-                </dd>
-              </div>
+              <span className="whitespace-nowrap" data-testid="collision-onsets">
+                <ObservedTime at={c.families[0].firstAt} /> →{" "}
+                <ObservedTime at={c.families[c.families.length - 1].firstAt} /> ·
+              </span>
             )}
-            <div className="flex flex-wrap gap-x-2">
-              <dt className="text-(--faint)">COUNT</dt>
-              <dd>INDEPENDENT FAMILIES, ONE VOTE EACH · NOT EVENTS</dd>
-            </div>
-            <div className="flex flex-wrap gap-x-2">
-              <dt className="text-(--faint)">OBSERVED POOL</dt>
-              <dd data-testid="collision-pool" title={c?.pairAddress ?? undefined}>
-                {c?.pairAddress ? shortAddress(c.pairAddress) : "—"}
-                {pool?.dexId ? ` · ${pool.dexId.toUpperCase()}` : ""} · ONLY THE NEWEST EVENT'S POOL
-              </dd>
-            </div>
-          </dl>
+            <span
+              className="whitespace-nowrap"
+              data-testid="collision-pool"
+              title={c?.pairAddress ?? undefined}
+            >
+              POOL {c?.pairAddress ? shortAddress(c.pairAddress) : "—"}
+              {pool?.dexId ? ` · ${pool.dexId.toUpperCase()}` : ""} ·
+            </span>
+            <span className="whitespace-nowrap" data-testid="collision-disclaimer">
+              COINCIDENCE, NOT CAUSE
+            </span>{" "}
+            <RuleTip label="DETAILS" testId="collision-details">
+              <span className="block">
+                WINDOW {windowText} (COLLISION_WINDOW_MS) OVER EVENT ONSETS, ENDING AT THE NEWEST
+                OBSERVED CHANGE
+                {c ? ` · ${ageLabel(Math.max(0, now - c.windowEnd))} AGO` : ""}.
+              </span>
+              <span className="block">
+                COUNT = INDEPENDENT FAMILIES, ONE VOTE EACH, OBSERVED ONSETS ONLY. RADAR SIGNALS AND
+                UNIVERSE ENTRY NEVER VOTE.
+              </span>
+              <span className="block">
+                ONE POOL: THE NEWEST EVENT&apos;S. COINCIDENCE WINDOW · NOT CAUSALITY · NOT
+                CONFIDENCE.
+              </span>
+            </RuleTip>
+          </p>
           {view.excluded.length > 0 && (
             <p
               role="note"
@@ -144,7 +155,17 @@ function CollisionBody({
         </div>
       </Zone>
 
-      <Zone index="02" label="FAMILIES" meta={c ? `${changesText(c.count)} IN WINDOW` : undefined}>
+      <Zone
+        index="02"
+        label="FAMILIES"
+        meta={
+          c
+            ? `${changesText(c.count)} IN WINDOW · ${pool?.source ?? "DEXSCREENER"} · POOL ${
+                c.pairAddress ? shortAddress(c.pairAddress) : "—"
+              }`
+            : undefined
+        }
+      >
         {c && c.families.length > 0 ? (
           <ol className="mv-tape hairline-t hairline-b" data-testid="collision-families">
             {c.families.map((f) => (
@@ -206,7 +227,7 @@ function FamilyRow({ f }: { f: CollisionFamily }) {
           {f.family}
         </h3>
         <p className="font-mono text-[10px] tracking-[0.1em] text-(--muted-2)">
-          FIRST <ObservedTime at={f.firstAt} className="text-(--gold)" />
+          FIRST <ObservedTime at={f.firstAt} className="text-(--bone)" />
         </p>
         {f.events.length > 1 && (
           <p className="font-mono text-[9px] tracking-[0.1em] text-(--faint)">
@@ -230,18 +251,13 @@ function EventLine({ e }: { e: EvidenceEvent }) {
         <span className="text-(--bone)">{eventTypeText(e)}</span>
         {e.direction && <span className="text-(--muted-2)">{e.direction}</span>}
         <span className="mono-data text-(--bone)">{eventValueText(e)}</span>
-        <span className="text-(--faint)">· {e.horizon.label}</span>
+        <span className="text-(--faint)">{e.horizon.label}</span>
       </p>
       <p className="flex flex-wrap gap-x-2 font-mono text-[10px] tracking-[0.08em] text-(--muted-2)">
-        <span>
+        <span className="whitespace-nowrap">
           OBSERVED <ObservedTime at={e.observedAt} />
         </span>
-        <span className="text-(--faint)">· {ONSET_TEXT[e.onset]}</span>
-        <span className="text-(--faint)">· {e.source}</span>
-        <span className="break-all text-(--faint)" title={e.pairAddress ?? undefined}>
-          · OBSERVED POOL {e.pairAddress ? shortAddress(e.pairAddress) : "— (LANE-LEVEL)"}
-          {e.dexId ? ` · ${e.dexId.toUpperCase()}` : ""}
-        </span>
+        <span className="whitespace-nowrap text-(--faint)">{ONSET_TEXT[e.onset]}</span>
       </p>
     </li>
   );

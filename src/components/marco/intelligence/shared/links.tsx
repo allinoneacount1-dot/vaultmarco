@@ -49,7 +49,7 @@ export function ViewLink({
       to={f.path}
       search={search}
       data-testid={testId}
-      className="group -my-1 inline-flex min-h-9 items-center gap-1.5 py-1 font-mono text-[9px] tracking-[0.18em] text-(--muted-2) transition-colors duration-(--dur-micro) hover:text-(--gold) focus-visible:text-(--gold) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)"
+      className="group -my-1 inline-flex min-h-9 items-center gap-1.5 py-1 font-mono text-[9px] tracking-[0.18em] text-(--muted-2) transition-colors duration-(--dur-micro) hover:text-(--bone) focus-visible:text-(--bone) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--gold)"
     >
       OPEN {f.label.toUpperCase()}
       <ArrowRight aria-hidden className="size-3" strokeWidth={1.8} />

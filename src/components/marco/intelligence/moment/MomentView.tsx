@@ -86,10 +86,17 @@ function Evidence({ assetKey, fresh }: { assetKey: string; fresh: AssetFreshness
 
   return (
     <div className="space-y-4 lg:space-y-5" data-testid="moment" data-state={fresh.state}>
-      <HeaderStrip latest={latest} fresh={fresh} />
+      <HeaderStrip latest={latest} />
       <FreshnessNote fresh={fresh} what="The evidence below" />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <WhatChanged changes={changes} now={now} asOf={latest.observedAt} />
+        <WhatChanged
+          changes={changes}
+          now={now}
+          asOf={latest.observedAt}
+          source={`${latest.provider.toUpperCase()} · ${latest.lanes.map((l) => l.toUpperCase()).join(" + ")}`}
+          pool={latest.pairAddress}
+          dex={latest.snapshot.dexId}
+        />
         <Summaries
           first={first}
           edge={edge}
@@ -102,13 +109,13 @@ function Evidence({ assetKey, fresh }: { assetKey: string; fresh: AssetFreshness
   );
 }
 
-function HeaderStrip({ latest, fresh }: { latest: AssetObservation; fresh: AssetFreshness }) {
+/** Price + the provider's M5/H1 windows. Freshness lives in the asset bar above (once). */
+function HeaderStrip({ latest }: { latest: AssetObservation }) {
   const s = latest.snapshot;
-  const dot = freshnessDeskState(fresh.state);
   return (
     <section
-      aria-label="Price and freshness"
-      className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-x-6 gap-y-4 sm:grid-cols-[auto_auto_auto_minmax(0,1fr)] sm:items-end"
+      aria-label="Price"
+      className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-x-6 gap-y-4 sm:grid-cols-[auto_auto_auto] sm:items-end sm:justify-start sm:gap-x-10"
       data-testid="moment-header"
     >
       <div className="col-span-2 min-w-0 sm:col-span-1">
@@ -126,32 +133,6 @@ function HeaderStrip({ latest, fresh }: { latest: AssetObservation; fresh: Asset
       </div>
       <Window label="Δ M5" value={s.priceChange.m5} />
       <Window label="Δ H1" value={s.priceChange.h1} />
-      <div className="col-span-2 min-w-0 sm:col-span-1 sm:justify-self-end sm:text-right">
-        <p className="mono-label text-[9px]!">STATE</p>
-        <p
-          className="mt-1.5 flex items-center gap-2 font-mono text-[11px] tracking-[0.14em] text-(--bone) sm:justify-end"
-          data-testid="moment-state"
-        >
-          {dot && (
-            <StateDot
-              state={dot}
-              className={dot === "live" ? "text-(--gold)" : "text-(--champagne)"}
-            />
-          )}
-          {FRESHNESS_TEXT[fresh.state]} · <ObservedTime at={latest.observedAt} prefix="OBSERVED" />{" "}
-          · {ageLabel(fresh.ageMs)} AGO
-        </p>
-        <p className="mt-1 truncate font-mono text-[9px] tracking-[0.12em] text-(--faint)">
-          {latest.provider.toUpperCase()} · {latest.lanes.map((l) => l.toUpperCase()).join(" + ")}
-          {latest.pairAddress && (
-            <span title={latest.pairAddress}>
-              {" "}
-              · OBSERVED POOL {shortAddress(latest.pairAddress)}
-              {s.dexId ? ` · ${s.dexId.toUpperCase()}` : ""}
-            </span>
-          )}
-        </p>
-      </div>
     </section>
   );
 }
@@ -282,7 +263,7 @@ function NoSelection() {
                   >
                     <span className="min-w-0">
                       <span className="flex min-w-0 items-center gap-1.5">
-                        <span className="mv-chip shrink-0 text-(--gold)">
+                        <span className="mv-chip shrink-0 text-(--bone)">
                           {normalizeChain(r.chainId).toUpperCase()}
                         </span>
                         <span className="truncate font-mono text-[12px] text-(--bone)">
@@ -298,7 +279,7 @@ function NoSelection() {
                       </span>
                     </span>
                     <span className="shrink-0 text-right font-mono text-[10px] text-(--muted-2)">
-                      <ObservedTime at={r.newestAt} className="block text-(--gold)" />
+                      <ObservedTime at={r.newestAt} className="block text-(--muted-2)" />
                       <span className="block text-[9px] text-(--faint)">
                         {ageLabel(now - r.newestAt)} AGO
                       </span>

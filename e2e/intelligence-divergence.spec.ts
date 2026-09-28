@@ -169,9 +169,11 @@ test.describe("Divergence — what doesn't fit?", () => {
     await expect(thresholds).toContainText("VA ≥ 3.0×");
     await expect(thresholds).toContainText("|PRICE M5| < 0.5%");
     await expect(first).toContainText("m5 ⊂ h1");
-    await expect(first).toContainText("DEXSCREENER · REALTIME");
-    await expect(first).toContainText(`OBSERVED POOL ${WETH_POOL.slice(0, 4)}`);
-    await expect(first.locator("time").first()).toHaveAttribute("datetime", /Z$/);
+    // Source, pool and observed time are stated once for all rows, under the zone header.
+    const meta = page.getByTestId("divergence-meta");
+    await expect(meta).toContainText("DEXSCREENER · REALTIME");
+    await expect(meta).toContainText(`POOL ${WETH_POOL.slice(0, 4)}`);
+    await expect(meta.locator("time").first()).toHaveAttribute("datetime", /Z$/);
 
     // Group order: DIVERGED, then ALIGNED, then NOT EVALUABLE.
     const states = await rows(page).evaluateAll((els) =>

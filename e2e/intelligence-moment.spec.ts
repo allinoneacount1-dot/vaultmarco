@@ -165,9 +165,10 @@ test.describe("The Moment", () => {
     const header = page.getByTestId("moment-header");
     await expect(header).toContainText("PRICE USD");
     await expect(header).toContainText("+4.20%");
-    await expect(page.getByTestId("moment-state")).toContainText("LIVE");
-    await expect(page.getByTestId("moment-state")).toContainText("OBSERVED");
-    await expect(header).toContainText("OBSERVED POOL");
+    // Freshness is stated once, in the asset bar; source + pool once, in WHAT CHANGED's header.
+    await expect(page.getByTestId("focus-freshness")).toContainText("LIVE");
+    await expect(page.getByTestId("focus-freshness")).toContainText("OBSERVED");
+    await expect(page.getByTestId("moment-changes-meta")).toContainText("POOL");
 
     const priceRow = page.locator('[data-testid="moment-change"][data-type="PRICE_EXPANSION"]');
     await expect(priceRow).toHaveAttribute("data-onset", "OBSERVED");
@@ -186,7 +187,10 @@ test.describe("The Moment", () => {
     await expect(page.getByTestId("moment-first").locator("li")).not.toHaveCount(0);
     await expect(page.getByTestId("moment-edge-age")).toHaveText(/^\d\dm \d\ds$/);
     await expect(page.getByTestId("moment-divergence-counts")).toContainText("NOT EVALUABLE");
-    await expect(page.getByTestId("moment-collision-count")).toHaveText(/\d FAMIL(Y|IES) \/ /);
+    // Fewer than 2 families is never shown as a count (intel-3 votes: observed onsets only).
+    await expect(page.getByTestId("moment-collision")).toContainText(
+      /\d FAMILIES \/ \d\dm \d\ds|NO COLLISION IN WINDOW/,
+    );
 
     // No score / prediction vocabulary anywhere on the page.
     const text = await page.getByTestId("moment").innerText();
@@ -301,7 +305,7 @@ test.describe("The Moment", () => {
   }, info) => {
     const { problems, mock } = await setup(page, SOL_URL, { pair: solMove });
     await rounds(page, mock, 2);
-    await expect(page.getByTestId("moment-state")).toContainText("LIVE");
+    await expect(page.getByTestId("focus-freshness")).toContainText("LIVE");
     for (const mode of ["429", "timeout", "malformed"] as const) {
       mock.pairsFail = mode;
       await page.clock.fastForward(30_000);

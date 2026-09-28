@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
-import { Price, Segmented } from "@/components/marco/desk";
+import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { Price, Segmented, Zone } from "@/components/marco/desk";
 import { useArrivals } from "@/hooks/useArrivals";
 import { useAllTracks, useLanes, useSessionInfo } from "@/hooks/useIntelligence";
 import { QUEUE_SORTS, type QueueSort } from "@/lib/intelligence/changeQueue";
@@ -45,7 +45,6 @@ export function ChangeQueue() {
   const [sort, setSort] = useState<QueueSort>("NEWEST");
   const assets = useAllTracks();
   const lanes = useLanes();
-  const { startedAt } = useSessionInfo();
   const entries = useMemo(() => queueEntries(assets, lanes, sort), [assets, lanes, sort]);
   const keys = useMemo(() => entries.map((e) => e.row.assetKey), [entries]);
   const answered = lanes.realtime.points.length + lanes.universe.points.length > 0;
@@ -54,84 +53,109 @@ export function ChangeQueue() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <QueueLaneState />
+      {/* One status line: recording + session bounds + the two lanes' state. */}
+      <QueueLaneState>
+        <span data-testid="queue-session">
+          <RecordingSince /> · {assets.size} ASSETS OBSERVED · {entries.length} QUEUED · RETAINED{" "}
+          {Math.round(SESSION_MAX_AGE_MS / 60_000)} MIN, MAX {SESSION_MAX_ASSETS} ASSETS
+        </span>
+      </QueueLaneState>
 
-      <section aria-labelledby="queue-heading" className="mv-panel p-4 sm:p-5" data-testid="queue">
-        <div className="hairline-b mb-3 flex flex-col gap-3 pb-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 id="queue-heading" className="mono-label flex items-center gap-2.5">
-              <span aria-hidden className="size-1 shrink-0 rounded-full bg-(--gold)" />
-              CHANGE QUEUE · OBSERVED THIS SESSION
-            </h2>
+      <Zone
+        index="01"
+        label="QUEUE"
+        meta={
+          <span data-testid="queue-count">
+            {entries.length} OF {assets.size} OBSERVED ASSETS WITH A QUALIFYING CHANGE
+          </span>
+        }
+      >
+        <section aria-label="Change queue" className="mv-panel p-4 sm:p-5" data-testid="queue">
+          <div className="hairline-b mb-3 flex flex-col gap-2 pb-3">
+            <Segmented
+              label="Queue order"
+              options={SORT_OPTIONS}
+              value={sort}
+              onChange={setSort}
+              className="self-start max-sm:grid max-sm:w-full max-sm:grid-cols-[repeat(2,minmax(0,1fr))]"
+            />
             <p
-              className="font-mono text-[10px] tracking-[0.14em] text-(--faint)"
-              data-testid="queue-count"
+              className="font-mono text-[10px] tracking-[0.06em] text-(--muted-2) sm:truncate"
+              data-testid="sort-caption"
+              title={meta.caption}
+              aria-live="polite"
             >
-              {entries.length} OF {assets.size} OBSERVED ASSETS WITH A QUALIFYING CHANGE
+              {meta.short}
             </p>
           </div>
-          <Segmented
-            label="Queue order"
-            options={SORT_OPTIONS}
-            value={sort}
-            onChange={setSort}
-            className="self-start"
-          />
-          <p
-            className="max-w-[92ch] font-mono text-[10px] leading-relaxed tracking-[0.06em] text-(--muted-2)"
-            data-testid="sort-caption"
-            aria-live="polite"
-          >
-            {meta.caption}
-          </p>
-        </div>
 
-        {entries.length === 0 ? (
-          <div className="py-6" data-testid="queue-empty">
-            <p className="font-mono text-[12px] tracking-[0.14em] text-(--bone)">
-              NO QUALIFYING CHANGE OBSERVED THIS SESSION
-            </p>
-            <p className="mt-2 font-mono text-[10px] tracking-[0.14em] text-(--faint)">
-              <RecordingSince /> · <span data-testid="assets-observed">{assets.size}</span> ASSETS
-              OBSERVED
-            </p>
-          </div>
-        ) : (
-          <>
-            <div
-              aria-hidden
-              className="-mx-2 hidden gap-3 px-2 pb-2 font-mono text-[9px] tracking-[0.16em] text-(--faint) xl:grid xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_72px_96px_84px_minmax(0,0.9fr)_minmax(0,1.2fr)_196px]"
-            >
-              <span>ASSET · CHAIN</span>
-              <span>NEWEST CHANGE</span>
-              <span>AGE</span>
-              <span>FAMILIES · {WINDOW_MIN}M</span>
-              <span>{meta.keyLabel ?? "EVENTS"}</span>
-              <span>PRICE</span>
-              <span>STATE · FRESHNESS</span>
-              <span />
+          {entries.length === 0 ? (
+            <div className="py-6" data-testid="queue-empty">
+              <p className="font-mono text-[12px] tracking-[0.14em] text-(--bone)">
+                NO QUALIFYING CHANGE OBSERVED THIS SESSION
+              </p>
+              <p className="mt-2 font-mono text-[10px] tracking-[0.14em] text-(--faint)">
+                <RecordingSince /> · <span data-testid="assets-observed">{assets.size}</span> ASSETS
+                OBSERVED
+              </p>
             </div>
-            <ol
-              className="mv-tape -mx-2"
-              aria-label={`Change queue, ordered by ${meta.label.toLowerCase()}`}
-              data-testid="queue-list"
-              data-sort={sort}
-            >
-              {entries.map((e) => (
-                <QueueRowItem
-                  key={e.row.assetKey}
-                  entry={e}
-                  sort={sort}
-                  arrived={arrivals.has(e.row.assetKey)}
-                />
-              ))}
-            </ol>
-          </>
-        )}
-      </section>
+          ) : (
+            <>
+              <div
+                aria-hidden
+                className="-mx-2 hidden gap-3 px-2 pb-2 font-mono text-[9px] tracking-[0.16em] text-(--faint) xl:grid xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_72px_96px_84px_minmax(0,0.9fr)_minmax(0,1.2fr)_196px]"
+              >
+                <span>ASSET · CHAIN</span>
+                <span>NEWEST CHANGE</span>
+                <span>AGE</span>
+                <span>FAMILIES · {WINDOW_MIN}M</span>
+                <span>{meta.keyLabel ?? "EVENTS"}</span>
+                <span>PRICE</span>
+                <span>STATE · FRESHNESS</span>
+                <span />
+              </div>
+              <ol
+                className="mv-tape -mx-2"
+                aria-label={`Change queue, ordered by ${meta.label.toLowerCase()}`}
+                data-testid="queue-list"
+                data-sort={sort}
+              >
+                {entries.map((e) => (
+                  <QueueRowItem
+                    key={e.row.assetKey}
+                    entry={e}
+                    sort={sort}
+                    arrived={arrivals.has(e.row.assetKey)}
+                  />
+                ))}
+              </ol>
+            </>
+          )}
+        </section>
+      </Zone>
 
-      <QueueRules startedAt={startedAt} observed={assets.size} queued={entries.length} />
+      <QueueRules />
     </div>
+  );
+}
+
+/**
+ * "BUY/SELL IMBALANCE · SELL": the last word, the "·" and what follows never
+ * wrap apart, so no line starts or ends with a lone separator.
+ */
+function NoOrphanSeparator({ text }: { text: string }) {
+  const at = text.indexOf(" · ");
+  if (at < 0) return <>{text}</>;
+  const head = text.slice(0, at);
+  const cut = head.lastIndexOf(" ");
+  return (
+    <>
+      {cut >= 0 ? `${head.slice(0, cut)} ` : ""}
+      <span className="whitespace-nowrap">
+        {head.slice(cut + 1)}
+        {text.slice(at)}
+      </span>
+    </>
   );
 }
 
@@ -166,7 +190,7 @@ const QueueRowItem = memo(function QueueRowItem({
       <div className="order-1 min-w-0 xl:order-1">
         <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <span className="truncate font-mono text-[12px] font-semibold text-(--bone)">{name}</span>
-          <span className="mv-chip shrink-0 text-(--gold)">{chain}</span>
+          <span className="mv-chip shrink-0 text-(--bone)">{chain}</span>
           <span className="font-mono text-[10px] text-(--faint)" title={row.address}>
             {shortAddress(row.address)}
           </span>
@@ -200,14 +224,7 @@ const QueueRowItem = memo(function QueueRowItem({
           data-type={newest.type}
           data-direction={newest.direction ?? ""}
         >
-          {changeText(newest.type, newest.direction)}
-        </p>
-        <p className="mt-0.5 font-mono text-[9px] tracking-[0.12em] text-(--faint)">
-          OBSERVED{" "}
-          <time dateTime={iso(newest.observedAt)} className="text-(--gold)">
-            {clockLabel(newest.observedAt)}
-          </time>
-          {newest.onset === "IN_PROGRESS_WHEN_OBSERVED" ? " · IN PROGRESS WHEN OBSERVED" : ""}
+          <NoOrphanSeparator text={changeText(newest.type, newest.direction)} />
         </p>
       </div>
 
@@ -266,7 +283,7 @@ const QueueRowItem = memo(function QueueRowItem({
           aria-label={`OPEN IN THE MOMENT — ${name} on ${chain}`}
           data-testid="open-moment"
         >
-          <span className="mono-label text-[9px]!">OPEN IN THE MOMENT</span>
+          <span className="mono-label text-[10px]! text-(--muted-2)!">OPEN IN THE MOMENT</span>
           <ArrowUpRight aria-hidden className="size-3.5" strokeWidth={1.8} />
         </Link>
       </div>
@@ -310,46 +327,32 @@ function ruleText(ids: readonly string[]): string {
   return `${values.join(" · ")} — ${horizons.join(" · ")}`;
 }
 
-/** Supporting evidence: what qualifies a row, with each rule's threshold + horizon. */
-function QueueRules({
-  startedAt,
-  observed,
-  queued,
-}: {
-  startedAt: number;
-  observed: number;
-  queued: number;
-}) {
+/** Supporting evidence, closed by default: what qualifies a row, each rule's threshold + horizon. */
+function QueueRules() {
   return (
-    <section
-      aria-labelledby="queue-rules-heading"
-      className="hairline-t space-y-3 pt-4"
-      data-testid="queue-rules"
-    >
-      <h2 id="queue-rules-heading" className="mono-label text-[9px]!">
+    <details className="group hairline-t pt-3" data-testid="queue-rules">
+      <summary className="flex min-h-9 cursor-pointer list-none items-center gap-2 font-mono text-[10px] tracking-[0.16em] text-(--muted-2) hover:text-(--bone) [&::-webkit-details-marker]:hidden">
+        <ChevronRight
+          className="size-3.5 shrink-0 transition-transform duration-(--dur-micro) group-open:rotate-90 motion-reduce:transition-none"
+          aria-hidden
+        />
         WHAT QUALIFIES A ROW · RULES {INTELLIGENCE_RULES_VERSION}
-      </h2>
-      <p className="max-w-[92ch] font-mono text-[10px] leading-relaxed tracking-[0.06em] text-(--muted-2)">
-        A row is an observed asset with at least one market-structure event this session (or a radar
-        firing / observed pair discovery). Provider-state events (PROVIDER STALE / RECOVERED) never
-        qualify a row. No score, no rank: the order is the selected sort only.
-      </p>
-      <dl className="grid gap-x-6 gap-y-1.5 font-mono text-[10px] tracking-[0.08em] sm:grid-cols-2 xl:grid-cols-3">
-        {RULE_ROWS.map((r) => (
-          <div key={r.label} className="flex min-w-0 flex-col">
-            <dt className="text-(--bone)">{r.label}</dt>
-            <dd className="text-(--faint)">{ruleText(r.ids)}</dd>
-          </div>
-        ))}
-      </dl>
-      <p
-        className="font-mono text-[9px] tracking-[0.14em] text-(--faint)"
-        data-testid="queue-session"
-      >
-        <RecordingSince /> · {observed} ASSETS OBSERVED · {queued} QUEUED · RETAINED{" "}
-        {Math.round(SESSION_MAX_AGE_MS / 60_000)} MIN, MAX {SESSION_MAX_ASSETS} ASSETS · DEXSCREENER
-        REALTIME + UNIVERSE
-      </p>
-    </section>
+      </summary>
+      <div className="space-y-3 pt-3">
+        <p className="max-w-[92ch] font-mono text-[10px] leading-relaxed tracking-[0.06em] text-(--muted-2)">
+          A row is an observed asset with at least one market-structure event this session (or a
+          radar firing / observed universe entry). Provider-state events (PROVIDER STALE /
+          RECOVERED) never qualify a row. No score, no rank: the order is the selected sort only.
+        </p>
+        <dl className="grid gap-x-6 gap-y-1.5 font-mono text-[10px] tracking-[0.08em] sm:grid-cols-2 xl:grid-cols-3">
+          {RULE_ROWS.map((r) => (
+            <div key={r.label} className="flex min-w-0 flex-col">
+              <dt className="text-(--bone)">{r.label}</dt>
+              <dd className="text-(--faint)">{ruleText(r.ids)}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </details>
   );
 }

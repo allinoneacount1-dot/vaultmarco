@@ -13,6 +13,7 @@ import {
 import { INTELLIGENCE_RULES_VERSION } from "@/lib/intelligence/rules";
 import { shortAddress } from "@/lib/search";
 import { ObservedTime } from "../shared/ObservedTime";
+import { RuleTip } from "../shared/RuleTip";
 import { SectionHead } from "../shared/SectionHead";
 
 /**
@@ -25,11 +26,18 @@ export function WhatChanged({
   changes,
   now,
   asOf,
+  source,
+  pool,
+  dex,
 }: {
   changes: EvidenceEvent[];
   now: number;
   /** Latest observation of the asset: "active" means true at this time. */
   asOf: number | null;
+  /** Source and observed pool of that observation — stated once, for every row. */
+  source: string;
+  pool: string | null;
+  dex: string | null;
 }) {
   return (
     <section
@@ -42,10 +50,12 @@ export function WhatChanged({
         id="moment-what-changed"
         label="WHAT CHANGED"
         meta={
-          <>
-            ACTIVE AT <ObservedTime at={asOf} prefix="OBSERVATION" /> · RULES{" "}
+          <span data-testid="moment-changes-meta" title={pool ?? undefined}>
+            ACTIVE AT <ObservedTime at={asOf} prefix="OBSERVATION" /> · {source} · POOL{" "}
+            {pool ? shortAddress(pool) : "—"}
+            {dex ? ` · ${dex.toUpperCase()}` : ""} · RULES{" "}
             {INTELLIGENCE_RULES_VERSION.toUpperCase()}
-          </>
+          </span>
         }
       />
       {changes.length === 0 ? (
@@ -82,7 +92,7 @@ function ChangeRow({ e, now }: { e: EvidenceEvent; now: number }) {
     >
       {/* Temporal anchor: the onset observation */}
       <div className="border-r border-(--hairline) pr-3">
-        <ObservedTime at={e.observedAt} className="mono-data block text-[11px] text-(--gold)" />
+        <ObservedTime at={e.observedAt} className="mono-data block text-[11px] text-(--bone)" />
         <span className="mt-1 block font-mono text-[9px] tracking-[0.12em] text-(--faint)">
           {ageLabel(now - e.observedAt)} AGO
         </span>
@@ -94,10 +104,26 @@ function ChangeRow({ e, now }: { e: EvidenceEvent; now: number }) {
           <h3 className="font-mono text-[12px] font-semibold tracking-[0.1em] text-(--bone)">
             {TYPE_TEXT[e.type]}
           </h3>
-          <span className="font-mono text-[10px] tracking-[0.12em] text-(--champagne)">
+          <span className="font-mono text-[10px] tracking-[0.12em] text-(--muted-2)">
             <span aria-hidden>{directionGlyph(e.direction)} </span>
             {directionText(e.type, e.direction)}
           </span>
+          <RuleTip>
+            <span className="block" data-testid="change-rule">
+              {rules.length > 0
+                ? rules.map((r, i) => (
+                    <span key={r.id}>
+                      {i > 0 && " · "}
+                      {r.id} {ruleThresholdText(r)}
+                    </span>
+                  ))
+                : "ALPHA RADAR OWN DETERMINISTIC RULE (RECORDED AS FIRED)"}
+              {" · HORIZON "}
+              {rules[0]?.horizon.toUpperCase() ?? e.horizon.label}
+              {rules[0] ? ` · ${rules[0].source.replace("_", " ")}` : ""}
+            </span>
+            {e.caveat && <span className="block text-(--muted-2)">{e.caveat}</span>}
+          </RuleTip>
         </div>
 
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -125,29 +151,9 @@ function ChangeRow({ e, now }: { e: EvidenceEvent; now: number }) {
           </dl>
         )}
 
-        <p
-          className="font-mono text-[9.5px] leading-relaxed tracking-[0.08em] text-(--muted-2) [overflow-wrap:anywhere]"
-          data-testid="change-rule"
-        >
-          <span className="text-(--faint)">RULE </span>
-          {rules.length > 0
-            ? rules.map((r, i) => (
-                <span key={r.id}>
-                  {i > 0 && <span className="text-(--faint)"> · </span>}
-                  {r.id} {ruleThresholdText(r)}
-                </span>
-              ))
-            : "ALPHA RADAR OWN DETERMINISTIC RULE (RECORDED AS FIRED)"}
-          <span className="text-(--faint)"> · HORIZON </span>
-          {rules[0]?.horizon.toUpperCase() ?? e.horizon.label}
-          {rules[0] && (
-            <span className="text-(--faint)"> · {rules[0].source.replace("_", " ")}</span>
-          )}
-        </p>
-
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9.5px] tracking-[0.1em] [overflow-wrap:anywhere]">
           <span
-            className={`mv-chip whitespace-normal! ${observed ? "text-(--gold)" : "text-(--champagne)"}`}
+            className={`mv-chip whitespace-normal! ${observed ? "text-(--bone)" : "text-(--muted-2)"}`}
             data-testid="change-onset"
           >
             <span aria-hidden>{observed ? "◆" : "◇"}</span>
@@ -165,18 +171,6 @@ function ChangeRow({ e, now }: { e: EvidenceEvent; now: number }) {
             </span>
           )}
         </div>
-
-        <p className="truncate font-mono text-[9px] tracking-[0.12em] text-(--faint)">
-          {e.source}
-          {e.pairAddress && (
-            <span title={e.pairAddress}>
-              {" "}
-              · OBSERVED POOL {shortAddress(e.pairAddress)}
-              {e.dexId ? ` · ${e.dexId.toUpperCase()}` : ""}
-            </span>
-          )}
-        </p>
-        {e.caveat && <p className="text-[11px] leading-relaxed text-(--faint)">{e.caveat}</p>}
       </div>
     </li>
   );

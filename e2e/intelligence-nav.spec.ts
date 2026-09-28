@@ -329,7 +329,7 @@ test.describe("Intelligence suite navigation", () => {
     const boot = await page.evaluate(() => Date.now());
     await page.clock.fastForward(10 * 60_000);
     // Client-side navigation: same bundle, same module-level session store.
-    await page.locator('a[href="/dashboard"]').first().click();
+    await page.locator('a[href="/dashboard"]:visible').first().click();
     await expect(page).toHaveURL(/\/dashboard$/);
     await openNav(page);
     await navLink(page, "Vault Trace").click();

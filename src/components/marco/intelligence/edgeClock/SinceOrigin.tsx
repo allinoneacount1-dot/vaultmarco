@@ -17,8 +17,7 @@ export function SinceOrigin({ model }: { model: EdgeClockModel }) {
       <p className="font-mono text-[9.5px] leading-relaxed tracking-[0.1em] text-(--faint)">
         ORIGIN <ObservedTime at={origin.observedAt} /> → LATEST{" "}
         <ObservedTime at={latest?.observedAt} /> ·{" "}
-        {latest ? ageLabel(latest.observedAt - origin.observedAt) : "—"} BETWEEN THE TWO REAL
-        OBSERVATIONS · {PAIR_HORIZON}
+        {latest ? ageLabel(latest.observedAt - origin.observedAt) : "—"} BETWEEN THEM
         {model.sinceBlocked ? ` · NO CHANGE COMPUTED — ${model.sinceBlocked}` : ""}
       </p>
       <ul
@@ -31,16 +30,16 @@ export function SinceOrigin({ model }: { model: EdgeClockModel }) {
           className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)] gap-x-4 pb-2 font-mono text-[9px] tracking-[0.2em] text-(--faint) sm:grid"
         >
           <span>METRIC</span>
-          <span className="text-right">AT ORIGIN</span>
-          <span className="text-right">LATEST</span>
-          <span className="text-right">CHANGE</span>
+          <span className="-mr-[0.2em] text-right">AT ORIGIN</span>
+          <span className="-mr-[0.2em] text-right">LATEST</span>
+          <span className="-mr-[0.2em] text-right">CHANGE</span>
         </li>
         {model.since.map((m) => {
           const t = sinceText(m);
           return (
             <li
               key={m.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-0.5 py-2.5 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)]"
+              className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-0.5 py-2.5 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)] sm:items-baseline"
               data-testid="since-metric"
               data-metric={m.id}
               data-delta={m.delta == null ? "" : String(m.delta)}
@@ -67,7 +66,7 @@ export function SinceOrigin({ model }: { model: EdgeClockModel }) {
                 <span className="sr-only">Latest </span>
                 {t.to}
               </span>
-              <span className="mono-data col-start-2 row-span-2 row-start-1 self-center text-right sm:self-start text-[11.5px] text-(--bone) sm:col-start-4 sm:row-span-1">
+              <span className="mono-data col-start-2 row-span-2 row-start-1 self-center text-right text-[11.5px] text-(--bone) sm:col-start-4 sm:row-span-1 sm:self-baseline">
                 <span className="sr-only">Change </span>
                 {t.delta}
               </span>

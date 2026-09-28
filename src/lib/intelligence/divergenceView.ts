@@ -213,6 +213,31 @@ export type RawMetricRow = {
   pairAddress: string | null;
 };
 
+const FIELD_LABEL: Record<string, string> = {
+  "priceChange.m5": "PRICE CHANGE",
+  "volume.m5": "VOLUME",
+  "volume.h1": "VOLUME",
+  "txns.m5.buys": "BUYS",
+  "txns.m5.sells": "SELLS",
+  "txns.h1.buys": "BUYS",
+  "txns.h1.sells": "SELLS",
+  "liquidity.usd": "LIQUIDITY",
+  "boosts.active": "ACTIVE BOOSTS",
+  pairCreatedAt: "POOL CREATED",
+};
+
+/**
+ * Human label of a provider field for the raw-metrics table, e.g.
+ * "liquidity.usd" → "LIQUIDITY", "liquidity.usd (earlier, same pool)" →
+ * "LIQUIDITY · EARLIER, SAME POOL". The window column carries M5 / H1.
+ */
+export function rawFieldLabel(field: string): string {
+  const m = /^(.+?) \(earlier, same pool\)$/.exec(field);
+  const base = m ? m[1] : field;
+  const label = FIELD_LABEL[base] ?? base.toUpperCase();
+  return m ? `${label} · EARLIER, SAME POOL` : label;
+}
+
 /**
  * Every provider field the six predicates read, from the latest observation,
  * plus the earlier same-pool observation a session-delta predicate compared

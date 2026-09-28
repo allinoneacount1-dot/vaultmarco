@@ -77,7 +77,7 @@ export function RowFreshness({ assetKey }: { assetKey: string }) {
 const LANE_TEXT = { realtime: "REALTIME", universe: "UNIVERSE" } as const;
 
 /** Page-level state of the two existing DexScreener lanes the queue is built from. */
-export function QueueLaneState() {
+export function QueueLaneState({ children }: { children?: React.ReactNode }) {
   const lanes = useLanes();
   const now = useNow();
   const { state, lanes: views } = pageLaneState(lanes, now);
@@ -88,6 +88,7 @@ export function QueueLaneState() {
       data-testid="queue-state"
       data-state={state}
     >
+      {children}
       <span className="flex items-center gap-2 text-(--bone)">
         <StateDot state={state} className={DOT_TONE[state]} />
         LANES {STATE_TEXT[state]}

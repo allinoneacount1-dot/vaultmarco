@@ -92,16 +92,18 @@ function FirstMoves({ first, search }: { first: TraceStep[]; search: FocusSearch
         <Empty>NO OBSERVED ONSET THIS SESSION</Empty>
       ) : (
         <ol className="relative space-y-2 border-l border-(--hairline) pl-3">
-          {first.map(({ event: e, sameObservation }) => (
+          {first.map(({ event: e, sameObservation }, i) => (
             <li key={e.id} className="relative min-w-0">
               <span
                 aria-hidden
-                className="absolute -left-[15.5px] top-1.5 size-1.5 rounded-full bg-(--gold)"
+                className={`absolute -left-[15.5px] top-1.5 size-1.5 rounded-full ${
+                  i === 0 ? "bg-(--gold)" : "bg-(--hairline-strong)"
+                }`}
               />
               <div className="flex min-w-0 items-baseline gap-2">
                 <ObservedTime
                   at={e.observedAt}
-                  className="mono-data shrink-0 text-[10.5px] text-(--gold)"
+                  className={`mono-data shrink-0 text-[10.5px] ${i === 0 ? "text-(--gold)" : "text-(--muted-2)"}`}
                 />
                 <span className="truncate font-mono text-[10.5px] tracking-[0.06em] text-(--bone)">
                   {TYPE_TEXT[e.type]}
@@ -178,30 +180,32 @@ function Divergences({ d, search }: { d: DivergenceSummary; search: FocusSearch 
             {DIVERGENCE_STATE_TEXT.NOT_EVALUABLE}
           </p>
           <ul className="space-y-1">
-            {d.rows.map((r) => (
-              <li
-                key={r.id}
-                className="flex min-w-0 items-baseline justify-between gap-3"
-                data-state={r.state}
-                title={r.missing ? `Missing: ${r.missing}` : undefined}
-              >
-                <span className="truncate font-mono text-[9.5px] tracking-[0.06em] text-(--muted-2)">
-                  {pairLabel(r.label)}
-                </span>
-                <span
-                  className={`shrink-0 font-mono text-[9px] tracking-[0.12em] ${
-                    r.state === "DIVERGED"
-                      ? "text-(--gold)"
-                      : r.state === "NOT_EVALUABLE"
-                        ? "text-(--faint)"
-                        : "text-(--muted-2)"
-                  }`}
+            {d.rows
+              .filter((r) => r.state === "DIVERGED")
+              .map((r) => (
+                <li
+                  key={r.id}
+                  className="flex min-w-0 items-baseline justify-between gap-3"
+                  data-state={r.state}
+                  title={r.missing ? `Missing: ${r.missing}` : undefined}
                 >
-                  {r.state === "DIVERGED" && <span aria-hidden>◆ </span>}
-                  {DIVERGENCE_STATE_TEXT[r.state]}
-                </span>
-              </li>
-            ))}
+                  <span className="truncate font-mono text-[9.5px] tracking-[0.06em] text-(--muted-2)">
+                    {pairLabel(r.label)}
+                  </span>
+                  <span
+                    className={`shrink-0 font-mono text-[9px] tracking-[0.12em] ${
+                      r.state === "DIVERGED"
+                        ? "text-(--gold)"
+                        : r.state === "NOT_EVALUABLE"
+                          ? "text-(--faint)"
+                          : "text-(--muted-2)"
+                    }`}
+                  >
+                    {r.state === "DIVERGED" && <span aria-hidden>◆ </span>}
+                    {DIVERGENCE_STATE_TEXT[r.state]}
+                  </span>
+                </li>
+              ))}
           </ul>
         </>
       )}
@@ -219,22 +223,18 @@ function CollisionSummary({ c, search }: { c: Collision | null; search: FocusSea
       testId="moment-collision"
       link={<ViewLink feature="collision" search={search} testId="moment-link-collision" />}
     >
-      {c == null ? (
-        <Empty>NO EVENTS IN WINDOW</Empty>
+      {c == null || c.count < 2 ? (
+        <Empty testId="moment-collision-none">NO COLLISION IN WINDOW</Empty>
       ) : (
         <div className="space-y-2">
           <p
             className="mono-data text-[20px] leading-none text-(--bone)"
             data-testid="moment-collision-count"
           >
-            {c.count} {c.count === 1 ? "FAMILY" : "FAMILIES"} / {ageLabel(c.spanMs)}
+            {c.count} FAMILIES / {ageLabel(c.spanMs)}
           </p>
           <p className="font-mono text-[9.5px] tracking-[0.1em] text-(--muted-2)">
             {c.families.map((f) => f.family).join(" · ")}
-          </p>
-          <p className="font-mono text-[9px] tracking-[0.1em] text-(--faint)">
-            WINDOW ENDS AT NEWEST ONSET <ObservedTime at={c.windowEnd} />
-            {rule ? ` · RULE ${rule.id}` : ""} · CO-OCCURRENCE ONLY
           </p>
         </div>
       )}

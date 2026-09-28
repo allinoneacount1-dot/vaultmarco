@@ -13,13 +13,15 @@ const fetchGasPrice = async () => {
 };
 
 export function GasTracker() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, errorUpdatedAt, failureCount } = useQuery({
     queryKey: ["gasPrice"],
     queryFn: fetchGasPrice,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  if (isLoading) {
+  // Placeholder only for the very first attempt: once the free API has failed,
+  // later refetches/retries never flash an empty box into the topbar.
+  if (isLoading && errorUpdatedAt === 0 && failureCount === 0) {
     return <Skeleton className="h-9 w-24" />;
   }
   if (!data) return null; // free API unavailable — hide rather than fake it
