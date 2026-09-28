@@ -1,10 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { IntelligencePlaceholder } from "@/components/marco/intelligence/IntelligenceShell";
+import { EdgeClockPage } from "@/components/marco/intelligence/edgeClock/EdgeClock";
 
 export const Route = createLazyFileRoute("/dashboard/edge-clock")({
-  component: Page,
+  component: EdgeClockPage,
 });
-
-function Page() {
-  return <IntelligencePlaceholder feature="edge-clock" />;
-}
